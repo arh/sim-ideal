@@ -17,6 +17,7 @@
 #include "assert.h"
 #include "iostream"
 #include "global.h"
+#include "baseCache.h"
 
 using namespace std;
 
@@ -25,7 +26,8 @@ using namespace std;
 // Class providing fixed-size (by number of records)
 // LRU-replacement cache of a function with signature
 // V f(K)
-template <typename K, typename V> class lru_stl
+template <typename K, typename V> 
+class lru_stl : public TestCache<K,V>
 {
 public:
 // Key access history, most recent at back
@@ -43,27 +45,28 @@ public:
 //         assert ( _capacity!=0 );
 	}
 	// Obtain value of the cached function for k
-	int operator()(const K& k  , V& value, uint32_t status) {
+
+	uint32_t access(const K& k  , V& value, uint32_t status) {
 		assert(_capacity != 0);
-		PRINT(cout << "Access key: " << k << " with value: " << value << endl;);
+		PRINT(cout << "Access key: " << k << endl;);
 // Attempt to find existing record
 		const typename key_to_value_type::iterator it	= _key_to_value.find(k);
 
 		if(it == _key_to_value.end()) {
 // We don’t have it:
-			PRINT(cout << "Miss on key: " << k << " with value: " << value << endl;);
+			PRINT(cout << "Miss on key: " << k << endl;);
 // Evaluate function and create new record
 			const V v = _fn(k, value);
 
 			///ARH: write buffer inserts new elements only on write miss
 			if(status & WRITE) {
 				status |=  insert(k, v);
-				PRINT(cout << "Insert done on key: " << k << " with value: " << value << endl;);
+				PRINT(cout << "Insert done on key: " << k << endl;);
 			}
 
 			return (status | MISS);
 		} else {
-			PRINT(cout << "Hit on key: " << k << " with value: " << value << endl;);
+			PRINT(cout << "Hit on key: " << k << endl;);
 // We do have it. Before returning value,
 // update access record by moving accessed
 // key to back of list.
@@ -94,7 +97,7 @@ public:
 		const typename key_to_value_type::iterator it
 		= _key_to_value.find(k);
 		assert(it != _key_to_value.end());
-		PRINT(cout << "Remove value " << (it->second).first << endl;);
+		PRINT(cout << "Remove value " << endl;);
 // Erase both elements to completely purge record
 		_key_to_value.erase(it);
 		_key_tracker.remove(k);
@@ -103,7 +106,7 @@ private:
 
 // Record a fresh key-value pair in the cache
 	int insert(const K& k, const V& v) {
-		PRINT(cout << "insert key " << k << " ,value " << v << endl;);
+		PRINT(cout << "insert key " << k  << endl;);
 		int status = 0;
 // Method is only called on cache misses
 		assert(_key_to_value.find(k) == _key_to_value.end());
@@ -134,8 +137,7 @@ private:
 		const typename key_to_value_type::iterator it
 		= _key_to_value.find(_key_tracker.front());
 		assert(it != _key_to_value.end());
-		PRINT(cout << "evicting victim key " << (*it).first << " ,value " << (*it).second.first << endl;);
-		sram_evict(it->first);
+		PRINT(cout << "evicting victim key " << (*it).first <<  endl;);
 // Erase both elements to completely purge record
 		_key_to_value.erase(it);
 		_key_tracker.pop_front();

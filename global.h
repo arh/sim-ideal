@@ -2,15 +2,13 @@
 #define GLOBAL_H
 #include "configuration.h"
 
-
 #ifdef DEBUG
 #define PRINT(X)	do { X	}while(false)
 #else
 #define PRINT(X)
 #endif
 
-Configuration	_gConfiguration;
-bool _gTraceBased;
+extern Configuration	_gConfiguration;
 const uint32_t READ = 1;
 const uint32_t WRITE = 2;
 const uint32_t MISS = 4;
@@ -28,12 +26,7 @@ public:
 	uint32_t lineNo; // line number in the trace
 	uint32_t flags;
 	reqAtom() {
-		fsblkno = 0; //file system block number
-		ssdblkno = 0; //ssd block number
-		issueTime = 0; // time stapt in the trace
-		lineNo = 0 ; // line number in the trace
-		flags = 0;
-		reqSize = 0;
+		clear();
 	}
 	reqAtom(uint32_t tLineno , double time, uint32_t tblkno , uint32_t treqSize  , uint32_t rw) {
 		lineNo = tLineno;
@@ -42,6 +35,14 @@ public:
 		reqSize = treqSize;
 		flags = rw;
 		ssdblkno = fsblkno / _gConfiguration.ssd2fsblkRatio;
+	}
+	void clear(){
+		fsblkno = 0; //file system block number
+		ssdblkno = 0; //ssd block number
+		issueTime = 0; // time stapt in the trace
+		lineNo = 0 ; // line number in the trace
+		flags = 0;
+		reqSize = 0;
 	}
 
 };
@@ -54,16 +55,17 @@ public:
 	cacheAtom(reqAtom newn) {
 		req = newn;
 	}
+	cacheAtom(){
+		
+	}
+	void clear(){
+		req.clear();
+	}
 };
 
-void exitNow(unsigned code)
-{
-	exit(code);
-}
+void exitNow(unsigned code);
 
-cacheAtom cacheAll(const unsigned long long int& key, cacheAtom new_value)
-{
-	return new_value;
-}
+
+cacheAtom cacheAll(const unsigned long long int& key, cacheAtom new_value);
 
 #endif

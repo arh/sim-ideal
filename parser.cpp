@@ -1,4 +1,6 @@
+#include <float.h>
 #include "global.h"
+#include "parser.h"
 
 // multiply 1000 to reach milisecond, orignial value to produce second has 3 more zero
 #define WINDOWS_TICK 10000
@@ -13,7 +15,6 @@ bool  getAndParseMSR(reqAtom *newn)
 {
 	int bcount_temp = 0;
 	long long int time = 0;
-	int devno = 0;
 	int fetched = 0;
 	unsigned long long int byteoff = 0;
 	long long int pageoff = 0;
@@ -47,7 +48,7 @@ bool  getAndParseMSR(reqAtom *newn)
 			} else {
 				fprintf(stderr, "ARH: request time reach to the double boundry\n");
 				fprintf(stderr, "line: %s", line);
-				ddbg_assert(0);
+				exitNow(1);
 			}
 
 // 			if( old_time > newn->time){
@@ -65,7 +66,7 @@ bool  getAndParseMSR(reqAtom *newn)
 			if(old_time > newn->issueTime) {
 				fprintf(stderr, "ARH: new time is small equal than old time\n");
 				fprintf(stderr, "line: %s", line);
-				ddbg_assert(0);
+				exitNow(1);
 			}
 
 			old_time = newn->issueTime;

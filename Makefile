@@ -1,5 +1,11 @@
 SRCS  =    \
-	main.cpp 
+	parser.cpp \
+	lru_stl.cpp \
+	global.cpp \
+	stats.cpp\
+	main.cpp \
+	
+
 
 
 OBJS :=   $(SRCS:%.cpp=objs/%.o)

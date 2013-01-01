@@ -2,13 +2,11 @@
 #define __CONFIGURATION__
 
 #include <string>
-#include "cpp_framework.h"
-#include "assert.h"
+#include <assert.h>
 #include <iostream>
 #include <fstream>
 #include <string.h>
-
-
+#include "cpp_framework.h"
 
 
 extern bool _gTraceBased;
