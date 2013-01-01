@@ -1,5 +1,5 @@
 SRCS  =    \
-	main.cpp
+	main.cpp 
 
 
 OBJS :=   $(SRCS:%.cpp=objs/%.o)
