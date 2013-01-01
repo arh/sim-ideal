@@ -48,25 +48,25 @@ public:
 
 	uint32_t access(const K& k  , V& value, uint32_t status) {
 		assert(_capacity != 0);
-		PRINT(cout << "Access key: " << k << endl;);
+		PRINTV(cout << "Access key: " << k << endl;);
 // Attempt to find existing record
 		const typename key_to_value_type::iterator it	= _key_to_value.find(k);
 
 		if(it == _key_to_value.end()) {
 // We don’t have it:
-			PRINT(cout << "Miss on key: " << k << endl;);
+			PRINTV(cout << "Miss on key: " << k << endl;);
 // Evaluate function and create new record
 			const V v = _fn(k, value);
 
 			///ARH: write buffer inserts new elements only on write miss
 			if(status & WRITE) {
 				status |=  insert(k, v);
-				PRINT(cout << "Insert done on key: " << k << endl;);
+				PRINTV(cout << "Insert done on key: " << k << endl;);
 			}
 
 			return (status | MISS);
 		} else {
-			PRINT(cout << "Hit on key: " << k << endl;);
+			PRINTV(cout << "Hit on key: " << k << endl;);
 // We do have it. Before returning value,
 // update access record by moving accessed
 // key to back of list.
@@ -90,14 +90,14 @@ public:
 		return (_key_to_value.rbegin())->first;
 	}
 	void remove(const K& k) {
-		PRINT(cout << "Removing key " << k << endl;);
+		PRINTV(cout << "Removing key " << k << endl;);
 // Assert method is never called when cache is empty
 		assert(!_key_tracker.empty());
 // Identify  key
 		const typename key_to_value_type::iterator it
 		= _key_to_value.find(k);
 		assert(it != _key_to_value.end());
-		PRINT(cout << "Remove value " << endl;);
+		PRINTV(cout << "Remove value " << endl;);
 // Erase both elements to completely purge record
 		_key_to_value.erase(it);
 		_key_tracker.remove(k);
@@ -106,14 +106,14 @@ private:
 
 // Record a fresh key-value pair in the cache
 	int insert(const K& k, const V& v) {
-		PRINT(cout << "insert key " << k  << endl;);
+		PRINTV(cout << "insert key " << k  << endl;);
 		int status = 0;
 // Method is only called on cache misses
 		assert(_key_to_value.find(k) == _key_to_value.end());
 
 // Make space if necessary
 		if(_key_to_value.size() == _capacity) {
-			PRINT(cout << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
+			PRINTV(cout << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
 			evict();
 			status = EVICT;
 		}
@@ -137,7 +137,7 @@ private:
 		const typename key_to_value_type::iterator it
 		= _key_to_value.find(_key_tracker.front());
 		assert(it != _key_to_value.end());
-		PRINT(cout << "evicting victim key " << (*it).first <<  endl;);
+		PRINTV(cout << "evicting victim key " << (*it).first <<  endl;);
 // Erase both elements to completely purge record
 		_key_to_value.erase(it);
 		_key_tracker.pop_front();

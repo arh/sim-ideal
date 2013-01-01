@@ -26,9 +26,8 @@ public:
 
 
 	bool read(int argc, char **argv) {
-// 		try {
-		//read configuration from input stream
-		if(argc < 5)
+
+		if(argc < 4)
 			return false;
 
 		int curr_arg = 1;
@@ -36,15 +35,12 @@ public:
 
 		if(GetTraceName().compare("stdin") != 0) {
 			_gTraceBased = true;
-			traceStream.open(traceName);
-
-			if(! traceStream.is_open()) {
-				std::cerr << "Can not open " << traceName << " trace file" << std::endl;
-				exit(1);
-			}
 		}
-
-		algName = argv[curr_arg++];
+		else{
+			std::cerr<<" Error: read from stdin is not implemented"<<std::endl;
+			exit(1);
+		}
+		algName 	= argv[curr_arg++];
 		testName	= argv[curr_arg++];
 		L1cacheSize = CMDR::Integer::parseInt(argv[curr_arg++]);
 		return true;

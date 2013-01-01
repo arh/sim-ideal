@@ -22,6 +22,7 @@ TestCache<uint64_t,cacheAtom> * _gTestCache;
 
 void	readTrace(queue<reqAtom> & memTrace)
 {
+	assert(_gTraceBased); // read from stdin is not implemented
 	_gConfiguration.traceStream.open(_gConfiguration.traceName, ifstream::in);
 
 	if(! _gConfiguration.traceStream.good()) {
@@ -34,12 +35,14 @@ void	readTrace(queue<reqAtom> & memTrace)
 		newAtom.clear();
 	}
 	
+	_gConfiguration.traceStream.close();
+	
 }
 
 void	Initialize(int argc, char **argv, queue<reqAtom> & memTrace)
 {
 	if(!_gConfiguration.read(argc, argv)) {
-		cerr << "USAGE: <tracefilename> " << endl;
+		cerr << "USAGE: <tracefilename> <AlgName> <TestName> <L1Size>" << endl;
 		exit(-1);
 	}
 
@@ -57,7 +60,7 @@ void RunBenchmark( queue<reqAtom> & memTrace){
 		reqAtom newReq = memTrace.front();
 		memTrace.pop();
 		
-		unsigned offset;
+		unsigned offset=0;
 		while(newReq.reqSize){
 			reqAtom tempReq = newReq;
 			tempReq.reqSize=1;
@@ -76,7 +79,6 @@ void RunBenchmark( queue<reqAtom> & memTrace){
 
 int main(int argc, char **argv)
 {
-	lru_stl< uint64_t , cacheAtom> LRUCache(cacheAll, _gConfiguration.L1cacheSize);
 	queue<reqAtom> memTrace; // in memory trace file
 	//read benchmark configuration
 	Initialize(argc, argv,memTrace);

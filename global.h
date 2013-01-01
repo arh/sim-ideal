@@ -8,6 +8,14 @@
 #define PRINT(X)
 #endif
 
+
+
+#ifdef VERB
+#define PRINTV(X)	do { X	}while(false)
+#else
+#define PRINTV(X)
+#endif
+
 extern Configuration	_gConfiguration;
 const uint32_t READ = 1;
 const uint32_t WRITE = 2;

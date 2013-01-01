@@ -17,7 +17,6 @@ bool  getAndParseMSR(reqAtom *newn)
 	long long int time = 0;
 	int fetched = 0;
 	unsigned long long int byteoff = 0;
-	long long int pageoff = 0;
 	char *tempchar;
 	char *r_w;
 	char line[201];
@@ -25,12 +24,13 @@ bool  getAndParseMSR(reqAtom *newn)
 	static double old_time = 0;
 
 	while(!fetched) {
-		if(_gConfiguration.traceStream.eof()) {
-			return false;
-		}
+		
 
 		std::string lineString;
 		std::getline(_gConfiguration.traceStream,  lineString);
+		if(_gConfiguration.traceStream.eof()) {
+			return false;
+		}
 		strcpy(line, lineString.c_str());
 		lineno++;
 		// Sample MSR trace lien:
@@ -106,7 +106,7 @@ bool  getAndParseMSR(reqAtom *newn)
 				PRINT(fprintf(stderr, "ARH: request byte count is not aligned to sector size\n"););
 				PRINT(fprintf(stderr, "line: %s", line););
 			} else {
-				newn->reqSize = pageoff;
+				newn->reqSize = bcount_temp/_gConfiguration.fsblkSize;
 			}
 
 			fetched = 1;
