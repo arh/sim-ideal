@@ -1,6 +1,8 @@
 #include "global.h"
+#include "stats.h"
 
-void exitNow(unsigned code){
+void ExitNow(unsigned code){
+	printStats();
 	exit(code);
 }
 

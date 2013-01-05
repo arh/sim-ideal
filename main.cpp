@@ -28,7 +28,7 @@ void	readTrace(queue<reqAtom> & memTrace)
 
 	if(! _gConfiguration.traceStream.good()) {
 		PRINT(cout << " Error: Can not open trace file : " << _gConfiguration.traceName << endl;);
-		exitNow(1);
+		ExitNow(1);
 	}
 	reqAtom newAtom;
 	while(getAndParseMSR(&newAtom)){
@@ -84,6 +84,5 @@ int main(int argc, char **argv)
 	//read benchmark configuration
 	Initialize(argc, argv,memTrace);
  	RunBenchmark(memTrace); // send reference memTrace
-// 	ExitNow(0);
-	return 0;
+	ExitNow(0);
 }

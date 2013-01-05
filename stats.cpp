@@ -6,21 +6,41 @@ extern StatsDS _gStats;
 
 void collectStat( uint32_t newFlags){
 	
-	++ _gStats.l1Ref;
+	++ _gStats.Ref;
 
 	if(newFlags	&	PAGEHIT){
-		++ _gStats.l1PageHit;
+		++ _gStats.PageHit;
 		assert( newFlags & BLKHIT);
 		assert( !(newFlags & PAGEMISS));
 	}
 	if(newFlags	&	PAGEMISS)
-		++ _gStats.l1PageMiss;
+		++ _gStats.PageMiss;
 	if(newFlags	&	BLKHIT){
-		++ _gStats.l1BlockHit;
+		++ _gStats.BlockHit;
 		assert( !(newFlags & BLKMISS) );
 	}
 	if(newFlags	&	BLKMISS)
-		++ _gStats.l1BlockMiss;
+		++ _gStats.BlockMiss;
 	if(newFlags	&	EVICT)
-		++ _gStats.l1BlockEvict;
+		++ _gStats.BlockEvict;
+}
+
+void printStats(){
+	
+	ofstream statStream;
+	string fileName(_gConfiguration.traceName);
+	fileName.append(".stat");
+	statStream.open(fileName);
+	if( ! statStream.good() ){
+		cerr<<"can not open stat file: "<<fileName<<endl;
+		return;
+	}
+	
+	
+	Stat * tempStat;
+	while( ( tempStat = _gStats.next() ) ){
+		statStream<< tempStat->print() <<endl;
+	}
+	
+	statStream.close();
 }

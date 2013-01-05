@@ -72,7 +72,7 @@ public:
 	}
 };
 
-void exitNow(unsigned code);
+void ExitNow(unsigned code);
 
 
 cacheAtom cacheAll(const uint64_t & key, cacheAtom new_value);

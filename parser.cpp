@@ -48,7 +48,7 @@ bool  getAndParseMSR(reqAtom *newn)
 			} else {
 				fprintf(stderr, "ARH: request time reach to the double boundry\n");
 				fprintf(stderr, "line: %s", line);
-				exitNow(1);
+				ExitNow(1);
 			}
 
 // 			if( old_time > newn->time){
@@ -66,7 +66,7 @@ bool  getAndParseMSR(reqAtom *newn)
 			if(old_time > newn->issueTime) {
 				fprintf(stderr, "ARH: new time is small equal than old time\n");
 				fprintf(stderr, "line: %s", line);
-				exitNow(1);
+				ExitNow(1);
 			}
 
 			old_time = newn->issueTime;
