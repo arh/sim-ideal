@@ -9,7 +9,15 @@ SRCS  =    \
 
 
 OBJS :=   $(SRCS:%.cpp=objs/%.o)
-CXX= g++
+
+ERR = $(shell icpc 2>/dev/null ; echo $? )
+
+ifeq "$(ERR)" "127"
+    CXX = g++
+else
+    CXX = icpc
+endif
+
 CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall
 
 all: main
