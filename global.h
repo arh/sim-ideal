@@ -19,10 +19,11 @@
 extern Configuration	_gConfiguration;
 const uint32_t READ = 1;
 const uint32_t WRITE = 2;
-const uint32_t MISS = 4;
-const uint32_t HIT = 8;
+const uint32_t PAGEMISS = 4;
+const uint32_t PAGEHIT = 8;
 const uint32_t EVICT = 16;
-
+const uint32_t BLKMISS = 32;
+const uint32_t BLKHIT = 64;
 
 class reqAtom
 {
@@ -74,6 +75,6 @@ public:
 void exitNow(unsigned code);
 
 
-cacheAtom cacheAll(const unsigned long long int& key, cacheAtom new_value);
+cacheAtom cacheAll(const uint64_t & key, cacheAtom new_value);
 
 #endif

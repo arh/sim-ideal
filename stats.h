@@ -18,8 +18,8 @@ public:
 	inline bool operator==(const Stat & other) const {
 		return (counter == other.counter); //this one is faster
 	}
-	inline bool operator++() {
-		return (++ counter); //this one is faster
+	inline bool operator++() {  // like ++ statA
+		return (++ counter); 
 	}
 	std::string print() {
 		return name.append(",\t").append(std::string( std::to_string(counter) ) );
@@ -32,7 +32,7 @@ class StatsDS {
 public:
 	Stat l1PageHit;
 	Stat l1PageMiss;
-	Stat l1PageEvict;
+	Stat l1Ref;
 	Stat l1BlockHit;
 	Stat l1BlockMiss;
 	Stat l1BlockEvict;

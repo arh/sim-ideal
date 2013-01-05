@@ -18,6 +18,7 @@ using namespace std;
 Configuration	_gConfiguration;
 bool _gTraceBased = false; 
 TestCache<uint64_t,cacheAtom> * _gTestCache;
+StatsDS _gStats; 
 
 
 void	readTrace(queue<reqAtom> & memTrace)

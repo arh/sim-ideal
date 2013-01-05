@@ -64,7 +64,7 @@ public:
 				PRINTV(cout << "Insert done on key: " << k << endl;);
 			}
 
-			return (status | MISS);
+			return (status | PAGEMISS);
 		} else {
 			PRINTV(cout << "Hit on key: " << k << endl;);
 // We do have it. Before returning value,
@@ -76,7 +76,7 @@ public:
 			        (*it).second.second
 			);
 			(*it).second.second = _key_tracker.rbegin().base();
-			return (status | HIT);
+			return (status | PAGEHIT | BLKHIT);
 		}
 	} //end operator ()
 
