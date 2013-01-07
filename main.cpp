@@ -31,7 +31,7 @@ void	readTrace(queue<reqAtom> & memTrace)
 		ExitNow(1);
 	}
 	reqAtom newAtom;
-	while(getAndParseMSR(&newAtom)){
+	while(getAndParseMSR(_gConfiguration.traceStream , &newAtom)){
 		memTrace.push(newAtom);
 		newAtom.clear();
 	}

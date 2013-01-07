@@ -3,6 +3,7 @@ SRCS  =    \
 	lru_stl.cpp \
 	global.cpp \
 	stats.cpp\
+	min.cpp\
 	main.cpp \
 	
 
@@ -10,12 +11,11 @@ SRCS  =    \
 
 OBJS :=   $(SRCS:%.cpp=objs/%.o)
 
-ERR = $(shell icpc 2>/dev/null ; echo $? )
-
-ifeq "$(ERR)" "127"
-    CXX = g++
-else
+ERR = $(shell which icpc >/dev/null; echo $?)
+ifeq "$(ERR)" "0"
     CXX = icpc
+else
+    CXX = g++
 endif
 
 CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall

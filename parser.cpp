@@ -11,7 +11,7 @@ double  WindowsTickToUnixmiliSeconds(long long windowsTicks)
 	return (double)((double)((double) windowsTicks / (double) WINDOWS_TICK) - SEC_TO_UNIX_EPOCH);
 }
 
-bool  getAndParseMSR(reqAtom *newn)
+bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 {
 	int bcount_temp = 0;
 	long long int time = 0;
@@ -22,13 +22,15 @@ bool  getAndParseMSR(reqAtom *newn)
 	char line[201];
 	static long lineno;
 	static double old_time = 0;
+	
+	assert( inputTrace.good() ); 
 
 	while(!fetched) {
 		
 
 		std::string lineString;
-		std::getline(_gConfiguration.traceStream,  lineString);
-		if(_gConfiguration.traceStream.eof()) {
+		std::getline(inputTrace,  lineString);
+		if(inputTrace.eof()) {
 			return false;
 		}
 		strcpy(line, lineString.c_str());

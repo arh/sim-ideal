@@ -25,6 +25,7 @@ const uint32_t EVICT = 16;
 const uint32_t BLKMISS = 32;
 const uint32_t BLKHIT = 64;
 
+const uint32_t INF = 0xFFFFFFFF;
 class reqAtom
 {
 public:
@@ -69,6 +70,9 @@ public:
 	}
 	void clear(){
 		req.clear();
+	}
+	uint32_t getLineNo(){
+		return req.lineNo;
 	}
 };
 

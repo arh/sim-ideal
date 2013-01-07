@@ -28,7 +28,7 @@ void collectStat( uint32_t newFlags){
 void printStats(){
 	
 	ofstream statStream;
-	string fileName(_gConfiguration.traceName);
+	string fileName(_gConfiguration.testName);
 	fileName.append(".stat");
 	statStream.open(fileName);
 	if( ! statStream.good() ){
@@ -36,7 +36,7 @@ void printStats(){
 		return;
 	}
 	
-	
+	statStream<<_gConfiguration.testName<<endl;
 	Stat * tempStat;
 	while( ( tempStat = _gStats.next() ) ){
 		statStream<< tempStat->print() <<endl;
