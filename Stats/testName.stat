@@ -1,0 +1,13 @@
+testName
+Total References,	20
+Total Reads,	0
+Total Writes,	20
+Page Read Hit,	0
+Page Read Miss,	0
+Block Read Hit,	0
+Block Read Miss,	0
+Page Write Hit,	1
+Page Write Miss,	19
+Block Write Hit,	1
+Block Write Miss,	0
+Block Evict,	9
