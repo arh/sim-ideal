@@ -27,7 +27,7 @@ using namespace std;
 // LRU-replacement cache of a function with signature
 // V f(K)
 template <typename K, typename V> 
-class lru_stl : public TestCache<K,V>
+class PageLRUCache : public TestCache<K,V>
 {
 public:
 // Key access history, most recent at back
@@ -37,7 +37,7 @@ public:
 	< K, pair<V, typename key_tracker_type::iterator> > 	key_to_value_type;
 // Constuctor specifies the cached function and
 // the maximum number of records to be stored.
-	lru_stl(
+	PageLRUCache(
 	        V(*f)(const K& , V),
 	        size_t c
 	) : _fn(f) , _capacity(c) {

@@ -7,7 +7,7 @@
 #include "parser.h"
 #include "lru_stl.h"
 #include "stats.h"
-
+#include "min.h"
 
 using namespace std;
 
@@ -50,13 +50,23 @@ void	Initialize(int argc, char **argv, queue<reqAtom> & memTrace)
 	readTrace(memTrace);
 	assert(memTrace.size() != 0);
 // 	lru_stl< uint64_t , cacheAtom> LRUCache(cacheAll, _gConfiguration.L1cacheSize);
-	_gTestCache = new lru_stl<uint64_t,cacheAtom>(cacheAll, _gConfiguration.L1cacheSize);
-	
-	cerr << "Configuration and setup done" << endl;
+	if( _gConfiguration.GetAlgName().compare("pagelru") == 0 ){
+		_gTestCache = new PageLRUCache<uint64_t,cacheAtom>(cacheAll, _gConfiguration.L1cacheSize);
+	}
+	else if ( _gConfiguration.GetAlgName().compare("pagemin") == 0	 ){
+		_gTestCache = new PageMinCache(cacheAll, _gConfiguration.L1cacheSize);
+	}
+	else{
+		cerr<< "Error: UnKnown Algorithm name " <<endl;
+	}
+	PRINTV (logfile << "Configuration and setup done" << endl;);
 	srand(0);
 }
 
 void RunBenchmark( queue<reqAtom> & memTrace){
+	
+	PRINTV (logfile << "Start benchmarking" << endl;);
+	
 	while( ! memTrace.empty() ){
 		reqAtom newReq = memTrace.front();
 		memTrace.pop();
@@ -72,10 +82,12 @@ void RunBenchmark( queue<reqAtom> & memTrace){
 			//cach access
 			newFlags = _gTestCache->access(tempReq.fsblkno,newCacheAtom,tempReq.flags);
 			collectStat(newFlags);
+			tempReq.clear();
 			++ offset;
 			-- newReq.reqSize;
 		}
 	}
+	PRINTV (logfile << "Benchmarking Done" << endl;);
 }
 
 int main(int argc, char **argv)

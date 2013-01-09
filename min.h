@@ -56,8 +56,7 @@ public:
 class PageMinCache : public TestCache<uint64_t,cacheAtom>
 {
 public:
-	// Key to value and key history iterator
-	typedef map< uint64_t, cacheAtom > 	key_to_value_type;
+	
 	// Constuctor specifies the cached function and
 	// the maximum number of records to be stored.
 	PageMinCache(
@@ -71,25 +70,25 @@ public:
 	
 	uint32_t access(const uint64_t& k  , cacheAtom& value, uint32_t status) {
 		assert(_capacity != 0);
-		PRINTV(cout << "Access key: " << k << endl;);
+		PRINTV(logfile << "Access key: " << k << endl;);
 		// Attempt to find existing record
 		const typename key_to_value_type::iterator it	= _key_to_value.find(k);
 		
 		if(it == _key_to_value.end()) {
 			// We don’t have it:
-			PRINTV(cout << "Miss on key: " << k << endl;);
+			PRINTV(logfile << "Miss on key: " << k << endl;);
 			// Evaluate function and create new record
 			const cacheAtom v = _fn(k, value);
 			
 			///ARH: write buffer inserts new elements only on write miss
 			if(status & WRITE) {
 				status |=  insert(k, v);
-				PRINTV(cout << "Insert done on key: " << k << endl;);
+				PRINTV(logfile << "Insert done on key: " << k << endl;);
 			}
 			
 			return (status | PAGEMISS);
 		} else {
-			PRINTV(cout << "Hit on key: " << k << endl;);
+			PRINTV(logfile << "Hit on key: " << k << endl;);
 			// We do have it. Do nothing in MIN cache
 			return (status | PAGEHIT | BLKHIT);
 		}
@@ -106,10 +105,12 @@ public:
 		return (_key_to_value.rbegin())->first;
 	}
 	void remove(const uint64_t& k) {
-		PRINTV(cout << "Removing key " << k << endl;);
+		PRINTV(logfile << "Removing key " << k << endl;);
 		assert(0); // not supported for MIN cache 
 	}
 private:
+	// Key to value and key history iterator
+	typedef map< uint64_t, cacheAtom > 	key_to_value_type;
 	// access ordering list , used to find next reference lineNo
 	AccessOrdering accessOrdering; 
 	priority_queue<HeapAtom,deque<HeapAtom>,CompHeapAtom> maxHeap;
@@ -123,21 +124,24 @@ private:
 	
 	// Record a fresh key-value pair in the cache
 	int insert( uint64_t k, cacheAtom v) {
-		PRINTV(cout << "insert key " << k  << endl;);
+		PRINTV(logfile << "insert key " << k  << endl;);
 		int status = 0;
 		// Method is only called on cache misses
 		assert(_key_to_value.find(k) == _key_to_value.end());
 		
 		// Make space if necessary
 		if(_key_to_value.size() == _capacity) {
-			PRINTV(cout << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
+			PRINTV(logfile << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
 			evict();
 			status = EVICT;
 		}
 		
 		// Record key and lineNo in the maxHeap
 		uint32_t tempLineNo = v.getLineNo();
-		HeapAtom tempHeapAtom(k , tempLineNo);
+		uint32_t nextAccessLineNo = accessOrdering.nextAccess(k,tempLineNo);
+		PRINTV(logfile<<"next access to key "<<k<<" is in lineNo "<<nextAccessLineNo<<endl;);
+		assert( tempLineNo <= _gConfiguration.maxLineNo|| nextAccessLineNo <= _gConfiguration.maxLineNo || nextAccessLineNo == INF );
+		HeapAtom tempHeapAtom(nextAccessLineNo, k);
 		maxHeap.push(tempHeapAtom);
 		
 		// Create the key-value entry,
@@ -152,15 +156,13 @@ private:
 		// Assert method is never called when cache is empty
 		// Identify the key with max lineNo
 		HeapAtom maxHeapAtom = maxHeap.top();
-		const typename key_to_value_type::iterator it
-		= _key_to_value.find(maxHeapAtom.key);
+		PRINTV(logfile<<" evicting victim key "<< maxHeapAtom.key <<" with next lineNo "<< maxHeapAtom.lineNo << endl;);
+		const typename key_to_value_type::iterator it 	= _key_to_value.find(maxHeapAtom.key);
 		assert(it != _key_to_value.end());
-		PRINTV(cout << "evicting victim key " << (*it).first << "and lineNo "<< maxHeapAtom.lineNo<< endl;);
 		// Erase both elements to completely purge record
 		_key_to_value.erase(it);
 		maxHeap.pop();
 	}
-
 };
 
 #endif //end lru_stl

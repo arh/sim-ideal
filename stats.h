@@ -39,30 +39,54 @@ private:
 	uint16_t returnIndex;
 public:
 	Stat Ref; //0
-	Stat PageHit;
-	Stat PageMiss;
-	Stat BlockHit;
-	Stat BlockMiss;
-	Stat BlockEvict; //5
+	
+	Stat PageRead; //1
+	Stat PageWrite; //2
+	
+	//read stats
+	Stat PageReadHit; //3
+	Stat PageReadMiss;
+	Stat BlockReadHit;
+	Stat BlockReadMiss;
+
+	// write stats
+	Stat PageWriteHit; //7
+	Stat PageWriteMiss;
+	Stat BlockWriteHit;
+	Stat BlockWriteMiss;
+	Stat BlockEvict; //11
 	
 	StatsDS()
 	: Ref("Total References")
-	, PageHit("Page Hit")
-	, PageMiss("Page Miss")
-	, BlockHit("Block Hit")
-	, BlockMiss("Block Miss")
+	, PageRead("Total Reads")
+	, PageWrite("Total Writes")
+	, PageReadHit("Page Read Hit")
+	, PageReadMiss("Page Read Miss")
+	, BlockReadHit("Block Read Hit")
+	, BlockReadMiss("Block Read Miss")
+	
+	, PageWriteHit("Page Write Hit")
+	, PageWriteMiss("Page Write Miss")
+	, BlockWriteHit("Block Write Hit")
+	, BlockWriteMiss("Block Write Miss")
 	, BlockEvict("Block Evict")
 	{
 		returnIndex=0;
 	}
 	Stat * next(){
 		switch(returnIndex){
-			case 0:	++returnIndex; return &Ref;
-			case 1:	++returnIndex; return &PageHit;
-			case 2:	++returnIndex; return &PageMiss;
-			case 3:	++returnIndex; return &BlockHit;
-			case 4:	++returnIndex; return &BlockMiss;
-			case 5:	++returnIndex; return &BlockEvict;
+			case 0:		++returnIndex; return &Ref;
+			case 1:		++returnIndex; return &PageRead;
+			case 2:		++returnIndex; return &PageWrite;
+			case 3:		++returnIndex; return &PageReadHit;
+			case 4:		++returnIndex; return &PageReadMiss;
+			case 5:		++returnIndex; return &BlockReadHit;
+			case 6:		++returnIndex; return &BlockReadMiss;
+			case 7:		++returnIndex; return &PageWriteHit;
+			case 8:		++returnIndex; return &PageWriteMiss;
+			case 9:		++returnIndex; return &BlockWriteHit;
+			case 10:	++returnIndex; return &BlockWriteMiss;
+			case 11:	++returnIndex; return &BlockEvict;
 			default:	return NULL;
 		}
 	}

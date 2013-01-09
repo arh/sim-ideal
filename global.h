@@ -17,6 +17,9 @@
 #endif
 
 extern Configuration	_gConfiguration;
+
+#define logfile _gConfiguration.logStream
+
 const uint32_t READ = 1;
 const uint32_t WRITE = 2;
 const uint32_t PAGEMISS = 4;

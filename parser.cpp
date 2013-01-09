@@ -31,6 +31,8 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 		std::string lineString;
 		std::getline(inputTrace,  lineString);
 		if(inputTrace.eof()) {
+			//end of file
+			_gConfiguration.maxLineNo = lineno; // record last line number 
 			return false;
 		}
 		strcpy(line, lineString.c_str());

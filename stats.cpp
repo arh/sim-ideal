@@ -7,32 +7,61 @@ extern StatsDS _gStats;
 void collectStat( uint32_t newFlags){
 	
 	++ _gStats.Ref;
-
-	if(newFlags	&	PAGEHIT){
-		++ _gStats.PageHit;
-		assert( newFlags & BLKHIT);
-		assert( !(newFlags & PAGEMISS));
+	
+	// find read or write count
+	
+	if(newFlags	&	READ){
+		++_gStats.PageRead ;
+		// Collect Read stats
+		if(newFlags	&	PAGEHIT){
+			++ _gStats.PageReadHit;
+			assert( newFlags & BLKHIT);
+			assert( !(newFlags & PAGEMISS));
+		}
+		if(newFlags	&	PAGEMISS)
+			++ _gStats.PageReadMiss;
+		if(newFlags	&	BLKHIT){
+			++ _gStats.BlockWriteHit;
+			assert( !(newFlags & BLKMISS) );
+		}
+		if(newFlags	&	BLKMISS)
+			++ _gStats.BlockReadMiss;
 	}
-	if(newFlags	&	PAGEMISS)
-		++ _gStats.PageMiss;
-	if(newFlags	&	BLKHIT){
-		++ _gStats.BlockHit;
-		assert( !(newFlags & BLKMISS) );
+	else if(newFlags	&	WRITE){
+		++_gStats.PageWrite;
+		// Collect Read stats
+		if(newFlags	&	PAGEHIT){
+			++ _gStats.PageWriteHit;
+			assert( newFlags & BLKHIT);
+			assert( !(newFlags & PAGEMISS));
+		}
+		if(newFlags	&	PAGEMISS)
+			++ _gStats.PageWriteMiss;
+		if(newFlags	&	BLKHIT){
+			++ _gStats.BlockWriteHit;
+			assert( !(newFlags & BLKMISS) );
+		}
+		if(newFlags	&	BLKMISS)
+			++ _gStats.BlockWriteMiss;
+		
+		if(newFlags	&	EVICT)
+			++ _gStats.BlockEvict;
 	}
-	if(newFlags	&	BLKMISS)
-		++ _gStats.BlockMiss;
-	if(newFlags	&	EVICT)
-		++ _gStats.BlockEvict;
+	else{
+		cerr<<"Error: Unknown request type in stat collection"<<endl;
+		assert(0);
+	}
 }
 
 void printStats(){
 	
 	ofstream statStream;
-	string fileName(_gConfiguration.testName);
+	string fileName("Stats/");
+	fileName.append(_gConfiguration.testName);
 	fileName.append(".stat");
-	statStream.open(fileName);
+	statStream.open(fileName, ios::out|ios::app);
 	if( ! statStream.good() ){
-		cerr<<"can not open stat file: "<<fileName<<endl;
+		cerr<<"Error: can not open stat file: "<<fileName<<endl;
 		return;
 	}
 	

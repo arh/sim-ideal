@@ -2,6 +2,7 @@
 #define __CONFIGURATION__
 
 #include <string>
+#include <ctime>
 #include <assert.h>
 #include <iostream>
 #include <fstream>
@@ -9,25 +10,29 @@
 #include "cpp_framework.h"
 
 
+
 extern bool _gTraceBased;
+
 
 class Configuration
 {
 public:
 	char* traceName;
 	std::ifstream traceStream;
+	std::ofstream logStream; 
 	char*	algName;
 	char*   testName;
 	uint64_t L1cacheSize;
 	uint64_t fsblkSize;
 	uint64_t ssdblkSize;
 	uint32_t ssd2fsblkRatio;
+	uint64_t maxLineNo;
 
 
 
 	bool read(int argc, char **argv) {
 
-		if(argc < 4)
+		if(argc < 5)
 			return false;
 
 		int curr_arg = 1;
@@ -66,10 +71,23 @@ public:
 		fsblkSize = 4096;
 		ssdblkSize = 512 * 1024 ;
 		ssd2fsblkRatio = ssdblkSize / fsblkSize;
+		maxLineNo = 0;
+		logStream.open("log.txt",std::ios::trunc);
+		
+		//print start time
+		time_t now = time(0);
+		tm* localtm = localtime(&now);
+		logStream<<"Start Logging at "<< asctime(localtm) <<std::endl;
 	}
 
 	~Configuration() {
 		traceStream.close();
+		
+		//print end time
+		time_t now = time(0);
+		tm* localtm = localtime(&now);
+		logStream<<"End Logging at "<< asctime(localtm) <<std::endl;
+		logStream.close();
 	}
 
 };

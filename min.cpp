@@ -16,7 +16,7 @@ void AccessOrdering::build(){
 		cerr<<"can not open file to build access ordering"<<endl;
 		ExitNow(1);
 	}
-	PRINTV(cerr<<"Building AccessOrdering...."<<endl;);
+	PRINTV(logfile<<"Building AccessOrdering...."<<endl;);
 	reqAtom newAtom;
 	uint32_t lineNo =0 ;
 	while(getAndParseMSR(zahraStream ,&newAtom)){
@@ -46,9 +46,9 @@ void AccessOrdering::build(){
 		}
 		newAtom.clear();
 	}
-	PRINTV(cerr<<"Building AccessOrdering finished. "<<endl;);
-	PRINTV(cerr<<" ... unique requests: "<< hashTable.size()<<endl; );
-	PRINTV(cerr<<" ... total requests: "<< lineNo<< endl; );
+	PRINTV(logfile<<"Building AccessOrdering finished. "<<endl;);
+	PRINTV(logfile<<" ... unique requests: "<< hashTable.size()<<endl; );
+	PRINTV(logfile<<" ... total requests: "<< lineNo<< endl; );
 	zahraStream.close();
 }
 

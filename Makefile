@@ -19,7 +19,7 @@ else
 endif
 
 CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall
-CPPFLAG = -g -DDEBUG  -std=c++0x -Wall
+# CPPFLAG = -g -DDEBUG  -std=c++0x -Wall
 
 all: main
 
