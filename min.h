@@ -203,7 +203,7 @@ public:
 				PRINTV(logfile << "Insert done on key: " << k << endl;);
 			}
 			
-			return (status | PAGEMISS);
+			return (status | BLKMISS);
 		} else {
 			PRINTV(logfile << "Hit on Block: " << value.getSsdblkno() << endl;);
 			status |= BLKHIT;

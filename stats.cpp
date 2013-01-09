@@ -24,8 +24,10 @@ void collectStat( uint32_t newFlags){
 			++ _gStats.BlockWriteHit;
 			assert( !(newFlags & BLKMISS) );
 		}
-		if(newFlags	&	BLKMISS)
+		if(newFlags	&	BLKMISS){
 			++ _gStats.BlockReadMiss;
+			++ _gStats.PageReadMiss;
+		}
 	}
 	else if(newFlags	&	WRITE){
 		++_gStats.PageWrite;
@@ -41,8 +43,10 @@ void collectStat( uint32_t newFlags){
 			++ _gStats.BlockWriteHit;
 			assert( !(newFlags & BLKMISS) );
 		}
-		if(newFlags	&	BLKMISS)
+		if(newFlags	&	BLKMISS){
 			++ _gStats.BlockWriteMiss;
+			++ _gStats.PageWriteMiss;
+		}
 		
 		if(newFlags	&	EVICT)
 			++ _gStats.BlockEvict;
