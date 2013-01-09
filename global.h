@@ -77,6 +77,9 @@ public:
 	uint32_t getLineNo(){
 		return req.lineNo;
 	}
+	uint64_t getSsdblkno(){
+		return req.ssdblkno;
+	}
 };
 
 void ExitNow(unsigned code);
