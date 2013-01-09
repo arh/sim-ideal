@@ -11,11 +11,11 @@ Name=small
 Type=Native Application
 
 [Launch][Launch Configuration 0][Data]
-Arguments=traces/small.msr pagemin testName 10
+Arguments=traces/small.msr blockmin testName 1000
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
-Executable=file:///home/arh/sim-ideal/sim-ideal
+Executable=file:///home/haghd002/sim-ideal/sim-ideal
 External Terminal=konsole --noclose --workdir %workdir -e %exe
 Project Target=
 Use External Terminal=false
@@ -29,15 +29,15 @@ Name=10K
 Type=Native Application
 
 [Launch][Launch Configuration 1][Data]
-Arguments=\straces/src_10K.csv pagemin src_10K 100
+Arguments=\straces/src_10K.csv blockmin src_10K 1000
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
-Executable=file:///home/arh/sim-ideal/sim-ideal
+Executable=file:///home/haghd002/sim-ideal/sim-ideal
 External Terminal=konsole --noclose --workdir %workdir -e %exe
 Project Target=
 Use External Terminal=false
-Working Directory=file:///home/arh/sim-ideal
+Working Directory=file:///home/haghd002/sim-ideal
 isExecutable=true
 
 [Project]

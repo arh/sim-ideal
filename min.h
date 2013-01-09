@@ -227,6 +227,10 @@ public:
 		}
 		
 	} //end access
+	void remove(const uint64_t& k) {
+		PRINTV(logfile << "Removing key " << k << endl;);
+		assert(0); // not supported for MIN cache 
+	}
 
 private:
 	// Key to value and key history iterator

@@ -109,7 +109,6 @@ void AccessOrdering::blockBaseBuild(){
 
 uint32_t AccessOrdering::nextAccess(uint64_t key, uint32_t currLine)
 {
-	assert(key);
 	if(builded== false){
 		cerr<<"Access ordering list is not ready"<<endl;
 		assert(0);

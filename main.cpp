@@ -56,6 +56,9 @@ void	Initialize(int argc, char **argv, queue<reqAtom> & memTrace)
 	else if ( _gConfiguration.GetAlgName().compare("pagemin") == 0	 ){
 		_gTestCache = new PageMinCache(cacheAll, _gConfiguration.L1cacheSize);
 	}
+	else if ( _gConfiguration.GetAlgName().compare("blockmin") == 0	 ){
+		_gTestCache = new BlockMinCache(cacheAll, _gConfiguration.L1cacheSize);
+	}
 	else{
 		cerr<< "Error: UnKnown Algorithm name " <<endl;
 	}
@@ -64,9 +67,7 @@ void	Initialize(int argc, char **argv, queue<reqAtom> & memTrace)
 }
 
 void RunBenchmark( queue<reqAtom> & memTrace){
-	
 	PRINTV (logfile << "Start benchmarking" << endl;);
-	
 	while( ! memTrace.empty() ){
 		reqAtom newReq = memTrace.front();
 		memTrace.pop();
@@ -82,6 +83,7 @@ void RunBenchmark( queue<reqAtom> & memTrace){
 			//cach access
 			newFlags = _gTestCache->access(tempReq.fsblkno,newCacheAtom,tempReq.flags);
 			collectStat(newFlags);
+			newCacheAtom.clear();
 			tempReq.clear();
 			++ offset;
 			-- newReq.reqSize;
