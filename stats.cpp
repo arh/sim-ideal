@@ -1,3 +1,5 @@
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "stats.h"
 #include "global.h"
 
@@ -47,7 +49,6 @@ void collectStat( uint32_t newFlags){
 			++ _gStats.BlockWriteMiss;
 			++ _gStats.PageWriteMiss;
 		}
-		
 		if(newFlags	&	EVICT)
 			++ _gStats.BlockEvict;
 	}
@@ -60,6 +61,7 @@ void collectStat( uint32_t newFlags){
 void printStats(){
 	
 	ofstream statStream;
+	mkdir("Stats", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	string fileName("Stats/");
 	fileName.append(_gConfiguration.testName);
 	fileName.append(".stat");
