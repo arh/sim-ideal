@@ -6,9 +6,24 @@
 #include "min.h"
 #include "baseCache.h"
 
+class CompCacheAtom{
+public:
+	bool operator()(  cacheAtom & a ,  cacheAtom & b ){
+		assert (a.getSsdblkno() == b.getSsdblkno() );
+		return (a.getFsblkno() < b.getFsblkno() );
+	}
+};
+
 class OwbpCacheBlock{
-  
-}
+  set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > blockSet;
+  uint64_t nextRefIndex;
+  uint32_t coldPageCounter;
+public:
+	OwbpCacheBlock(){
+		nextRefIndex = 0; 
+		coldPageCounter = 0; 
+	}
+};
 
 class OwbpCache : public TestCache<uint64_t,cacheAtom>
 {
@@ -20,7 +35,7 @@ public:
 		size_t c
 	) : _fn(f) , _capacity(c) {
 		///ARH: Commented for single level cache implementation
-		        assert ( _capacity!=0 );
+		    assert ( _capacity!=0 );
 			accessOrdering.blockBaseBuild();
 	}
 	// Obtain value of the cached function for k

@@ -80,6 +80,9 @@ public:
 	uint64_t getSsdblkno(){
 		return req.ssdblkno;
 	}
+	uint64_t getFsblkno(){
+		return req.fsblkno;
+	}
 };
 
 void ExitNow(unsigned code);
