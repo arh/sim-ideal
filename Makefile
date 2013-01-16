@@ -4,6 +4,7 @@ SRCS  =    \
 	global.cpp \
 	stats.cpp\
 	min.cpp\
+	sharedDS.cpp\
 	owbp.cpp\
 	main.cpp \
 	

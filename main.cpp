@@ -1,6 +1,6 @@
 #include <iostream>
 #include <time.h>
-#include <queue>
+#include <deque>
 #include "global.h"
 #include "cpp_framework.h"
 #include "configuration.h"
@@ -18,10 +18,11 @@ using namespace std;
 Configuration	_gConfiguration;
 bool _gTraceBased = false; 
 TestCache<uint64_t,cacheAtom> * _gTestCache;
-StatsDS _gStats; 
+StatsDS _gStats;
+deque<reqAtom> memTrace; // in memory trace file
 
 
-void	readTrace(queue<reqAtom> & memTrace)
+void	readTrace(deque<reqAtom> & memTrace)
 {
 	assert(_gTraceBased); // read from stdin is not implemented
 	_gConfiguration.traceStream.open(_gConfiguration.traceName, ifstream::in);
@@ -32,7 +33,7 @@ void	readTrace(queue<reqAtom> & memTrace)
 	}
 	reqAtom newAtom;
 	while(getAndParseMSR(_gConfiguration.traceStream , &newAtom)){
-		memTrace.push(newAtom);
+		memTrace.push_back(newAtom);
 		newAtom.clear();
 	}
 	
@@ -40,7 +41,7 @@ void	readTrace(queue<reqAtom> & memTrace)
 	
 }
 
-void	Initialize(int argc, char **argv, queue<reqAtom> & memTrace)
+void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 {
 	if(!_gConfiguration.read(argc, argv)) {
 		cerr << "USAGE: <tracefilename> <AlgName> <TestName> <L1Size>" << endl;
@@ -66,11 +67,11 @@ void	Initialize(int argc, char **argv, queue<reqAtom> & memTrace)
 	srand(0);
 }
 
-void RunBenchmark( queue<reqAtom> & memTrace){
+void RunBenchmark( deque<reqAtom> & memTrace){
 	PRINTV (logfile << "Start benchmarking" << endl;);
 	while( ! memTrace.empty() ){
 		reqAtom newReq = memTrace.front();
-		memTrace.pop();
+		memTrace.pop_front();
 		
 		unsigned offset=0;
 		while(newReq.reqSize){
@@ -94,7 +95,7 @@ void RunBenchmark( queue<reqAtom> & memTrace){
 
 int main(int argc, char **argv)
 {
-	queue<reqAtom> memTrace; // in memory trace file
+
 	//read benchmark configuration
 	Initialize(argc, argv,memTrace);
  	RunBenchmark(memTrace); // send reference memTrace

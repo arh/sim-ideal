@@ -10,48 +10,12 @@
 #include "iostream"
 #include "global.h"
 #include "baseCache.h"
+#include "sharedDS.h" 
 
 using namespace std;
-typedef unordered_map<uint64_t,queue<uint32_t>> AOHashTable; //access ordering hash table
 
-class AccessOrdering{
-private:
-	AOHashTable hashTable;
-	bool builded;
-	
-public:
-	AccessOrdering(){
-		hashTable.clear();
-		builded=false;
-	}
-	void pageBaseBuild();
-	void blockBaseBuild();
-	
-	uint32_t nextAccess( uint64_t key, uint32_t currLine);
-	
-	
-};
-// lineno_2_key heap nodes
-class HeapAtom{
-public:
-	uint32_t lineNo;
-	uint64_t key;
-	HeapAtom(){
-		lineNo=0;
-		key=0;
-	}
-	HeapAtom(uint32_t newLine, uint64_t newKey){
-		lineNo =  newLine; 
-		key  = newKey;
-	}
-};
 
-class CompHeapAtom{
-public:
-	bool operator()( const HeapAtom & a , const HeapAtom & b ){
-		return (a.lineNo < b.lineNo);
-	}
-};
+
 // Class providing fixed-size (by number of records)
 // LRU-replacement cache of a function with signature
 // V f(K)

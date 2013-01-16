@@ -1,10 +1,17 @@
 #ifndef OWBP_H
 #define OWBP_H
 #include <unordered_map>
-
+#include <boost/bimap.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
+#include <boost/bimap/multiset_of.hpp>
+// #include <boost/
 #include "glob.h"
-#include "min.h"
+#include "sharedDS.h"
 #include "baseCache.h"
+
+using namespace std; 
+using namespace boost;
+using namespace bimaps;
 
 class CompCacheAtom{
 public:
@@ -14,16 +21,37 @@ public:
 	}
 };
 
+
+class CompBlkCacheAtom{
+public:
+	bool operator()(  cacheAtom & a ,  cacheAtom & b ){
+		assert (a.getSsdblkno() == b.getSsdblkno() );
+		return (a.getFsblkno() < b.getFsblkno() );
+	}
+};
+
 class OwbpCacheBlock{
-  set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > blockSet;
-  uint64_t nextRefIndex;
-  uint32_t coldPageCounter;
+	set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > blockSet;
+	uint64_t nextRefIndex;
+	uint32_t coldPageCounter;
 public:
 	OwbpCacheBlock(){
 		nextRefIndex = 0; 
 		coldPageCounter = 0; 
 	}
 };
+
+
+
+typedef bimap< unordered_set_of<cacheAtom,CompCacheAtom> , //SsdBlock_type
+HERE
+		multiset_of<uint32_t> // future distance
+		> BiMapType; 
+		
+typedef BiMapType::value_type BmAtom;
+
+
+
 
 class OwbpCache : public TestCache<uint64_t,cacheAtom>
 {
@@ -37,57 +65,19 @@ public:
 		///ARH: Commented for single level cache implementation
 		    assert ( _capacity!=0 );
 			accessOrdering.blockBaseBuild();
+			currSize = 0; 
 	}
 	// Obtain value of the cached function for k
-	
-	uint32_t access(const uint64_t& k  , cacheAtom& value, uint32_t status) {
-		assert(_capacity != 0);
-		PRINTV(logfile << "Access key: " << k << endl;);
-		// Attempt to find existing record
-		const typename key_to_block_type::iterator it	= _key_to_block.find(value.getSsdblkno());
-		
-		if(it == _key_to_block.end()) {
-			// We don’t have it:
-			PRINTV(logfile << "Miss on block: " << value.getSsdblkno() << endl;);
-			// Evaluate function and create new record
-			const cacheAtom v = _fn(k, value);
-			
-			///ARH: write buffer inserts new elements only on write miss
-			if(status & WRITE) {
-				status |=  insert(k, v);
-				PRINTV(logfile << "Insert done on key: " << k << endl;);
-			}
-			
-			return (status | BLKMISS);
-		} else {
-			PRINTV(logfile << "Hit on Block: " << value.getSsdblkno() << endl;);
-			status |= BLKHIT;
-			
-			SsdBlock_type tempBlock;
-			SsdBlock_type::iterator pageit;
-			
-			tempBlock = it->second;
-			pageit = tempBlock.find(k);
-			
-			if(pageit == tempBlock.end() ){
-				PRINTV(logfile << "Miss on key: " << k << endl;);
-				tempBlock.insert(k);
-				return (status | PAGEMISS );
-			}
-			else{
-				PRINTV(logfile << "Hit on key: " << k << endl;);
-				return (status | PAGEHIT );
-			}
-			// We do have it. Do nothing in MIN cache
-		}
-		
-	} //end access
+	// access to a page 
+	uint32_t access(const uint64_t& k  , cacheAtom& value, uint32_t status);
 	void remove(const uint64_t& k) {
 		PRINTV(logfile << "Removing key " << k << endl;);
 		assert(0); // not supported for MIN cache 
 	}
 
 private:
+	BiMapType BiMap;  
+	size_t currSize;  // current number of pages in the cache
 	// Key to value and key history iterator
 	typedef set<uint64_t> SsdBlock_type;
 	typedef map< uint64_t, SsdBlock_type > 	key_to_block_type;
@@ -103,39 +93,7 @@ private:
 	key_to_block_type _key_to_block;
 	
 	// Record a fresh key-value pair in the cache
-	int insert( uint64_t k, cacheAtom v) {
-		PRINTV(logfile << "insert key " << k  << endl;);
-		int status = 0;
-		// Method is only called on cache misses
-		assert(_key_to_block.find(v.getSsdblkno()) == _key_to_block.end());
-		
-		// Make space if necessary
-		if(_key_to_block.size() == _capacity/_gConfiguration.ssd2fsblkRatio) {
-			PRINTV(logfile << "Cache is Full " << _key_to_block.size() << " blocks" << endl;);
-			evict();
-			status = EVICT;
-		}
-		
-		// Record ssdblkno and lineNo in the maxHeap
-		uint32_t tempLineNo = v.getLineNo();
-		uint64_t tempSsdblkno = v.getSsdblkno();
-		PRINTV(logfile<<"key "<<k<<" is in ssdblock "<< tempSsdblkno<<endl;);
-		uint32_t nextAccessLineNo = accessOrdering.nextAccess(tempSsdblkno,tempLineNo);
-		PRINTV(logfile<<"next access to block "<<tempSsdblkno<<" is in lineNo "<<nextAccessLineNo<<endl;);
-		assert( tempLineNo <= _gConfiguration.maxLineNo|| nextAccessLineNo <= _gConfiguration.maxLineNo || nextAccessLineNo == INF );
-		HeapAtom tempHeapAtom(nextAccessLineNo, tempSsdblkno);
-		maxHeap.push(tempHeapAtom);
-		
-		// Create the key-value entry,
-		SsdBlock_type tempBlock;
-		tempBlock.clear();
-		tempBlock.insert(k);
-		// linked to the usage record.
-		_key_to_block.insert(make_pair(v.getSsdblkno(),tempBlock));
-		// No need to check return,
-		// given previous assert.
-		return status;
-	}
+	uint32_t insert( uint64_t k, cacheAtom v);
 	// Purge the least-recently-used element in the cache
 	void evict() {
 		// Assert method is never called when cache is empty
