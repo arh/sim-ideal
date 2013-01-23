@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <map>
 #include <queue>
+#include <deque>
 #include <list>
 #include <set>
 #include "assert.h"
@@ -63,11 +64,27 @@ public:
 };
 
 
+struct nextPageRef{
+  uint64_t pageID; 
+  uint32_t distance;
+  uint32_t lineNo;
+  
+  nextPageRef(){
+    clear();
+  }
+  void clear(){
+    pageID = 0; 
+    distance = 0; 
+    lineNo = 0;   
+  }
+};
+
 
 
 
 // 	uniqFutureDist();
 uint32_t getFutureBlkDist(const uint64_t SsdBlknokey, uint32_t currLine);
 
+deque<nextPageRef> getFuturePageRef(const uint64_t SsdBlknokey, uint32_t currLine);
 
 #endif

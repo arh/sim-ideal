@@ -31,20 +31,48 @@ public:
 };
 
 class OwbpCacheBlock{
-	set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > blockSet;
-	uint64_t nextRefIndex;
+	set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > pageSet;
 	uint32_t coldPageCounter;
+	deque<nextPageRef> futurePageQ; 
+	uint64_t BlkID;
 public:
-	OwbpCacheBlock(){
-		nextRefIndex = 0; 
-		coldPageCounter = 0; 
+
+	OwbpCacheBlock(deque<nextPageRef> inFuturePageQ, cacheAtom& firstValue){
+		clear();
+		pageSet.insert(firstValue);
+		coldPageCounter=findColdPageCount();
+		futurePageQ = inFuturePageQ;
+		BlkID = firstValue.getSsdblkno();
 	}
+
+	void clear(){
+		coldPageCounter = 0;
+		pageSet.clear();
+		futurePageQ.clear();
+		BlkID = 0;
+	}
+	uint32_t getMinFutureDist(){
+		return futurePageQ.front().distance;
+	}
+	
+	uint32_t findColdPageCount(){
+		deque<nextPageRef>::iterator it; 
+		uint32_t coldness=0;
+		for( it = futurePageQ.begin(); it != futurePageQ.end() ; ++ it){
+			if( it->distance < _gConfiguration.futureWindowSize ) // max window size
+				++ coldness;
+			else
+				break;
+		}
+		return coldness;
+	}
+	
+	uint32_t accessPage(uint64_t pageID , cacheAtom& value);
 };
 
 
 
-typedef bimap< unordered_set_of<cacheAtom,CompCacheAtom> , //SsdBlock_type
-HERE
+typedef bimap< uint64_t , //SsdBlock_ID
 		multiset_of<uint32_t> // future distance
 		> BiMapType; 
 		
@@ -64,7 +92,6 @@ public:
 	) : _fn(f) , _capacity(c) {
 		///ARH: Commented for single level cache implementation
 		    assert ( _capacity!=0 );
-			accessOrdering.blockBaseBuild();
 			currSize = 0; 
 	}
 	// Obtain value of the cached function for k
@@ -76,36 +103,23 @@ public:
 	}
 
 private:
-	BiMapType BiMap;  
+	BiMapType BiMap;  //bimap between blkID and blkColdness
 	size_t currSize;  // current number of pages in the cache
-	// Key to value and key history iterator
-	typedef set<uint64_t> SsdBlock_type;
-	typedef map< uint64_t, SsdBlock_type > 	key_to_block_type;
-	// access ordering list , used to find next reference lineNo
-	AccessOrdering accessOrdering; 
-	priority_queue<HeapAtom,deque<HeapAtom>,CompHeapAtom> maxHeap;
+	map< uint64_t, OwbpCacheBlock > 	blkID_2_DS;//map blkID to blk DS (all blocks in the cache)
+	queue<uint64_t> infinitDistBlkIDQ;
+	
+	
 	// The function to be cached
 	cacheAtom(*_fn)(const uint64_t& , cacheAtom);
 	// Maximum number of key-value pairs to be retained
 	const size_t _capacity;
 	
-	// Key-to-value lookup
-	key_to_block_type _key_to_block;
-	
 	// Record a fresh key-value pair in the cache
 	uint32_t insert( uint64_t k, cacheAtom v);
 	// Purge the least-recently-used element in the cache
-	void evict() {
-		// Assert method is never called when cache is empty
-		// Identify the key with max lineNo
-		HeapAtom maxHeapAtom = maxHeap.top();
-		PRINTV(logfile<<" evicting victim block "<< maxHeapAtom.key <<" with next lineNo "<< maxHeapAtom.lineNo << endl;);
-		const typename key_to_block_type::iterator it 	= _key_to_block.find(maxHeapAtom.key);
-		assert(it != _key_to_block.end());
-		// Erase both elements to completely purge record
-		_key_to_block.erase(it);
-		maxHeap.pop();
-	}
+	void evict(); 
+	uint32_t blkHitAccess(const uint64_t& PageNo  , cacheAtom& value, uint32_t status);
+	void insertNewBlk( cacheAtom& value);
 };
 
 

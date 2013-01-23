@@ -22,11 +22,12 @@ public:
 	std::ofstream logStream; 
 	char*	algName;
 	char*   testName;
-	uint64_t L1cacheSize;
+	uint64_t L1cacheSize; // in page 
 	uint64_t fsblkSize;
 	uint64_t ssdblkSize;
 	uint32_t ssd2fsblkRatio;
 	uint64_t maxLineNo;
+	uint32_t futureWindowSize; 
 
 
 
@@ -48,6 +49,7 @@ public:
 		algName 	= argv[curr_arg++];
 		testName	= argv[curr_arg++];
 		L1cacheSize = CMDR::Integer::parseInt(argv[curr_arg++]);
+		futureWindowSize = L1cacheSize;
 		return true;
 	}
 

@@ -1,5 +1,6 @@
 #include <unordered_map>
 #include <queue>
+#include <deque>
 #include "global.h"
 #include "min.h"
 #include "configuration.h"
@@ -153,4 +154,33 @@ uint32_t getFutureBlkDist(const uint64_t SsdBlknokey, uint32_t currLine){
 		}
 	}
 	return INF;
+}
+
+deque<nextPageRef> getFuturePageRef(const uint64_t SsdBlknokey, uint32_t currLine){
+
+	deque<nextPageRef> retDeque; 
+	nextPageRef tempPageRef;
+	
+	reqAtom newAtom;
+	
+	deque<reqAtom>::iterator it; // iterate over the memTrace
+	
+	unordered_set<uint64_t> uniqSet; 
+	uniqSet.clear();
+	
+	for( it = memTrace.begin() ; it != memTrace.end() ; ++ it ){
+		assert(  currLine < it->lineNo );
+		uniqSet.insert(it->lineNo);
+		if(uniqSet.size() < _gConfiguration.futureWindowSize ) // hopefully size() complexity is O(1)
+			return retDeque;
+		if( SsdBlknokey == it->ssdblkno ){
+			tempPageRef.pageID = it->fsblkno;
+			tempPageRef.lineNo = it->lineNo;
+			tempPageRef.distance = uniqSet.size();
+			retDeque.push_back(tempPageRef);
+		}
+		tempPageRef.clear();
+	}
+	
+	return retDeque;
 }
