@@ -31,6 +31,7 @@ public:
 };
 
 class OwbpCacheBlock{
+private:
 	set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > pageSet;
 	uint32_t coldPageCounter;
 	deque<nextPageRef> futurePageQ; 
@@ -65,6 +66,9 @@ public:
 				break;
 		}
 		return coldness;
+	}
+	uint32_t getColdness(){
+		return coldPageCounter;
 	}
 	
 	uint32_t accessPage(uint64_t pageID , cacheAtom& value);
@@ -118,7 +122,7 @@ private:
 	uint32_t insert( uint64_t k, cacheAtom v);
 	// Purge the least-recently-used element in the cache
 	void evict(); 
-	uint32_t blkHitAccess(const uint64_t& PageNo  , cacheAtom& value, uint32_t status);
+	uint32_t blkHitAccess(const uint64_t& PageNo  , cacheAtom& value, uint32_t status, map< uint64_t, OwbpCacheBlock >::iterator it);
 	void insertNewBlk( cacheAtom& value);
 };
 

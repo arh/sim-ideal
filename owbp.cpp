@@ -1,9 +1,5 @@
 #include "owbp.h"
 
-uint32_t OwbpCache::blkHitAccess(const uint64_t& PageNo  , cacheAtom& value, uint32_t status){
-	
-}
-
 void OwbpCache::insertNewBlk(cacheAtom& value){
 	uint64_t currSsdBlkNo = value.getSsdblkno();
 	uint32_t currLine = value.getLineNo();
@@ -13,17 +9,27 @@ void OwbpCache::insertNewBlk(cacheAtom& value){
 	
 	OwbpCacheBlock tempBlock(nextPages,value);
 	
+	//insert in bimap
+	BmAtom bmAtom(currSsdBlkNo, tempBlock.getColdness() );
+	BiMap.insert( bmAtom ); 
+	
+	
 	ret = blkID_2_DS.insert(pair<uint64_t,OwbpCacheBlock>(currSsdBlkNo,tempBlock));
+	
 	
 	assert ( ret.second == true ) ; 
 	
 	
 }
 
+uint32_t OwbpCache::blkHitAccess(const uint64_t& k  , cacheAtom& value, uint32_t status, map< uint64_t, OwbpCacheBlock >::iterator 	it){
+// 	OwbpCacheBlock = 
+}
 // access to a page 
 uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t status) {
 	
 	assert(_capacity != 0);
+	assert(k == value.getFsblkno());
 	PRINTV(logfile << "Access page number: " << k << endl;);
 	uint64_t currSsdBlkNo = value.getSsdblkno();
 	// Attempt to find existing block 
@@ -33,13 +39,13 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 	if( blkit ==  blkID_2_DS.end() ) {
 		status |= BLKMISS | PAGEMISS;
 		if(status & WRITE){
-			insertNewBlk(k, value);
+			insertNewBlk(value);
 		}
 	}
 	else{
 		status |= BLKHIT;
 		//PAGEMISS or hit to status is return value of this function
-		status |= blkHitAccess(k, value, status);
+		status |= blkHitAccess(k, value, status, blkit);
 	}
 	
 	return status;
