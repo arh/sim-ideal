@@ -1,11 +1,18 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 #include "configuration.h"
+#include <boost/concept_check.hpp>
 
 #ifdef DEBUG
 #define PRINT(X)	do { X	}while(false)
 #else
 #define PRINT(X)
+#endif
+
+#ifdef DEBUG
+#define IFDEBUG(X)	do { X	}while(false)
+#else
+#define IFDEBUG(X)
 #endif
 
 
@@ -74,14 +81,20 @@ public:
 	void clear(){
 		req.clear();
 	}
-	uint32_t getLineNo(){
+	uint32_t getLineNo() const {
 		return req.lineNo;
 	}
-	uint64_t getSsdblkno(){
+	uint64_t getSsdblkno() const {
 		return req.ssdblkno;
 	}
-	uint64_t getFsblkno(){
+	uint64_t getFsblkno() const {
 		return req.fsblkno;
+	}
+	reqAtom getReq() const {
+		return req;
+	}
+	void update( const cacheAtom & newValue){
+		req = newValue.getReq();
 	}
 };
 

@@ -15,7 +15,7 @@ using namespace bimaps;
 
 class CompCacheAtom{
 public:
-	bool operator()(  cacheAtom & a ,  cacheAtom & b ){
+	bool operator()(  const cacheAtom a ,  const cacheAtom  b ) {
 		assert (a.getSsdblkno() == b.getSsdblkno() );
 		return (a.getFsblkno() < b.getFsblkno() );
 	}
@@ -32,7 +32,8 @@ public:
 
 class OwbpCacheBlock{
 private:
-	set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > pageSet;
+	typedef set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > PageSetType;
+	PageSetType pageSet;
 	uint32_t coldPageCounter;
 	deque<nextPageRef> futurePageQ; 
 	uint64_t BlkID;
@@ -44,6 +45,9 @@ public:
 		coldPageCounter=findColdPageCount();
 		futurePageQ = inFuturePageQ;
 		BlkID = firstValue.getSsdblkno();
+	}
+	size_t getPageSetSize() const{
+		return pageSet.size();
 	}
 
 	void clear(){
@@ -71,7 +75,35 @@ public:
 		return coldPageCounter;
 	}
 	
-	uint32_t accessPage(uint64_t pageID , cacheAtom& value);
+	uint32_t readPage(cacheAtom value){
+		PageSetType::iterator it =  pageSet.find(value);
+		if( it == pageSet.end() ){
+			return PAGEMISS;
+		}
+		else{
+			return PAGEHIT;
+		}
+	}
+	uint32_t writePage(cacheAtom value){
+		pair < PageSetType::iterator , bool > ret =  pageSet.insert(value);
+		if( ret.second == true ){
+			assert( ret.first == pageSet.end() );
+			return PAGEMISS;
+		}
+		else{
+			assert( ret.first != pageSet.end() ) ;
+			size_t tempSize;
+			IFDEBUG( tempSize = pageSet.size(); );
+			pageSet.erase(ret.first);
+			
+			IFDEBUG( assert( (tempSize -1 ) == pageSet.size() ); );
+			
+			pageSet.insert(value);
+			IFDEBUG( assert( tempSize == pageSet.size() ); );
+			
+			return PAGEHIT;
+		}
+	}
 };
 
 
@@ -118,11 +150,9 @@ private:
 	// Maximum number of key-value pairs to be retained
 	const size_t _capacity;
 	
-	// Record a fresh key-value pair in the cache
-	uint32_t insert( uint64_t k, cacheAtom v);
 	// Purge the least-recently-used element in the cache
 	void evict(); 
-	uint32_t blkHitAccess(const uint64_t& PageNo  , cacheAtom& value, uint32_t status, map< uint64_t, OwbpCacheBlock >::iterator it);
+	uint32_t blkHitAccess(const uint64_t& k  , cacheAtom& value, uint32_t status, OwbpCacheBlock & tempBlock);
 	void insertNewBlk( cacheAtom& value);
 };
 
