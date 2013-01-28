@@ -24,8 +24,10 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 	for( ; it != memTrace.end() ; ++ it ){
 		assert(  currLine < it->lineNo );
 		
+		/*ret = */uniqSet.insert(it->fsblkno); // insert page ID in the uniqSet
 		if(it->ssdblkno == meta.BlkID ){
 			if(assignedFirstBlkRef == false){
+				assert(uniqSet.size());
 				meta.distance= uniqSet.size() ;
 				assignedFirstBlkRef = true;
 			}
@@ -34,7 +36,6 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 			}
 		}
 		
-		/*ret = */uniqSet.insert(it->fsblkno); // insert page ID in the uniqSet
 		
 		if(uniqSet.size() > _gConfiguration.futureWindowSize ){ // hopefully size() complexity is O(1)
 		
@@ -42,8 +43,9 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 		}
 	}
 	
-	if(pageAccessInfutureWindow == false)
+	if(pageAccessInfutureWindow == false){
 		++ meta.coldPageCounter;
+	}
 	
 	if(assignedFirstBlkRef == false){
 		assert(pageAccessInfutureWindow == false); 
@@ -75,7 +77,7 @@ uint32_t OwbpCacheBlock::writePage(cacheAtom value)
 	
 	pair < PageSetType::iterator , bool > ret =  pageSet.insert(value);
 	if( ret.second == true ){
-		assert( ret.first == pageSet.end() );
+		assert( ret.first != pageSet.end() );
 		return PAGEMISS;
 	}
 	else{
@@ -96,7 +98,7 @@ uint32_t OwbpCacheBlock::writePage(cacheAtom value)
 void OwbpCache::insertNewBlk(cacheAtom& value){
 	PRINTV(logfile << "Insert new block on page ID miss: " << value.getFsblkno() << endl;);
 	
-	assert(currSize < _capacity); //evict call happen in access function
+	assert(currSize <= _capacity); //evict call happen in access function
 	uint64_t currSsdBlkNo = value.getSsdblkno();
 	
 	assert(value.getLineNo() == memTrace.front().lineNo); //check position 
@@ -167,7 +169,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 			//PAGEMISS or hit to status is return value of this function
 			IFDEBUG( valid_pages = blkit->second.getPageSetSize(); );
 			status |= blkit->second.writePage(value); //insert new page and update block metabata
-			IFDEBUG( assert( valid_pages + 1 == blkit->second.getPageSetSize() ););
+			IFDEBUG( assert( status&PAGEHIT ? valid_pages == blkit->second.getPageSetSize()  :valid_pages + 1 == blkit->second.getPageSetSize() ););
 			
 			//update coldHeap and victimPull
 			ColdHeapIt it = blkit->second.coldHeapIt;

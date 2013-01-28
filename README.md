@@ -5,10 +5,7 @@ sim-ideal
 =========
 
 TODO: 
-- update bimap on inserion
-- modify CalcFuturePageRef to include distinct distance between adjacent future pages writes 
-- check initial block coldness value is <= 1
-
+- block metadata update rate and update time ?
 
 ========
 Block i Coldness value at time t = number of valid pages in the cache associated with block i 

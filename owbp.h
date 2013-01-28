@@ -63,8 +63,8 @@ public:
 
 	OwbpCacheBlock(cacheAtom& firstValue){
 		
-		meta.BlkID = firstValue.getSsdblkno();
 		clear();
+		meta.BlkID = firstValue.getSsdblkno();
 		pageSet.insert(firstValue);
 		updateMetaDataOnPageInsert( firstValue );	
 	}

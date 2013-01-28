@@ -63,7 +63,7 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 		_gTestCache = new BlockMinCache(cacheAll, _gConfiguration.L1cacheSize);
 	}
 	else if ( _gConfiguration.GetAlgName().compare("owbp") == 0	 ){
-// 		_gTestCache = new OwbpCache(cacheAll, _gConfiguration.L1cacheSize);
+		_gTestCache = new OwbpCache(cacheAll, _gConfiguration.L1cacheSize);
 	}
 	else{
 		cerr<< "Error: UnKnown Algorithm name " <<endl;
@@ -76,7 +76,6 @@ void RunBenchmark( deque<reqAtom> & memTrace){
 	PRINTV (logfile << "Start benchmarking" << endl;);
 	while( ! memTrace.empty() ){
 		reqAtom newReq = memTrace.front();
-		memTrace.pop_front();
 		
 		unsigned offset=0;
 		while(newReq.reqSize){
@@ -94,6 +93,7 @@ void RunBenchmark( deque<reqAtom> & memTrace){
 			++ offset;
 			-- newReq.reqSize;
 		}
+		memTrace.pop_front();
 	}
 	PRINTV (logfile << "Benchmarking Done" << endl;);
 }
