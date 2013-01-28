@@ -5,8 +5,8 @@ SRCS  =    \
 	stats.cpp\
 	min.cpp\
 	sharedDS.cpp\
+	main.cpp\
 	owbp.cpp\
-	main.cpp \
 	
 
 

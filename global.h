@@ -1,7 +1,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 #include "configuration.h"
-#include <boost/concept_check.hpp>
+
 
 #ifdef DEBUG
 #define PRINT(X)	do { X	}while(false)

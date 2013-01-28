@@ -1,17 +1,14 @@
 #ifndef OWBP_H
 #define OWBP_H
-#include <unordered_map>
-#include <boost/bimap.hpp>
-#include <boost/bimap/unordered_set_of.hpp>
-#include <boost/bimap/multiset_of.hpp>
-// #include <boost/
-#include "glob.h"
+
+#include <set>
+#include "global.h"
 #include "sharedDS.h"
 #include "baseCache.h"
 
+
 using namespace std; 
-using namespace boost;
-using namespace bimaps;
+
 
 class CompCacheAtom{
 public:
@@ -30,90 +27,75 @@ public:
 	}
 };
 
-class OwbpCacheBlock{
-private:
-	typedef set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > PageSetType;
-	PageSetType pageSet;
-	uint32_t coldPageCounter;
-	deque<nextPageRef> futurePageQ; 
-	uint64_t BlkID;
+class OwbpCacheBlockMetaData{
 public:
-
-	OwbpCacheBlock(deque<nextPageRef> inFuturePageQ, cacheAtom& firstValue){
-		clear();
-		pageSet.insert(firstValue);
-		coldPageCounter=findColdPageCount();
-		futurePageQ = inFuturePageQ;
-		BlkID = firstValue.getSsdblkno();
-	}
-	size_t getPageSetSize() const{
-		return pageSet.size();
-	}
-
-	void clear(){
-		coldPageCounter = 0;
-		pageSet.clear();
-		futurePageQ.clear();
-		BlkID = 0;
-	}
-	uint32_t getMinFutureDist(){
-		return futurePageQ.front().distance;
-	}
-	
-	uint32_t findColdPageCount(){
-		deque<nextPageRef>::iterator it; 
-		uint32_t coldness=0;
-		for( it = futurePageQ.begin(); it != futurePageQ.end() ; ++ it){
-			if( it->distance < _gConfiguration.futureWindowSize ) // max window size
-				++ coldness;
-			else
-				break;
-		}
-		return coldness;
-	}
-	uint32_t getColdness(){
-		return coldPageCounter;
-	}
-	
-	uint32_t readPage(cacheAtom value){
-		PageSetType::iterator it =  pageSet.find(value);
-		if( it == pageSet.end() ){
-			return PAGEMISS;
-		}
-		else{
-			return PAGEHIT;
-		}
-	}
-	uint32_t writePage(cacheAtom value){
-		pair < PageSetType::iterator , bool > ret =  pageSet.insert(value);
-		if( ret.second == true ){
-			assert( ret.first == pageSet.end() );
-			return PAGEMISS;
-		}
-		else{
-			assert( ret.first != pageSet.end() ) ;
-			size_t tempSize;
-			IFDEBUG( tempSize = pageSet.size(); );
-			pageSet.erase(ret.first);
-			
-			IFDEBUG( assert( (tempSize -1 ) == pageSet.size() ); );
-			
-			pageSet.insert(value);
-			IFDEBUG( assert( tempSize == pageSet.size() ); );
-			
-			return PAGEHIT;
-		}
-	}
+	uint32_t coldPageCounter;
+	uint32_t distance; // min distinct ditance to the next page reference in future window, INF means there is no ref 
+	uint64_t BlkID;
 };
 
 
 
-typedef bimap< uint64_t , //SsdBlock_ID
-		multiset_of<uint32_t> // future distance
-		> BiMapType; 
+class CompOwbpCacheBlockMetaData{
+public:
+	// return coldest block. if there are two block with the same coldness value, return a block with largest destance
+	bool operator()(  const OwbpCacheBlockMetaData & a , const OwbpCacheBlockMetaData & b ){
 		
-typedef BiMapType::value_type BmAtom;
+		if( a.coldPageCounter == b.coldPageCounter ){
+			return a.distance < b.distance ; // there might be a chance to see two block with the same coldness value and distance, for this reason I used multiset
+		}
+		else
+			return a.coldPageCounter < b.coldPageCounter;
+	}
+};
 
+typedef multiset<OwbpCacheBlockMetaData,CompOwbpCacheBlockMetaData,allocator<OwbpCacheBlockMetaData>> ColdHeap_type;
+typedef multiset<OwbpCacheBlockMetaData,CompOwbpCacheBlockMetaData,allocator<OwbpCacheBlockMetaData>>::iterator ColdHeapIt;
+typedef set<uint64_t>::iterator victimIt; 
+
+class OwbpCacheBlock{
+private:
+	typedef set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > PageSetType;
+	PageSetType pageSet;
+public:
+	OwbpCacheBlockMetaData meta;
+	ColdHeapIt coldHeapIt;
+
+	OwbpCacheBlock(cacheAtom& firstValue){
+		
+		meta.BlkID = firstValue.getSsdblkno();
+		clear();
+		pageSet.insert(firstValue);
+		updateMetaDataOnPageInsert( firstValue );	
+	}
+	inline size_t getPageSetSize() const{
+		return pageSet.size();
+	}
+	
+	inline uint64_t getBlkID() const{
+		return meta.BlkID;
+	}
+
+	void clear(){
+		meta.coldPageCounter = 0;
+		pageSet.clear();
+		meta.BlkID = 0;
+		meta.distance = 0;
+	}
+	inline uint32_t getMinFutureDist() const{
+		return meta.distance;
+	}
+	
+
+	inline uint32_t getColdness() const{
+		return meta.coldPageCounter;
+	}
+	
+	uint32_t readPage(cacheAtom value);
+	uint32_t writePage(cacheAtom value);
+	void updateMetaDataOnPageInsert(const cacheAtom value);
+		// check if firstValue is currpage in the memTrace
+};
 
 
 
@@ -139,10 +121,12 @@ public:
 	}
 
 private:
-	BiMapType BiMap;  //bimap between blkID and blkColdness
+	
 	size_t currSize;  // current number of pages in the cache
 	map< uint64_t, OwbpCacheBlock > 	blkID_2_DS;//map blkID to blk DS (all blocks in the cache)
-	queue<uint64_t> infinitDistBlkIDQ;
+	ColdHeap_type coldHeap;
+	set<uint64_t> victimPull; // maintain block IDs with INF distance
+	
 	
 	
 	// The function to be cached

@@ -1,7 +1,9 @@
 #include <iostream>
 #include <time.h>
 #include <deque>
+
 #include "global.h"
+#include "owbp.h"
 #include "cpp_framework.h"
 #include "configuration.h"
 #include "parser.h"
@@ -59,6 +61,9 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 	}
 	else if ( _gConfiguration.GetAlgName().compare("blockmin") == 0	 ){
 		_gTestCache = new BlockMinCache(cacheAll, _gConfiguration.L1cacheSize);
+	}
+	else if ( _gConfiguration.GetAlgName().compare("owbp") == 0	 ){
+// 		_gTestCache = new OwbpCache(cacheAll, _gConfiguration.L1cacheSize);
 	}
 	else{
 		cerr<< "Error: UnKnown Algorithm name " <<endl;

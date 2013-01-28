@@ -7,6 +7,7 @@
 #include "parser.h"
 
 
+
 using namespace std;
 //************** AccessOrdering **************//
 
@@ -138,24 +139,24 @@ uint32_t AccessOrdering::nextAccess(uint64_t key, uint32_t currLine)
 
 
 // 	uniqFutureDist();
-uint32_t getFutureBlkDist(const uint64_t SsdBlknokey, uint32_t currLine){
-	reqAtom newAtom;
-	deque<reqAtom>::iterator it; 
-	unordered_set<uint64_t> uniqSet; 
-	uniqSet.clear();
-	
-	for( it = memTrace.begin() ; it != memTrace.end() ; ++ it ){
-		assert(  currLine < it->lineNo );
-		uniqSet.insert(it->lineNo);
-		if(uniqSet.size() < _gConfiguration.L1cacheSize )
-			return INF;
-		if( SsdBlknokey == it->ssdblkno ){
-			return uniqSet.size();
-		}
-	}
-	return INF;
-}
-
+// uint32_t getFutureBlkDist(const uint64_t SsdBlknokey, uint32_t currLine){
+// 	reqAtom newAtom;
+// 	deque<reqAtom>::iterator it; 
+// 	unordered_set<uint64_t> uniqSet; 
+// 	uniqSet.clear();
+// 	
+// 	for( it = memTrace.begin() ; it != memTrace.end() ; ++ it ){
+// 		assert(  currLine < it->lineNo );
+// 		uniqSet.insert(it->lineNo);
+// 		if(uniqSet.size() < _gConfiguration.L1cacheSize )
+// 			return INF;
+// 		if( SsdBlknokey == it->ssdblkno ){
+// 			return uniqSet.size();
+// 		}
+// 	}
+// 	return INF;
+// }
+/*
 deque<nextPageRef> getFuturePageRef(const uint64_t SsdBlknokey, uint32_t currLine){
 
 	deque<nextPageRef> retDeque; 
@@ -183,4 +184,4 @@ deque<nextPageRef> getFuturePageRef(const uint64_t SsdBlknokey, uint32_t currLin
 	}
 	
 	return retDeque;
-}
+}*/
