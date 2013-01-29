@@ -71,7 +71,7 @@ public:
 		testName = 0;
 		L1cacheSize = 0;
 		fsblkSize = 4096;
-		ssdblkSize = 512 * 1024 ;
+		ssdblkSize = 256 * 1024 ; //64 page per ssd block
 		ssd2fsblkRatio = ssdblkSize / fsblkSize;
 		maxLineNo = 0;
 		logStream.open("log.txt",std::ios::trunc);

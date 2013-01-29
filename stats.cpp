@@ -39,11 +39,12 @@ void collectStat( uint32_t newFlags){
 			assert( newFlags & BLKHIT);
 			assert( !(newFlags & PAGEMISS));
 		}
-		if(newFlags	&	PAGEMISS)
-			++ _gStats.PageWriteMiss;
+		
 		if(newFlags	&	BLKHIT){
 			++ _gStats.BlockWriteHit;
 			assert( !(newFlags & BLKMISS) );
+			if(newFlags	&	PAGEMISS)
+				++ _gStats.PageWriteMiss;
 		}
 		if(newFlags	&	BLKMISS){
 			++ _gStats.BlockWriteMiss;
@@ -71,7 +72,7 @@ void printStats(){
 		return;
 	}
 	
-	statStream<<_gConfiguration.testName<<endl;
+	statStream<<_gConfiguration.testName<<",\t"<<_gConfiguration.GetAlgName()<<endl;
 	Stat * tempStat;
 	while( ( tempStat = _gStats.next() ) ){
 		statStream<< tempStat->print() <<endl;

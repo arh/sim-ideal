@@ -150,7 +150,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 		status |= BLKMISS | PAGEMISS;
 		if(status & WRITE){
 			
-			if(currSize > _capacity ){
+			if(currSize >= _capacity ){
 				evict();
 				status |= EVICT;
 			}
@@ -206,7 +206,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 			
 			if( status & PAGEMISS){
 				++ currSize;
-				if(currSize > _capacity ){
+				if(currSize >= _capacity ){
 					evict();
 					status |= EVICT;
 				}
@@ -224,7 +224,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 
 
 void OwbpCache::evict(){
-	assert( currSize > _capacity );
+	assert( currSize == _capacity );
 	uint64_t victimBlkID;
 	if( victimPull.size() != 0 ){
 		victimIt itV = victimPull.begin() ;

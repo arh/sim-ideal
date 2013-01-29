@@ -35,8 +35,11 @@ void	readTrace(deque<reqAtom> & memTrace)
 	}
 	reqAtom newAtom;
 	while(getAndParseMSR(_gConfiguration.traceStream , &newAtom)){
-		memTrace.push_back(newAtom);
-		newAtom.clear();
+		//frop all reads
+		if(newAtom.flags & WRITE){
+			memTrace.push_back(newAtom);
+			newAtom.clear();
+		}
 	}
 	
 	_gConfiguration.traceStream.close();
@@ -75,8 +78,7 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 void RunBenchmark( deque<reqAtom> & memTrace){
 	PRINTV (logfile << "Start benchmarking" << endl;);
 	while( ! memTrace.empty() ){
-		reqAtom newReq = memTrace.front();
-		
+		reqAtom newReq = memTrace.front();	
 		unsigned offset=0;
 		while(newReq.reqSize){
 			reqAtom tempReq = newReq;
