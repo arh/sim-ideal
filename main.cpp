@@ -49,7 +49,7 @@ void	readTrace(deque<reqAtom> & memTrace)
 void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 {
 	if(!_gConfiguration.read(argc, argv)) {
-		cerr << "USAGE: <tracefilename> <AlgName> <TestName> <L1Size>" << endl;
+		cerr << "USAGE: <tracefilename> <AlgName> <TestName> <L1Size> <WindowSize>" << endl;
 		exit(-1);
 	}
 
@@ -70,6 +70,7 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 	}
 	else{
 		cerr<< "Error: UnKnown Algorithm name " <<endl;
+		exit(1);
 	}
 	PRINTV (logfile << "Configuration and setup done" << endl;);
 	srand(0);

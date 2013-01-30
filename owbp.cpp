@@ -205,11 +205,11 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 			}
 			
 			if( status & PAGEMISS){
-				++ currSize;
 				if(currSize >= _capacity ){
 					evict();
 					status |= EVICT;
 				}
+				++ currSize;
 			}
 		}
 		else{ // read a page 

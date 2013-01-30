@@ -33,7 +33,7 @@ public:
 
 	bool read(int argc, char **argv) {
 
-		if(argc < 5)
+		if(argc < 6)
 			return false;
 
 		int curr_arg = 1;
@@ -49,7 +49,7 @@ public:
 		algName 	= argv[curr_arg++];
 		testName	= argv[curr_arg++];
 		L1cacheSize = CMDR::Integer::parseInt(argv[curr_arg++]);
-		futureWindowSize = L1cacheSize;
+		futureWindowSize = CMDR::Integer::parseInt(argv[curr_arg++]);
 		return true;
 	}
 
