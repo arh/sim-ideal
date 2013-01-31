@@ -23,7 +23,7 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 	
 	for( ; it != memTrace.end() ; ++ it ){
 		assert(  currLine < it->lineNo );
-		
+		assert(it->reqSize == 1);
 		/*ret = */uniqSet.insert(it->fsblkno); // insert page ID in the uniqSet
 		if(it->ssdblkno == meta.BlkID ){
 			if(assignedFirstBlkRef == false){
@@ -31,11 +31,7 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 				meta.distance= uniqSet.size() ;
 				assignedFirstBlkRef = true;
 			}
-			if(it->fsblkno == value.getFsblkno()){
-				pageAccessInfutureWindow = true ;
-			}
 		}
-		
 		
 		if(uniqSet.size() >= _gConfiguration.futureWindowSize ){ // hopefully size() complexity is O(1)
 		

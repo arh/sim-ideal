@@ -7,6 +7,9 @@ sim-ideal
 TODO: 
 - block metadata update rate and update time ?
 
+Assumptions:
+- a request in the trace access only one block. For example if the request want to access 8 pages, all pages blong to the same block
+
 ========
 Block i Coldness value at time t = number of valid pages in the cache associated with block i 
 	that will not receive any hit in future window. 

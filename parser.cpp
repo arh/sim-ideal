@@ -102,7 +102,7 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 			}
 
 			bcount_temp = atoi((strtok(NULL, " ,")));   // read size
-
+			
 			if(!bcount_temp) {
 				continue;
 			}
@@ -112,6 +112,9 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 				PRINT(fprintf(stderr, "line: %s", line););
 			} else {
 				newn->reqSize = bcount_temp/_gConfiguration.fsblkSize;
+				if( newn->fsblkno % _gConfiguration.ssdblkSize + newn->reqSize >= _gConfiguration.ssdblkSize ){ // req size is big, going to share multiple block
+					newn->reqSize = _gConfiguration.ssdblkSize - newn->fsblkno% _gConfiguration.ssdblkSize  - 1;
+				}
 			}
 
 			fetched = 1;
