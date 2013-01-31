@@ -11,15 +11,15 @@ Name=small
 Type=Native Application
 
 [Launch][Launch Configuration 0][Data]
-Arguments=traces/small.msr owbp testName 1000
+Arguments=traces/small.csv owbp testName 4 15
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
-Executable=file:///home/haghd002/sim-ideal/sim-ideal
+Executable=file:///home/arh/sim-ideal/sim-ideal
 External Terminal=konsole --noclose --workdir %workdir -e %exe
 Project Target=
 Use External Terminal=false
-Working Directory=file:///home/haghd002/sim-ideal/
+Working Directory=file:///home/arh/sim-ideal/
 isExecutable=true
 
 [Launch][Launch Configuration 1]

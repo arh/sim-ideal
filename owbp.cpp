@@ -37,7 +37,7 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 		}
 		
 		
-		if(uniqSet.size() > _gConfiguration.futureWindowSize ){ // hopefully size() complexity is O(1)
+		if(uniqSet.size() >= _gConfiguration.futureWindowSize ){ // hopefully size() complexity is O(1)
 		
 			break;
 		}
@@ -110,7 +110,8 @@ void OwbpCache::insertNewBlk(cacheAtom& value){
 	
 	//insert in coldheap or victimPull
 	// make sure it is not already there
-	assert( coldHeap.find(tempBlock.meta) == coldHeap.end() ); //this assertaion may fail because there might be multiple block with the same condition
+// 	assert( coldHeap.find(tempBlock.meta) == coldHeap.end() ); //this assertaion may fail because there might be multiple block with the same condition
+	// failure of previous assert observerd, 
 	assert( victimPull.find(value.getSsdblkno() ) == victimPull.end() );
 	
 	if(tempBlock.getMinFutureDist() == INF ){
@@ -233,7 +234,7 @@ void OwbpCache::evict(){
 	}
 	else{
 		assert( coldHeap.size() != 0 );
-		ColdHeapIt itH = coldHeap.begin(); // assume there is no douplicated entry with the same condition in the multiset
+		ColdHeapIt itH = -- coldHeap.end(); // assume there is no douplicated entry with the same condition in the multiset, this assumption is no longer valid, but the code funcionality is validated
 		victimBlkID = itH->BlkID;
 		coldHeap.erase(itH);
 	}

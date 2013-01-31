@@ -41,17 +41,18 @@ public:
 	// return coldest block. if there are two block with the same coldness value, return a block with largest destance
 	bool operator()(  const OwbpCacheBlockMetaData & a , const OwbpCacheBlockMetaData & b ){
 		
-		if( a.coldPageCounter == b.coldPageCounter ){
-			return a.distance < b.distance ; // there might be a chance to see two block with the same coldness value and distance, for this reason I used multiset
+		if( a.coldPageCounter != b.coldPageCounter ){
+			return a.coldPageCounter < b.coldPageCounter;
 		}
 		else
-			return a.coldPageCounter < b.coldPageCounter;
+			return a.distance < b.distance;  // there might be a chance to see two block with the same coldness value and distance, for this reason I used multiset
 	}
 };
 
 typedef multiset<OwbpCacheBlockMetaData,CompOwbpCacheBlockMetaData,allocator<OwbpCacheBlockMetaData>> ColdHeap_type;
 typedef multiset<OwbpCacheBlockMetaData,CompOwbpCacheBlockMetaData,allocator<OwbpCacheBlockMetaData>>::iterator ColdHeapIt;
 typedef set<uint64_t>::iterator victimIt; 
+typedef set<uint64_t>::reverse_iterator victimRIt; 
 
 class OwbpCacheBlock{
 private:

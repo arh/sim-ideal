@@ -98,6 +98,7 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 				PRINT(fprintf(stderr, "line: %s", line););
 			} else {
 				newn->fsblkno = (byteoff / _gConfiguration.fsblkSize) ; //convert byte2sector and align to page size
+				newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio;
 			}
 
 			bcount_temp = atoi((strtok(NULL, " ,")));   // read size
