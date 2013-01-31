@@ -6,6 +6,7 @@ sim-ideal
 
 TODO: 
 - block metadata update rate and update time ?
+- a request with reqSize > 1 will always have future distance block 1 , Do we need to fix it ? 
 
 Assumptions:
 - a request in the trace access only one block. For example if the request want to access 8 pages, all pages blong to the same block

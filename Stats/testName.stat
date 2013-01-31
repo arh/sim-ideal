@@ -89,3 +89,16 @@ Page Write Miss,	19
 Block Write Hit,	1
 Block Write Miss,	19
 Block Evict,	15
+testName,	owbp
+Total References,	145
+Total Reads,	0
+Total Writes,	145
+Page Read Hit,	0
+Page Read Miss,	0
+Block Read Hit,	0
+Block Read Miss,	0
+Page Write Hit,	0
+Page Write Miss,	145
+Block Write Hit,	107
+Block Write Miss,	38
+Block Evict,	38

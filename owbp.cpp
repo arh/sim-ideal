@@ -22,7 +22,8 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 // 	pair<deque<reqAtom>::iterator,bool> ret;
 	
 	for( ; it != memTrace.end() ; ++ it ){
-		assert(  currLine < it->lineNo );
+		///TODO fix this <= .... it should be <
+		assert(  currLine <= it->lineNo );
 		assert(it->reqSize == 1);
 		/*ret = */uniqSet.insert(it->fsblkno); // insert page ID in the uniqSet
 		if(it->ssdblkno == meta.BlkID ){
