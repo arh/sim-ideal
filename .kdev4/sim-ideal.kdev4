@@ -11,7 +11,7 @@ Name=small
 Type=Native Application
 
 [Launch][Launch Configuration 0][Data]
-Arguments=traces/small.csv owbp testName 4 15
+Arguments=traces/small.csv  blockmin arh 200 15
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default

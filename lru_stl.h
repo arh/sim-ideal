@@ -78,7 +78,7 @@ public:
 			(*it).second.second = _key_tracker.rbegin().base();
 			return (status | PAGEHIT | BLKHIT);
 		}
-	} //end operator ()
+	} //end operator access
 
 
 	unsigned long long int get_min_key() {

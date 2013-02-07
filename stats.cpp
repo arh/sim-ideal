@@ -52,6 +52,9 @@ void collectStat( uint32_t newFlags){
 		}
 		if(newFlags	&	EVICT)
 			++ _gStats.BlockEvict;
+		
+		if(newFlags	&	PAGEMISS && ! (newFlags	&BLKHIT ) && !(newFlags	&BLKMISS) ) // for page based algorithm
+			++ _gStats.PageWriteMiss;
 	}
 	else{
 		cerr<<"Error: Unknown request type in stat collection"<<endl;
