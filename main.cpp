@@ -1,7 +1,6 @@
 #include <iostream>
 #include <time.h>
 #include <deque>
-#include <boost/config/posix_features.hpp>
 
 #include "global.h"
 #include "owbp.h"
