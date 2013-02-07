@@ -1,6 +1,7 @@
 #include <iostream>
 #include <time.h>
 #include <deque>
+#include <boost/config/posix_features.hpp>
 
 #include "global.h"
 #include "owbp.h"
@@ -81,7 +82,11 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 	PRINTV (logfile << "Configuration and setup done" << endl;);
 	srand(0);
 }
-
+void reportProgress(){
+	static uint64_t totalTraceLines = memTrace.size();
+	std::cerr<<"\r--> "<<((float)(totalTraceLines-memTrace.size())/(float)totalTraceLines )*100<<"% done"<<flush;
+// 	cin.get();
+}
 void RunBenchmark( deque<reqAtom> & memTrace){
 	PRINTV (logfile << "Start benchmarking" << endl;);
 	while( ! memTrace.empty() ){
@@ -104,6 +109,7 @@ void RunBenchmark( deque<reqAtom> & memTrace){
 			-- newReq.reqSize;
 		}
 		memTrace.pop_front();
+		reportProgress();
 	}
 	PRINTV (logfile << "Benchmarking Done" << endl;);
 }
