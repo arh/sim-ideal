@@ -1,0 +1,5 @@
+qsub rsrch.q
+qsub wdev.q
+qsub ts.q
+qsub stg.q
+qsub web.q
