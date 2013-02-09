@@ -62,20 +62,18 @@ void AccessOrdering::pageBaseBuild(){
 void AccessOrdering::blockBaseBuild(){
 	
 	assert(builded==false);
-	ifstream zahraStream;
-	
-	zahraStream.open(_gConfiguration.traceName);
-	
-	if( ! zahraStream.good() ){
-		cerr<<"can not open file to build access ordering"<<endl;
-		ExitNow(1);
-	}
 	PRINTV(logfile<<"Building AccessOrdering...."<<endl;);
-	reqAtom newAtom;
-	uint32_t lineNo =0 ;
-	while(getAndParseMSR(zahraStream ,&newAtom)){
-		uint64_t key = newAtom.ssdblkno;
-		lineNo = newAtom.lineNo;
+
+	uint32_t lineNo =0;
+	
+	deque<reqAtom>::iterator it = memTrace.begin(); // iterate over the memTrace
+
+	
+	// 	pair<deque<reqAtom>::iterator,bool> ret;
+	
+	for( ; it != memTrace.end() ; ++ it ){
+		uint64_t key = it->ssdblkno;
+		lineNo = it->lineNo;
 		assert(lineNo);
 		AOHashTable::iterator it;
 		it = hashTable.find(key);
@@ -98,12 +96,11 @@ void AccessOrdering::blockBaseBuild(){
 			assert(tempQPoint->front() < lineNo );
 			tempQPoint->push(lineNo);
 		}
-		newAtom.clear();
+
 	}
 	PRINTV(logfile<<"Building Block Based AccessOrdering finished. "<<endl;);
 	PRINTV(logfile<<" ... unique Block access: "<< hashTable.size()<<endl; );
 	PRINTV(logfile<<" ... total Block access: "<< lineNo<< endl; );
-	zahraStream.close();
 	builded = true; 
 }
 
@@ -119,13 +116,15 @@ uint32_t AccessOrdering::nextAccess(uint64_t key, uint32_t currLine)
 	AOHashTable::iterator it; 
 	it = hashTable.find(key);
 	
-	if( it == hashTable.end())
-		return 0; 
+	if( it == hashTable.end()){
+		cerr<<"Block "<< key <<" is not availble in Access ordering list"<<endl;
+		assert(0);
+	}
 	else{
 		assert( it->first == key);
 		queue<uint32_t> tempQ;
 		tempQ = it->second;
-		while( tempQ.front() < currLine ){
+		while( tempQ.front() <= currLine ){
 			tempQ.pop(); // skip
 			if(tempQ.size() == 0 ){
 				hashTable.erase(key);

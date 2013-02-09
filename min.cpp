@@ -11,7 +11,7 @@ uint32_t PageMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t st
 	assert(_capacity != 0);
 	PRINTV(logfile << "Access key: " << k << endl;);
 	// Attempt to find existing record
-	const typename key_to_value_type::iterator it	= _key_to_value.find(k);
+	key_to_value_type::iterator it	= _key_to_value.find(k);
 	
 	if(it == _key_to_value.end()) {
 		// We don’t have it:
@@ -46,7 +46,7 @@ int PageMinCache::insert( uint64_t k, cacheAtom v) {
 	if(_key_to_value.size() == _capacity) {
 		PRINTV(logfile << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
 		evict();
-		status = EVICT;
+		status |= EVICT;
 	}
 	
 	// Record key and lineNo in the maxHeap
@@ -70,7 +70,7 @@ void PageMinCache::evict() {
 	// Identify the key with max lineNo
 	HeapAtom maxHeapAtom = maxHeap.top();
 	PRINTV(logfile<<" evicting victim key "<< maxHeapAtom.key <<" with next lineNo "<< maxHeapAtom.lineNo << endl;);
-	const typename key_to_value_type::iterator it 	= _key_to_value.find(maxHeapAtom.key);
+	key_to_value_type::iterator it 	= _key_to_value.find(maxHeapAtom.key);
 	assert(it != _key_to_value.end());
 	// Erase both elements to completely purge record
 	_key_to_value.erase(it);
@@ -80,10 +80,10 @@ void PageMinCache::evict() {
 
 
 uint32_t BlockMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t status) {
-	assert(_capacity != 0);
+	assert(cacheNum <= _capacity);
 	PRINTV(logfile << "Access key: " << k << endl;);
 	// Attempt to find existing record
-	const typename key_to_block_type::iterator it	= _key_to_block.find(value.getSsdblkno());
+	key_to_block_type::iterator it	= _key_to_block.find(value.getSsdblkno());
 	
 	if(it == _key_to_block.end()) {
 		// We don’t have it:
@@ -110,7 +110,14 @@ uint32_t BlockMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t s
 		
 		if(pageit == tempBlock.end() ){
 			PRINTV(logfile << "Miss on key: " << k << endl;);
+			if( cacheNum == _capacity) {
+				PRINTV(logfile << "Cache is Full " << cacheNum << " pages" << endl;);
+				evict();
+				status |= EVICT;
+			}
 			tempBlock.insert(k);
+			it->second = tempBlock ; 
+			++ cacheNum;
 			return (status | PAGEMISS );
 		}
 		else{
@@ -126,16 +133,16 @@ uint32_t BlockMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t s
 int BlockMinCache::insert( uint64_t k, cacheAtom v) {
 	PRINTV(logfile << "insert key " << k  << endl;);
 	int status = 0;
-	// Method is only called on cache misses
+	// Method is only called on block cache misses
 	assert(_key_to_block.find(v.getSsdblkno()) == _key_to_block.end());
 	
 	
 	// Make space if necessary
 	assert( _capacity );
-	if(_key_to_block.size() == _capacity) {
-		PRINTV(logfile << "Cache is Full " << _key_to_block.size() << " blocks" << endl;);
+	if( cacheNum == _capacity) {
+		PRINTV(logfile << "Cache is Full " << cacheNum << " pages" << endl;);
 		evict();
-		status = EVICT;
+		status |= EVICT;
 	}
 	
 	// Record ssdblkno and lineNo in the maxHeap
@@ -154,6 +161,7 @@ int BlockMinCache::insert( uint64_t k, cacheAtom v) {
 	tempBlock.insert(k);
 	// linked to the usage record.
 	_key_to_block.insert(make_pair(v.getSsdblkno(),tempBlock));
+	++ cacheNum;
 	// No need to check return,
 	// given previous assert.
 	return status;
@@ -162,10 +170,13 @@ int BlockMinCache::insert( uint64_t k, cacheAtom v) {
 void BlockMinCache::evict() {
 	// Assert method is never called when cache is empty
 	// Identify the key with max lineNo
+	assert( maxHeap.size() == _key_to_block.size() ); 
 	HeapAtom maxHeapAtom = maxHeap.top();
 	PRINTV(logfile<<" evicting victim block "<< maxHeapAtom.key <<" with next lineNo "<< maxHeapAtom.lineNo << endl;);
-	const typename key_to_block_type::iterator it 	= _key_to_block.find(maxHeapAtom.key);
+	key_to_block_type::iterator it 	= _key_to_block.find(maxHeapAtom.key);
 	assert(it != _key_to_block.end());
+	PRINTV(logfile<<" Make "<< (it->second).size()<<" empty space"<<endl;);
+	cacheNum -= (it->second).size();
 	// Erase both elements to completely purge record
 	_key_to_block.erase(it);
 	maxHeap.pop();

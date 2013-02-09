@@ -41,8 +41,8 @@ void	readTrace(deque<reqAtom> & memTrace)
 			newAtom.reqSize = 1;
 			//expand large request
 			for( uint32_t i=0 ; i < reqSize ; ++ i) {
-				++ newAtom.fsblkno; 
 				memTrace.push_back(newAtom);
+				++ newAtom.fsblkno; 
 			}
 				newAtom.clear();
 		}

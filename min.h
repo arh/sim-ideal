@@ -61,7 +61,7 @@ private:
 	cacheAtom(*_fn)(const uint64_t& , cacheAtom);
 	// Maximum number of key-value pairs to be retained
 	const size_t _capacity;
-	
+
 	// Key-to-value lookup
 	key_to_value_type _key_to_value;
 	
@@ -84,6 +84,7 @@ public:
 		///ARH: Commented for single level cache implementation
 		        assert ( _capacity!=0 );
 			accessOrdering.blockBaseBuild();
+			cacheNum = 0;
 	}
 	// Obtain value of the cached function for k
 	
@@ -104,7 +105,7 @@ private:
 	cacheAtom(*_fn)(const uint64_t& , cacheAtom);
 	// Maximum number of key-value pairs to be retained
 	const size_t _capacity;
-	
+	size_t cacheNum;
 	// Key-to-value lookup
 	key_to_block_type _key_to_block;
 	
