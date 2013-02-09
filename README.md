@@ -17,3 +17,18 @@ Block i Coldness value at time t = number of valid pages in the cache associated
 	that will not receive any hit in future window. 
 block i coldness initial value: At the time of block i insertion, the coldness value could either 0 or 1. 
 	if page p accessed in the future window, the coldness value is 0, otherwise it would be 1
+	
+if( no future page hit)
+		
+	block miss , page miss
+
+		coldness = 1;
+
+	block hit, page hit
+		hit on previously cold page 
+			no update on coldness
+		hit on previously Hot page
+			-- coldness
+		
+	block hit, page miss
+		++ codlness

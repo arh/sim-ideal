@@ -67,7 +67,8 @@ public:
 		clear();
 		meta.BlkID = firstValue.getSsdblkno();
 		pageSet.insert(firstValue);
-		updateMetaDataOnPageInsert( firstValue );	
+		//update meta.distance and coldPageCounter 
+		updateMetaDataOnPageInsert( firstValue, PAGEMISS );	// for the first insertion we do always have PageMiss status
 	}
 	inline size_t getPageSetSize() const{
 		return pageSet.size();
@@ -94,7 +95,8 @@ public:
 	
 	uint32_t readPage(cacheAtom value);
 	uint32_t writePage(cacheAtom value);
-	void updateMetaDataOnPageInsert(const cacheAtom value);
+	uint32_t findPage(cacheAtom value);
+	void updateMetaDataOnPageInsert(const cacheAtom value, const uint32_t status);
 		// check if firstValue is currpage in the memTrace
 };
 

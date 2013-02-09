@@ -2,7 +2,7 @@
 
 extern deque<reqAtom> memTrace;
 
-void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
+void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value, const uint32_t status)
 {
 	//check if firstValue is in the curr position of memTrace
 	assert(memTrace.size()); 
@@ -18,8 +18,6 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 	
 	deque<reqAtom>::iterator it = memTrace.begin(); // iterate over the memTrace
 	++ it; //skip over currLine
-	
-// 	pair<deque<reqAtom>::iterator,bool> ret;
 	
 	for( ; it != memTrace.end() ; ++ it ){
 		///TODO fix this <= .... it should be <
@@ -41,8 +39,10 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 	}
 	
 	if(pageAccessInfutureWindow == false){
+		if(status & PAGEHITHERE
 		++ meta.coldPageCounter;
 	}
+	else
 	
 	if(assignedFirstBlkRef == false){
 		assert(pageAccessInfutureWindow == false); 
@@ -70,32 +70,46 @@ uint32_t OwbpCacheBlock::writePage(cacheAtom value)
 	
 	
 	// update distance and coldness value
-	updateMetaDataOnPageInsert(value) ;
 	
 	pair < PageSetType::iterator , bool > ret =  pageSet.insert(value);
 	if( ret.second == true ){
 		assert( ret.first != pageSet.end() );
+		updateMetaDataOnPageInsert(value, PAGEMISS) ;
 		return PAGEMISS;
 	}
 	else{
 		assert( ret.first != pageSet.end() ) ;
 		size_t tempSize;
+		
 		IFDEBUG( tempSize = pageSet.size(); );
 		pageSet.erase(ret.first);
-		
 		IFDEBUG( assert( (tempSize -1 ) == pageSet.size() ); );
-		
 		pageSet.insert(value);
 		IFDEBUG( assert( tempSize == pageSet.size() ); );
+
+		updateMetaDataOnPageInsert(value, PAGEHIT) ;
 		
 		return PAGEHIT;
 	}
 }
 
+uint32_t OwbpCacheBlock::findPage(cacheAtom value)
+{
+	
+	PageSetType::iterator it =  pageSet.find(value);
+	if( it == pageSet.end() ){
+		return PAGEMISS;
+	}
+	else{
+		return PAGEHIT;
+	}
+}
+
+
 void OwbpCache::insertNewBlk(cacheAtom& value){
 	PRINTV(logfile << "Insert new block on page ID miss: " << value.getFsblkno() << endl;);
 	
-	assert(currSize <= _capacity); //evict call happen in access function
+	assert(currSize < _capacity); //evict call happen in access function
 	uint64_t currSsdBlkNo = value.getSsdblkno();
 	
 	assert(value.getLineNo() == memTrace.front().lineNo); //check position 
@@ -119,6 +133,12 @@ void OwbpCache::insertNewBlk(cacheAtom& value){
 		ColdHeapIt it;
 		it = coldHeap.insert(tempBlock.meta);
 		tempBlock.coldHeapIt =  it;
+		
+		//debug
+		ColdHeapIt itDebug;
+		itDebug = coldHeap.find(tempBlock.meta);
+		assert(it->coldPageCounter !=0);
+		assert(itDebug->coldPageCounter == it->coldPageCounter );
 		
 	}
 	
@@ -148,7 +168,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 		status |= BLKMISS | PAGEMISS;
 		if(status & WRITE){
 			
-			if(currSize >= _capacity ){
+			if(currSize == _capacity ){
 				evict();
 				status |= EVICT;
 			}
@@ -161,21 +181,42 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 		status |= BLKHIT;
 		size_t valid_pages;
 		if(status & WRITE){
-			
-			//insert page first in the block then if it found page miss, it will check to trigger evict()
+			// loock up for pagehit or page miss
+			status |= blkit->second.findPage(value);
+			if(status & PAGEMISS){
 
-			//PAGEMISS or hit to status is return value of this function
-			IFDEBUG( valid_pages = blkit->second.getPageSetSize(); );
-			status |= blkit->second.writePage(value); //insert new page and update block metabata
-			IFDEBUG( assert( status&PAGEHIT ? valid_pages == blkit->second.getPageSetSize()  :valid_pages + 1 == blkit->second.getPageSetSize() ););
+				if(currSize == _capacity ){
+					evict();
+					status |= EVICT;
+				}
+				++ currSize;
+				
+				uint32_t debugStatus;
+				assert( valid_pages = blkit->second.getPageSetSize() );
+				debugStatus = blkit->second.writePage(value); //insert new page and update block metabata
+				assert(valid_pages + 1 == blkit->second.getPageSetSize() );
+				assert(debugStatus & PAGEMISS);
+				
+				
+			}
+			else{
+				assert(status & PAGEHIT);
+				uint32_t debugStatus;
+				assert( valid_pages = blkit->second.getPageSetSize() ); // read valid pages for debug 
+				debugStatus = blkit->second.writePage(value); //insert new page and update block metabata
+				assert( valid_pages == blkit->second.getPageSetSize() );
+				assert(debugStatus & PAGEHIT);
+				
+			}
 			
-			//update coldHeap and victimPull
+			
+			//update block metadata in coldHeap and victimPull
 			ColdHeapIt it = blkit->second.coldHeapIt;
 			
 			if( it  == coldHeap.end() ){
 				// block is in victimPull
 				victimIt itV = victimPull.find( blkit->second.getBlkID() );
-				assert( itV != victimPull.end() ); 
+				assert( itV != victimPull.end() ); // make sure that block is in victimpull 
 				if(blkit->second.getMinFutureDist() != INF ){
 					// move block from victimpull to coldheap
 					victimPull.erase(blkit->second.getBlkID());
@@ -200,14 +241,6 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 					
 				}
 				
-			}
-			
-			if( status & PAGEMISS){
-				if(currSize >= _capacity ){
-					evict();
-					status |= EVICT;
-				}
-				++ currSize;
 			}
 		}
 		else{ // read a page 
@@ -239,6 +272,7 @@ void OwbpCache::evict(){
 	assert( itOw != blkID_2_DS.end() );
 	
 	size_t victimSize = itOw->second.getPageSetSize();
+	assert(victimSize); 
 	currSize -= victimSize;
 	
 	//remove from main table
