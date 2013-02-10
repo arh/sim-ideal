@@ -26,7 +26,7 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 // 		if(ret.second == false){
 // 			assert(0);
 // 		}
-		assert(  currLine < it->lineNo );
+		assert(  currLine <= it->lineNo );
 		if(it->ssdblkno == meta.BlkID ){
 			if(assignedFirstBlkRef == false){
 				assert(uniqSet.size());

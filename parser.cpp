@@ -20,7 +20,7 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 	char *tempchar;
 	char *r_w;
 	char line[201];
-	static long lineno;
+	static uint32_t lineno=0;
 	static double old_time = 0;
 	
 	assert( inputTrace.good() ); 
@@ -36,7 +36,7 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 			return false;
 		}
 		strcpy(line, lineString.c_str());
-		lineno++;
+		++ lineno;
 		// Sample MSR trace lien:
 		// 	Timestamp        ,Hostname,DiskNumber,Type  ,Offset     ,Size,ResponseTime
 		// 128166554283938750,wdev    ,3         ,Write ,3154152960,4096 ,   2170

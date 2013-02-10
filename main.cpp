@@ -45,10 +45,10 @@ void	readTrace(deque<reqAtom> & memTrace)
 				memTrace.push_back(newAtom);
 				++ newAtom.fsblkno; 
 			}
-				newAtom.clear();
 		}
 		assert(lineNo < newAtom.lineNo ); 
-		lineNo = newAtom.lineNo; 
+		IFDEBUG( lineNo = newAtom.lineNo;  );
+		newAtom.clear();
 	}
 	
 	_gConfiguration.traceStream.close();
