@@ -26,7 +26,16 @@ if( no future page hit)
 
 	block hit, page hit
 		hit on previously cold page 
-			no update on coldness
+			coldness (nochange)
+			no update on coldness (My hypothesis is that this case will not happen any more). this case means that a page is initially cold and after some times
+				convert to hot page. However my argument is that if the page is cold, it will not translate to hot page because the containing block will 
+				kicked off the write buffer in advance. Therefore, there would be a block miss for the second reference that we assume it can translate cold 
+				page to hot page. 
+				This condition is very critical if my hyphotesis turns out to be true, It means that the future window size is accurate. 
+				if a page does not show up in the future window, it determined as cold and the supporting block will kicked out. 
+				any way, I need to validate this hypothesis. 
+				The ultimate goal is to be able to detect if current cold page was originaly cold
+		
 		hit on previously Hot page
 			-- coldness
 		

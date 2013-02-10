@@ -34,6 +34,9 @@ const uint32_t PAGEHIT = 8;
 const uint32_t EVICT = 16;
 const uint32_t BLKMISS = 32;
 const uint32_t BLKHIT = 64;
+const uint32_t COLD2COLD=128;
+const uint32_t COLD2HOT=256;
+
 
 const uint32_t INF = 0xFFFFFFFF;
 class reqAtom

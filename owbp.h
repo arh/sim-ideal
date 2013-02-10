@@ -58,6 +58,7 @@ class OwbpCacheBlock{
 private:
 	typedef set < cacheAtom,CompCacheAtom,allocator<cacheAtom> > PageSetType;
 	PageSetType pageSet;
+	set < uint64_t > coldPageSet;
 public:
 	OwbpCacheBlockMetaData meta;
 	ColdHeapIt coldHeapIt;
@@ -68,7 +69,7 @@ public:
 		meta.BlkID = firstValue.getSsdblkno();
 		pageSet.insert(firstValue);
 		//update meta.distance and coldPageCounter 
-		updateMetaDataOnPageInsert( firstValue, PAGEMISS );	// for the first insertion we do always have PageMiss status
+		updateMetaDataOnPageInsert(firstValue);	// for the first insertion we do always have PageMiss status
 	}
 	inline size_t getPageSetSize() const{
 		return pageSet.size();
@@ -83,6 +84,7 @@ public:
 		pageSet.clear();
 		meta.BlkID = 0;
 		meta.distance = 0;
+		coldPageSet.clear();
 	}
 	inline uint32_t getMinFutureDist() const{
 		return meta.distance;
@@ -96,7 +98,7 @@ public:
 	uint32_t readPage(cacheAtom value);
 	uint32_t writePage(cacheAtom value);
 	uint32_t findPage(cacheAtom value);
-	void updateMetaDataOnPageInsert(const cacheAtom value, const uint32_t status);
+	uint32_t updateMetaDataOnPageInsert(const cacheAtom value);
 		// check if firstValue is currpage in the memTrace
 };
 

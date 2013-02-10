@@ -47,6 +47,7 @@ void collectStat( uint32_t newFlags){
 				++ _gStats.PageWriteMiss;
 		}
 		if(newFlags	&	BLKMISS){
+			assert( !(newFlags & BLKHIT) );
 			++ _gStats.BlockWriteMiss;
 			++ _gStats.PageWriteMiss;
 		}

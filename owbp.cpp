@@ -2,10 +2,11 @@
 
 extern deque<reqAtom> memTrace;
 
-void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value, const uint32_t status)
+uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 {
 	//check if firstValue is in the curr position of memTrace
 	assert(memTrace.size()); 
+	uint32_t status=0;
 	uint32_t currLine = value.getLineNo();
 	assert( currLine == memTrace.front().lineNo );
 	assert( meta.BlkID == value.getSsdblkno() );
@@ -20,29 +21,47 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value, const uin
 	++ it; //skip over currLine
 	
 	for( ; it != memTrace.end() ; ++ it ){
-		///TODO fix this <= .... it should be <
-		assert(  currLine <= it->lineNo );
-		assert(it->reqSize == 1);
-		/*ret = */uniqSet.insert(it->fsblkno); // insert page ID in the uniqSet
+/*		pair<unordered_set<uint64_t>::iterator, bool> ret; 
+		ret =*/ uniqSet.insert((uint64_t) it->fsblkno); // insert page ID in the uniqSet
+// 		if(ret.second == false){
+// 			assert(0);
+// 		}
+		assert(  currLine < it->lineNo );
 		if(it->ssdblkno == meta.BlkID ){
 			if(assignedFirstBlkRef == false){
 				assert(uniqSet.size());
 				meta.distance= uniqSet.size() ;
 				assignedFirstBlkRef = true;
 			}
+			if(it->fsblkno == value.getFsblkno() ){
+				pageAccessInfutureWindow = true;
+			}
 		}
 		
-		if(uniqSet.size() >= _gConfiguration.futureWindowSize ){ // hopefully size() complexity is O(1)
+		if(uniqSet.size() >= ( _gConfiguration.futureWindowSize - 1) ){ // -1 because currBlock is excluded from uniqSet, hopefully size() complexity is O(1)
 		
 			break;
 		}
 	}
 	
 	if(pageAccessInfutureWindow == false){
-		if(status & PAGEHITHERE
-		++ meta.coldPageCounter;
+		pair<set<uint64_t>::iterator,bool> ret; 
+		ret = coldPageSet.insert(value.getFsblkno());
+		if( ret.second == false ){
+			PRINTV( logfile<<" page "<< value.getFsblkno() <<" was already cold" << endl; );
+			status = COLD2COLD;
+		}
 	}
-	else
+	else{ // page is not cold 
+		set<uint64_t>::iterator it;
+		it =  coldPageSet.find(value.getFsblkno());
+		if(it != coldPageSet.end() ){ // page is in the block coldset
+			PRINTV( logfile<<" page "<< value.getFsblkno() <<" was cold and now is convert to hot" << endl; );
+			coldPageSet.erase(it);
+			status = COLD2HOT;
+		}
+	}
+	meta.coldPageCounter = coldPageSet.size();
 	
 	if(assignedFirstBlkRef == false){
 		assert(pageAccessInfutureWindow == false); 
@@ -50,7 +69,8 @@ void OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value, const uin
 	}
 	
 	assert( meta.distance ); 
-	
+	uniqSet.clear();
+	return status; 
 }
 
 uint32_t OwbpCacheBlock::readPage(cacheAtom value)
@@ -67,15 +87,15 @@ uint32_t OwbpCacheBlock::readPage(cacheAtom value)
 uint32_t OwbpCacheBlock::writePage(cacheAtom value)
 {
 	assert(memTrace.front().lineNo == value.getLineNo() ); //make sure that write comes with the same sequence recorded in the queue
-	
+	uint32_t status=0;
 	
 	// update distance and coldness value
 	
 	pair < PageSetType::iterator , bool > ret =  pageSet.insert(value);
 	if( ret.second == true ){
 		assert( ret.first != pageSet.end() );
-		updateMetaDataOnPageInsert(value, PAGEMISS) ;
-		return PAGEMISS;
+		status = updateMetaDataOnPageInsert(value) ;
+		return status | PAGEMISS;
 	}
 	else{
 		assert( ret.first != pageSet.end() ) ;
@@ -87,9 +107,9 @@ uint32_t OwbpCacheBlock::writePage(cacheAtom value)
 		pageSet.insert(value);
 		IFDEBUG( assert( tempSize == pageSet.size() ); );
 
-		updateMetaDataOnPageInsert(value, PAGEHIT) ;
+		status = updateMetaDataOnPageInsert(value) ;
 		
-		return PAGEHIT;
+		return status | PAGEHIT;
 	}
 }
 
@@ -137,7 +157,7 @@ void OwbpCache::insertNewBlk(cacheAtom& value){
 		//debug
 		ColdHeapIt itDebug;
 		itDebug = coldHeap.find(tempBlock.meta);
-		assert(it->coldPageCounter !=0);
+// 		assert(it->coldPageCounter !=0);
 		assert(itDebug->coldPageCounter == it->coldPageCounter );
 		
 	}
@@ -191,21 +211,23 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 				}
 				++ currSize;
 				
-				uint32_t debugStatus;
+				uint32_t debugStatus=0;
 				assert( valid_pages = blkit->second.getPageSetSize() );
 				debugStatus = blkit->second.writePage(value); //insert new page and update block metabata
 				assert(valid_pages + 1 == blkit->second.getPageSetSize() );
 				assert(debugStatus & PAGEMISS);
+				status |= debugStatus; 
 				
 				
 			}
 			else{
 				assert(status & PAGEHIT);
-				uint32_t debugStatus;
+				uint32_t debugStatus=0;
 				assert( valid_pages = blkit->second.getPageSetSize() ); // read valid pages for debug 
 				debugStatus = blkit->second.writePage(value); //insert new page and update block metabata
 				assert( valid_pages == blkit->second.getPageSetSize() );
 				assert(debugStatus & PAGEHIT);
+				status |= debugStatus; 
 				
 			}
 			
