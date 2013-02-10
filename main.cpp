@@ -34,6 +34,7 @@ void	readTrace(deque<reqAtom> & memTrace)
 		ExitNow(1);
 	}
 	reqAtom newAtom;
+	uint32_t lineNo = 0;
 	while(getAndParseMSR(_gConfiguration.traceStream , &newAtom)){
 		//frop all reads
 		if(newAtom.flags & WRITE){
@@ -46,6 +47,8 @@ void	readTrace(deque<reqAtom> & memTrace)
 			}
 				newAtom.clear();
 		}
+		assert(lineNo < newAtom.lineNo ); 
+		lineNo = newAtom.lineNo; 
 	}
 	
 	_gConfiguration.traceStream.close();
