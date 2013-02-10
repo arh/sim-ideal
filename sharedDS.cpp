@@ -92,8 +92,8 @@ void AccessOrdering::blockBaseBuild(){
 			queue<uint32_t> *tempQPoint; 
 			tempQPoint = &(it->second);
 			assert(tempQPoint->size() != 0);
-			assert(tempQPoint->back() < lineNo );
-			assert(tempQPoint->front() < lineNo );
+			assert(tempQPoint->back() <= lineNo );
+			assert(tempQPoint->front() <= lineNo );
 			tempQPoint->push(lineNo);
 		}
 
