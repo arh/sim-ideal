@@ -56,7 +56,7 @@ private:
 	typedef map< uint64_t, cacheAtom > 	key_to_value_type;
 	// access ordering list , used to find next reference lineNo
 	AccessOrdering accessOrdering; 
-	priority_queue<HeapAtom,deque<HeapAtom>,CompHeapAtom> maxHeap;
+	multiset<HeapAtom,CompHeapAtom> maxHeap;
 	// The function to be cached
 	cacheAtom(*_fn)(const uint64_t& , cacheAtom);
 	// Maximum number of key-value pairs to be retained
@@ -100,7 +100,7 @@ private:
 	typedef map< uint64_t, SsdBlock_type > 	key_to_block_type;
 	// access ordering list , used to find next reference lineNo
 	AccessOrdering accessOrdering; 
-	priority_queue<HeapAtom,deque<HeapAtom>,CompHeapAtom> maxHeap;
+	multiset<HeapAtom,CompHeapAtom> maxHeap;
 	// The function to be cached
 	cacheAtom(*_fn)(const uint64_t& , cacheAtom);
 	// Maximum number of key-value pairs to be retained

@@ -47,7 +47,7 @@ public:
 class HeapAtom{
 public:
 	uint32_t lineNo;
-	uint64_t key;
+	uint64_t key; //key is pageID in pageMin and BlkID in blkMIN
 	HeapAtom(){
 		lineNo=0;
 		key=0;
