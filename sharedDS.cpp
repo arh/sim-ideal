@@ -81,10 +81,11 @@ void AccessOrdering::blockBaseBuild(){
 			// key is not availble in the hashTable
 			queue<uint32_t> tempQ;
 			tempQ.push(lineNo);
+			assert(tempQ.size() == 1 );
 			pair<uint64_t,queue<uint32_t>> temP(key,tempQ);
 			pair<AOHashTable::iterator,bool> ret;
 			ret = hashTable.insert(temP);
-			assert( ret.second == true ); //suppose to insert successfully
+			assert( ret.second == true ); //suppose insert successfully
 		}
 		else{
 			// key is availble

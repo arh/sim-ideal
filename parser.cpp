@@ -83,23 +83,23 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 				newn->flags = WRITE;
 			} else if(strcmp(r_w, "Read") == 0) {
 				newn->flags = READ;
-// 				continue; //only write acceess (Read bug dareh)
+ 				continue; //only write acceess (Read bug dareh)
 			} else
 				continue;
 
 			byteoff = strtoull((strtok(NULL, " ,")) , NULL , 10) ;   //read byteoffset (byte)
 			//ARH: comment this line to accept blkno 0
-// 			if(!byteoff) {
-// 				continue;
-// 			}
-// 
-// 			if(!byteoff % 512) {
-// 				PRINT(fprintf(stderr, "ARH: request byte offset is not aligned to sector size\n"););
-// 				PRINT(fprintf(stderr, "line: %s", line););
-// 			} else {
+			if(!byteoff) {
+				continue;
+			}
+
+			if(!byteoff % 512) {
+				PRINT(fprintf(stderr, "ARH: request byte offset is not aligned to sector size\n"););
+				PRINT(fprintf(stderr, "line: %s", line););
+			} else {
 				newn->fsblkno = (byteoff / _gConfiguration.fsblkSize) ; //convert byte2sector and align to page size
 				newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio;
-// 			}
+			}
 
 			bcount_temp = atoi((strtok(NULL, " ,")));   // read size
 			
@@ -112,8 +112,8 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 				PRINT(fprintf(stderr, "line: %s", line););
 			} else {
 				newn->reqSize = bcount_temp/_gConfiguration.fsblkSize;
-				if( newn->fsblkno % _gConfiguration.ssdblkSize + newn->reqSize >= _gConfiguration.ssdblkSize ){ // req size is big, going to share multiple block
-					newn->reqSize = _gConfiguration.ssdblkSize - newn->fsblkno% _gConfiguration.ssdblkSize  - 1;
+				if( newn->fsblkno % _gConfiguration.ssd2fsblkRatio + newn->reqSize >= _gConfiguration.ssd2fsblkRatio ){ // req size is big, going to share multiple block
+					newn->reqSize = _gConfiguration.ssd2fsblkRatio - newn->fsblkno% _gConfiguration.ssd2fsblkRatio;
 				}
 			}
 
