@@ -90,7 +90,7 @@ void reportProgress(){
 	
 	int completePercent = (int) ((float)(totalTraceLines-memTrace.size())/(float)totalTraceLines )*100;
 
-	if(completePercent%10 == 0 )
+	if(completePercent%10 == 0 && completePercent )
 		std::cerr<<"\r--> "<<completePercent<<"% done"<<flush;
 }
 void RunBenchmark( deque<reqAtom> & memTrace){
