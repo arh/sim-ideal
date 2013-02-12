@@ -12,8 +12,6 @@ uint32_t PageMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t st
 	PRINTV(logfile << value.getLineNo()<<": Access key: " << k << endl;);
 	// Attempt to find existing record
 	key_to_value_type::iterator it	= _key_to_value.find(k);
-	if(k==2624581)
-		cout<<"debug";
 	if(it == _key_to_value.end()) {
 		// We don’t have it:
 		PRINTV(logfile << "\tMiss on key: " << k << endl;);
@@ -54,8 +52,6 @@ uint32_t PageMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t st
 			range = maxHeap.equal_range(currHeapAtom);
 			if(range.first != range.second){
 				for(setit=range.first; setit != range.second ; ++setit ){
-					if(k==2624581)
-						cout<<"debug";
 					if(setit->key == k ){
 						maxHeap.erase(setit);
 						currHeapAtom.lineNo = nextAccessLineNo; 
@@ -260,8 +256,6 @@ int BlockMinCache::insert( uint64_t k, cacheAtom v) {
 	SsdBlock_type tempBlock;
 	tempBlock.clear();
 	tempBlock.insert(k);
-// 	if(v.getSsdblkno() == 37476)
-// 		cout<<"debug";
 	assert(tempBlock.size() == 1); 
 	// linked to the usage record.
 	_key_to_block.insert(make_pair(v.getSsdblkno(),tempBlock));
