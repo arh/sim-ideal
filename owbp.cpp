@@ -14,9 +14,9 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 	bool pageAccessInfutureWindow = false;
 	// find out min distance to future ref to the same block
 	// find out if firstValue page is cold ?
-	set<uint64_t> uniqSet; 
-	uniqSet.clear();
+
 	
+	unordered_set<uint64_t> uniqSet; 
 	deque<reqAtom>::iterator it = memTrace.begin(); // iterate over the memTrace
 	++ it; //skip over currLine
 	
@@ -53,11 +53,11 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 		}
 	}
 	else{ // page is not cold 
-		set<uint64_t>::iterator it;
-		it =  coldPageSet.find(value.getFsblkno());
-		if(it != coldPageSet.end() ){ // page is in the block coldset
+		set<uint64_t>::iterator setit;
+		setit =  coldPageSet.find(value.getFsblkno());
+		if(setit != coldPageSet.end() ){ // page is in the block coldset
 			PRINTV( logfile<<"\tpage "<< value.getFsblkno() <<" was cold and now is convert to hot" << endl; );
-			coldPageSet.erase(it);
+			coldPageSet.erase(setit);
 			status = COLD2HOT;
 		}
 	}
