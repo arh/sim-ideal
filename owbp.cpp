@@ -16,13 +16,13 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 	// find out if firstValue page is cold ?
 
 	
-	unordered_set<uint64_t> uniqSet; 
+	set<uint64_t> uniqSet; 
 	deque<reqAtom>::iterator it = memTrace.begin(); // iterate over the memTrace
 	++ it; //skip over currLine
 	
 	for( ; it != memTrace.end() ; ++ it ){
 /*		pair<unordered_set<uint64_t>::iterator, bool> ret; 
-		ret =*/ uniqSet.insert((uint64_t) it->fsblkno); // insert page ID in the uniqSet
+		ret =*/ uniqSet.insert( it->fsblkno); // insert page ID in the uniqSet
 // 		if(ret.second == false){
 // 			assert(0);
 // 		}
