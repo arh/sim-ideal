@@ -14,7 +14,7 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 	bool pageAccessInfutureWindow = false;
 	// find out min distance to future ref to the same block
 	// find out if firstValue page is cold ?
-	unordered_set<uint64_t> uniqSet; 
+	set<uint64_t> uniqSet; 
 	uniqSet.clear();
 	
 	deque<reqAtom>::iterator it = memTrace.begin(); // iterate over the memTrace
