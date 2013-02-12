@@ -69,7 +69,6 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 	}
 	
 	assert( meta.distance ); 
-	uniqSet.clear();
 	return status; 
 }
 
