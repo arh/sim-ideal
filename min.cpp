@@ -25,34 +25,36 @@ uint32_t PageMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t st
 			PRINTV(logfile << "\tInsert done on key: " << k << endl;);
 		}
 		
-		return (status | PAGEMISS);
+		status |= PAGEMISS;
 	} else {
 		PRINTV(logfile << "\tHit on key: " << k << endl;);
 		// We do have it. Do nothing in MIN cache
-		return (status | PAGEHIT | BLKHIT);
-	}
-	//update maxHeap
-	HeapAtom currHeapAtom;
-	currHeapAtom.lineNo = value.getLineNo();
-	currHeapAtom.key = k; 
-	
-	uint32_t nextAccessLineNo=0;
-	deque<reqAtom>::iterator memit = memTrace.begin();
-	
-	assert(memit->lineNo == currHeapAtom.lineNo );
-	
-	if( (++memit)->lineNo != currHeapAtom.lineNo ){ //if it need update do update 
+		status |= PAGEHIT | BLKHIT;
+
+		//update maxHeap
+		HeapAtom currHeapAtom;
+		currHeapAtom.lineNo = value.getLineNo();
+		currHeapAtom.key = k; 
 		
-		nextAccessLineNo = accessOrdering.nextAccess(currHeapAtom.key,currHeapAtom.lineNo);
-		// update max heap setit
-		multiset<HeapAtom>::iterator setit;
-		setit = maxHeap.find(currHeapAtom);
-		assert( setit != maxHeap.end());
-		maxHeap.erase(setit);
-		currHeapAtom.lineNo = nextAccessLineNo; 
-		setit = maxHeap.insert(currHeapAtom);
-		assert( setit != maxHeap.end()); 
+		uint32_t nextAccessLineNo=0;
+		deque<reqAtom>::iterator memit = memTrace.begin();
+		
+		assert(memit->lineNo == currHeapAtom.lineNo );
+		
+		if( (++memit)->lineNo != currHeapAtom.lineNo ){ //if it need update do update 
+			
+			nextAccessLineNo = accessOrdering.nextAccess(currHeapAtom.key,currHeapAtom.lineNo);
+			// update max heap setit
+			multiset<HeapAtom>::iterator setit;
+			setit = maxHeap.find(currHeapAtom);
+			assert( setit != maxHeap.end());
+			maxHeap.erase(setit);
+			currHeapAtom.lineNo = nextAccessLineNo; 
+			setit = maxHeap.insert(currHeapAtom);
+			assert( setit != maxHeap.end()); 
+		}
 	}
+	return status; 
 	
 } //end access
 
@@ -70,6 +72,11 @@ int PageMinCache::insert( uint64_t k, cacheAtom v) {
 		evict();
 		status |= EVICT;
 	}
+	
+	
+	
+	
+	
 	uint32_t tempLineNo = v.getLineNo();
 	uint32_t nextAccessLineNo = 0;
 	deque<reqAtom>::iterator it = memTrace.begin(); 
@@ -83,10 +90,12 @@ int PageMinCache::insert( uint64_t k, cacheAtom v) {
 	// Record key and lineNo in the maxHeap
 		nextAccessLineNo = accessOrdering.nextAccess(k,tempLineNo);
 	}
-	PRINTV(logfile<<"\tnext access to key "<<k<<" is in lineNo "<<nextAccessLineNo<<endl;);
-	assert( tempLineNo <= _gConfiguration.maxLineNo|| nextAccessLineNo <= _gConfiguration.maxLineNo || nextAccessLineNo == INF );
+	PRINTV(logfile<<"\tnext access to pageID "<<k<<" is in lineNo "<<nextAccessLineNo<<endl;);
+	assert(  nextAccessLineNo <= _gConfiguration.maxLineNo || nextAccessLineNo == INF );
 	HeapAtom tempHeapAtom(nextAccessLineNo, k);
+	//lookup in heap to find out block hit and update block-level metadate in case of block hit
 	multiset<HeapAtom>::iterator setit;
+	
 	setit = maxHeap.insert(tempHeapAtom);
 	assert( setit != maxHeap.end() ); 
 	
@@ -131,7 +140,7 @@ uint32_t BlockMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t s
 			PRINTV(logfile << "\tInsert done on key: " << k << endl;);
 		}
 		
-		return (status | BLKMISS);
+		status |= BLKMISS;
 	} else {
 		PRINTV(logfile << "\tHit on Block: " << value.getSsdblkno() << endl;);
 		status |= BLKHIT;
@@ -146,19 +155,19 @@ uint32_t BlockMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t s
 			PRINTV(logfile << "\tMiss on key: " << k << endl;);
 			if( cacheNum == _capacity) {
 				PRINTV(logfile << "\tCache is Full " << cacheNum << " pages" << endl;);
-				evict();
+				evict(value.getSsdblkno());
 				status |= EVICT;
 			}
 			(it->second).insert(k);
 // 			it->second.swap(tempBlock) ;
 			assert(it->second.size() ); 
 			++ cacheNum;
-			return (status | PAGEMISS );
+			status |= PAGEMISS ;
 		}
 		else{
 			// We do have it. Do nothing in MIN cache
 			PRINTV(logfile << "\tHit on key: " << k << endl;);
-			return (status | PAGEHIT );
+			status |= PAGEHIT ;
 		}
 		
 		//update maxHeap
@@ -174,6 +183,7 @@ uint32_t BlockMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t s
 		if( (++memit)->lineNo != currHeapAtom.lineNo ){ //if it need update do update 
 			
 			nextAccessLineNo = accessOrdering.nextAccess(currHeapAtom.key,currHeapAtom.lineNo);
+			PRINTV(logfile << "\tNext access on Block: " << value.getSsdblkno() <<" is in line "<<nextAccessLineNo<< endl;);
 			// update max heap setit
 			multiset<HeapAtom>::iterator setit;
 			setit = maxHeap.find(currHeapAtom);
@@ -183,7 +193,8 @@ uint32_t BlockMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t s
 			setit = maxHeap.insert(currHeapAtom);
 			assert( setit != maxHeap.end()); 
 		}
-	}
+	} //end hit 
+	return status;
 } //end access
 
 
@@ -198,7 +209,7 @@ int BlockMinCache::insert( uint64_t k, cacheAtom v) {
 	assert( _capacity );
 	if( cacheNum == _capacity) {
 		PRINTV(logfile << "\tCache is Full " << cacheNum << " pages" << endl;);
-		evict();
+		evict(v.getSsdblkno());
 		status |= EVICT;
 	}
 	
@@ -240,21 +251,29 @@ int BlockMinCache::insert( uint64_t k, cacheAtom v) {
 	return status;
 }
 // Purge the least-recently-used element in the cache
-void BlockMinCache::evict() {
+void BlockMinCache::evict(uint64_t ssdblkno) {
 	// Assert method is never called when cache is empty
 	// Identify the key with max lineNo
 	assert( maxHeap.size() == _key_to_block.size() ); 
 	multiset<HeapAtom>::iterator setit = maxHeap.begin();
 	PRINTV(logfile<<"\tevicting victim blockID "<< setit->key <<" with next lineNo "<< setit->lineNo << endl;);
+	
 	key_to_block_type::iterator it 	= _key_to_block.find(setit->key);
 	assert(it != _key_to_block.end());
-	PRINTV(logfile<<"\tMake "<< (it->second).size()<<" empty space"<<endl;);
 	assert((it->second).size());
+	
+	PRINTV(logfile<<"\tMake "<< (it->second).size()<<" empty space"<<endl;);
 	cacheNum -= (it->second).size();
 	
 	(it->second).clear();
-
-	// Erase both elements to completely purge record
-	_key_to_block.erase(it);
-	maxHeap.erase(setit);
+	
+	if( setit->key != ssdblkno ){ //it is possible to evict the same block that currant page blong to it. 
+		// Erase both elements to completely purge record
+		
+		_key_to_block.erase(it);
+		maxHeap.erase(setit);
+	}
+	else{
+		PRINTV(logfile<<"\tBlock "<< setit->key <<" cleaned but remains in cache"<<endl;);
+	}
 }

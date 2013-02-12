@@ -61,7 +61,8 @@ public:
 class CompHeapAtom{
 public:
 	bool operator()( const HeapAtom & a , const HeapAtom & b ){
-		return (a.lineNo < b.lineNo);
+// 		return (a.lineNo < b.lineNo); //turns out that this line make a MIN-heap
+		return (a.lineNo > b.lineNo); // debatin ...
 	}
 };
 

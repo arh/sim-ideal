@@ -13,20 +13,17 @@ using namespace std;
 
 void AccessOrdering::pageBaseBuild(){
 	
-	ifstream zahraStream;
-	
-	zahraStream.open(_gConfiguration.traceName);
-	
-	if( ! zahraStream.good() ){
-		cerr<<"can not open file to build access ordering"<<endl;
-		ExitNow(1);
-	}
+	assert(builded==false);
 	PRINTV(logfile<<"Building AccessOrdering...."<<endl;);
-	reqAtom newAtom;
-	uint32_t lineNo =0 ;
-	while(getAndParseMSR(zahraStream ,&newAtom)){
-		uint64_t key = newAtom.fsblkno;
-		lineNo = newAtom.lineNo;
+	
+	uint32_t lineNo =0;
+	
+	deque<reqAtom>::iterator it = memTrace.begin(); // iterate over the memTrace
+	
+	
+	for( ; it != memTrace.end() ; ++ it ){
+		uint64_t key = it->fsblkno;
+		lineNo = it->lineNo;
 		assert(lineNo);
 		AOHashTable::iterator it;
 		it = hashTable.find(key);
@@ -34,6 +31,7 @@ void AccessOrdering::pageBaseBuild(){
 			// key is not availble in the hashTable
 			queue<uint32_t> tempQ;
 			tempQ.push(lineNo);
+			assert(tempQ.size() == 1 );
 			pair<uint64_t,queue<uint32_t>> temP(key,tempQ);
 			pair<AOHashTable::iterator,bool> ret;
 			ret = hashTable.insert(temP);
@@ -49,12 +47,11 @@ void AccessOrdering::pageBaseBuild(){
 			assert(tempQPoint->front() < lineNo );
 			tempQPoint->push(lineNo);
 		}
-		newAtom.clear();
+	
 	}
 	PRINTV(logfile<<"Building Page Based AccessOrdering finished. "<<endl;);
 	PRINTV(logfile<<" ... unique page access: "<< hashTable.size()<<endl; );
 	PRINTV(logfile<<" ... total page access: "<< lineNo<< endl; );
-	zahraStream.close();
 	builded = true; 
 }
 

@@ -112,7 +112,7 @@ private:
 	// Record a fresh key-value pair in the cache
 	int insert( uint64_t k, cacheAtom v);
 	// Purge the least-recently-used element in the cache
-	void evict();
+	void evict(uint64_t ssdblkno);
 };
 
 

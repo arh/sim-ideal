@@ -89,17 +89,17 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 
 			byteoff = strtoull((strtok(NULL, " ,")) , NULL , 10) ;   //read byteoffset (byte)
 			//ARH: comment this line to accept blkno 0
-			if(!byteoff) {
-				continue;
-			}
+// 			if(!byteoff) {
+// 				continue;
+// 			}
 
-			if(!byteoff % 512) {
-				PRINT(fprintf(stderr, "ARH: request byte offset is not aligned to sector size\n"););
-				PRINT(fprintf(stderr, "line: %s", line););
-			} else {
+// 			if(!byteoff % 512) {
+// 				PRINT(fprintf(stderr, "ARH: request byte offset is not aligned to sector size\n"););
+// 				PRINT(fprintf(stderr, "line: %s", line););
+// 			} else {
 				newn->fsblkno = (byteoff / _gConfiguration.fsblkSize) ; //convert byte2sector and align to page size
 				newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio;
-			}
+// 			}
 
 			bcount_temp = atoi((strtok(NULL, " ,")));   // read size
 			

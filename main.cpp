@@ -111,7 +111,7 @@ void RunBenchmark( deque<reqAtom> & memTrace){
 			-- newReq.reqSize;
 		}
 		memTrace.pop_front();
-		reportProgress();
+// 		reportProgress();
 	}
 	PRINTV (logfile << "Benchmarking Done" << endl;);
 }
