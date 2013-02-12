@@ -85,9 +85,13 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 	srand(0);
 }
 void reportProgress(){
+	
 	static uint64_t totalTraceLines = memTrace.size();
-	std::cerr<<"\r--> "<<((float)(totalTraceLines-memTrace.size())/(float)totalTraceLines )*100<<"% done"<<flush;
-// 	cin.get();
+	
+	int completePercent = (int) ((float)(totalTraceLines-memTrace.size())/(float)totalTraceLines )*100;
+
+	if(completePercent%10 == 0 )
+		std::cerr<<"\r--> "<<completePercent<<"% done"<<flush;
 }
 void RunBenchmark( deque<reqAtom> & memTrace){
 	PRINTV (logfile << "Start benchmarking" << endl;);
@@ -111,7 +115,7 @@ void RunBenchmark( deque<reqAtom> & memTrace){
 			-- newReq.reqSize;
 		}
 		memTrace.pop_front();
-// 		reportProgress();
+		reportProgress();
 	}
 	PRINTV (logfile << "Benchmarking Done" << endl;);
 }
