@@ -116,6 +116,7 @@ uint32_t AccessOrdering::nextAccess(uint64_t key, uint32_t currLine)
 	if( it == hashTable.end()){
 		cerr<<"Block "<< key <<" is not availble in Access ordering list"<<endl;
 		assert(0);
+		return 0; // remove compiler warning
 	}
 	else{
 		assert( it->first == key);
