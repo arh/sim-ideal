@@ -12,7 +12,8 @@ uint32_t PageMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t st
 	PRINTV(logfile << value.getLineNo()<<": Access key: " << k << endl;);
 	// Attempt to find existing record
 	key_to_value_type::iterator it	= _key_to_value.find(k);
-	
+	if(k==2624581)
+		cout<<"debug";
 	if(it == _key_to_value.end()) {
 		// We don’t have it:
 		PRINTV(logfile << "\tMiss on key: " << k << endl;);
@@ -34,25 +35,44 @@ uint32_t PageMinCache::access(const uint64_t& k  , cacheAtom& value, uint32_t st
 		//update maxHeap
 		HeapAtom currHeapAtom;
 		currHeapAtom.lineNo = value.getLineNo();
-		currHeapAtom.key = k; 
-		
+		currHeapAtom.key = k; 	
 		uint32_t nextAccessLineNo=0;
-		deque<reqAtom>::iterator memit = memTrace.begin();
-		
-		assert(memit->lineNo == currHeapAtom.lineNo );
-		
-		if( (++memit)->lineNo != currHeapAtom.lineNo ){ //if it need update do update 
+// 		deque<reqAtom>::iterator memit = memTrace.begin();
+// 		
+// 		assert(memit->lineNo == currHeapAtom.lineNo );
+// 		
+// 		if( (++memit)->lineNo != currHeapAtom.lineNo ){ //if it need update do update 
 			
 			nextAccessLineNo = accessOrdering.nextAccess(currHeapAtom.key,currHeapAtom.lineNo);
+			PRINTV(logfile<<"\tNext access to pageID "<<k<<" is in lineNo "<<nextAccessLineNo<<endl;);
 			// update max heap setit
+			bool updated = false; 
 			multiset<HeapAtom>::iterator setit;
-			setit = maxHeap.find(currHeapAtom);
-			assert( setit != maxHeap.end());
-			maxHeap.erase(setit);
-			currHeapAtom.lineNo = nextAccessLineNo; 
-			setit = maxHeap.insert(currHeapAtom);
-			assert( setit != maxHeap.end()); 
-		}
+			
+			pair<multiset<HeapAtom>::iterator,multiset<HeapAtom>::iterator> range;
+			
+			range = maxHeap.equal_range(currHeapAtom);
+			if(range.first != range.second){
+				for(setit=range.first; setit != range.second ; ++setit ){
+					if(k==2624581)
+						cout<<"debug";
+					if(setit->key == k ){
+						maxHeap.erase(setit);
+						currHeapAtom.lineNo = nextAccessLineNo; 
+						multiset<HeapAtom>::iterator debugit;
+						debugit = maxHeap.insert(currHeapAtom);
+						assert( debugit != maxHeap.end()); 
+						IFDEBUG(updated=true;);
+						break;
+					}
+				}
+				assert(updated == true);
+			}
+			else{
+				assert(0);
+			}
+			
+// 		}
 	}
 	return status; 
 	
@@ -79,17 +99,17 @@ int PageMinCache::insert( uint64_t k, cacheAtom v) {
 	
 	uint32_t tempLineNo = v.getLineNo();
 	uint32_t nextAccessLineNo = 0;
-	deque<reqAtom>::iterator it = memTrace.begin(); 
-	
-	assert(it->lineNo == tempLineNo);
-	
-	if((++it)->lineNo == tempLineNo ){ // both current request and next one blong to the same block (sequential)
-		nextAccessLineNo = tempLineNo; 
-	}
-	else{
+// 	deque<reqAtom>::iterator it = memTrace.begin(); 
+// 	
+// 	assert(it->lineNo == tempLineNo);
+// 	
+// 	if((++it)->lineNo == tempLineNo ){ // both current request and next one blong to the same block (sequential)
+// 		nextAccessLineNo = tempLineNo; 
+// 	}
+// 	else{
 	// Record key and lineNo in the maxHeap
 		nextAccessLineNo = accessOrdering.nextAccess(k,tempLineNo);
-	}
+// 	}
 	PRINTV(logfile<<"\tnext access to pageID "<<k<<" is in lineNo "<<nextAccessLineNo<<endl;);
 	assert(  nextAccessLineNo <= _gConfiguration.maxLineNo || nextAccessLineNo == INF );
 	HeapAtom tempHeapAtom(nextAccessLineNo, k);

@@ -94,7 +94,6 @@ void AccessOrdering::blockBaseBuild(){
 			assert(tempQPoint->front() <= lineNo );
 			tempQPoint->push(lineNo);
 		}
-
 	}
 	PRINTV(logfile<<"Building Block Based AccessOrdering finished. "<<endl;);
 	PRINTV(logfile<<" ... unique Block access: "<< hashTable.size()<<endl; );

@@ -48,7 +48,7 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 		pair<set<uint64_t>::iterator,bool> ret; 
 		ret = coldPageSet.insert(value.getFsblkno());
 		if( ret.second == false ){
-			PRINTV( logfile<<" page "<< value.getFsblkno() <<" was already cold" << endl; );
+			PRINTV( logfile<<"\tpage "<< value.getFsblkno() <<" was already cold" << endl; );
 			status = COLD2COLD;
 		}
 	}
@@ -56,7 +56,7 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 		set<uint64_t>::iterator it;
 		it =  coldPageSet.find(value.getFsblkno());
 		if(it != coldPageSet.end() ){ // page is in the block coldset
-			PRINTV( logfile<<" page "<< value.getFsblkno() <<" was cold and now is convert to hot" << endl; );
+			PRINTV( logfile<<"\tpage "<< value.getFsblkno() <<" was cold and now is convert to hot" << endl; );
 			coldPageSet.erase(it);
 			status = COLD2HOT;
 		}
@@ -127,7 +127,7 @@ uint32_t OwbpCacheBlock::findPage(cacheAtom value)
 
 
 void OwbpCache::insertNewBlk(cacheAtom& value){
-	PRINTV(logfile << "Insert new block on page ID miss: " << value.getFsblkno() << endl;);
+	PRINTV(logfile << "\tInsert new block on page miss on PageID: " << value.getFsblkno() << endl;);
 	
 	assert(currSize < _capacity); //evict call happen in access function
 	uint64_t currSsdBlkNo = value.getSsdblkno();
@@ -290,6 +290,7 @@ void OwbpCache::evict(){
 		victimBlkID = itH->BlkID;
 		coldHeap.erase(itH);
 	}
+	PRINTV(logfile<<"\tevicting victim block ID"<< victimBlkID <<endl;);
 	map< uint64_t, OwbpCacheBlock >::iterator itOw = blkID_2_DS.find(victimBlkID);
 	assert( itOw != blkID_2_DS.end() );
 	
@@ -299,7 +300,6 @@ void OwbpCache::evict(){
 	
 	//remove from main table
 	blkID_2_DS.erase(itOw);
-// 	PRINTV(logfile<<" evicting victim block "<< maxHeapAtom.key <<" with next lineNo "<< maxHeapAtom.lineNo << endl;);
 }
 
 

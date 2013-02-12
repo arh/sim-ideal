@@ -13,7 +13,7 @@ SRCS  =    \
 
 OBJS :=   $(SRCS:%.cpp=objs/%.o)
 
-ERR = $(shell which icpc >/dev/null; echo $?)
+ERR = $(shell which icpc >/dev/null; echo $$?)
 ifeq "$(ERR)" "0"
     CXX = icpc
 else

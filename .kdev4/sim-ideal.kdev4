@@ -11,7 +11,7 @@ Name=small
 Type=Native Application
 
 [Launch][Launch Configuration 0][Data]
-Arguments=Traces/small.csv  pagemin arh 5 5
+Arguments=Traces/small.csv  owbp arh 5 5
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
