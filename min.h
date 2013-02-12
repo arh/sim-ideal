@@ -1,7 +1,6 @@
 #ifndef MIN_H
 #define MIN_H
 
-#include <unordered_map>
 #include <map>
 #include <queue>
 #include <list>

@@ -17,24 +17,27 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 
 	
 	set<uint64_t> uniqSet; 
+	pair<set<uint64_t>::iterator,bool> ret; 
 	deque<reqAtom>::iterator it = memTrace.begin(); // iterate over the memTrace
 	++ it; //skip over currLine
 	
 	for( ; it != memTrace.end() ; ++ it ){
-/*		pair<unordered_set<uint64_t>::iterator, bool> ret; 
-		ret =*/ uniqSet.insert( it->fsblkno); // insert page ID in the uniqSet
-// 		if(ret.second == false){
-// 			assert(0);
-// 		}
-		assert(  currLine <= it->lineNo );
-		if(it->ssdblkno == meta.BlkID ){
+		uint64_t tempFsblkno = it->fsblkno;
+		uint32_t tempLineNo = it->lineNo;
+		uint64_t tempSsdblkno = it->ssdblkno; 
+		assert(tempFsblkno && tempLineNo); 
+		ret=uniqSet.insert(tempFsblkno ); // insert page ID in the uniqSet to remove doublication
+		assert( ret.first != uniqSet.end() );  
+		assert(  currLine <= tempLineNo );
+		if(tempSsdblkno == meta.BlkID ){
 			if(assignedFirstBlkRef == false){
 				assert(uniqSet.size());
 				meta.distance= uniqSet.size() ;
 				assignedFirstBlkRef = true;
 			}
-			if(it->fsblkno == value.getFsblkno() ){
+			if(tempFsblkno == value.getFsblkno() ){
 				pageAccessInfutureWindow = true;
+				break; 
 			}
 		}
 		
