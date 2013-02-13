@@ -47,8 +47,9 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 		}
 	}
 	
+	uniqSet.clear();
+	
 	if(pageAccessInfutureWindow == false){
-		pair<set<uint64_t>::iterator,bool> ret; 
 		ret = coldPageSet.insert(value.getFsblkno());
 		if( ret.second == false ){
 			PRINTV( logfile<<"\tpage "<< value.getFsblkno() <<" was already cold" << endl; );
