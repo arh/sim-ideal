@@ -149,10 +149,13 @@ void OwbpCache::insertNewBlk(cacheAtom& value){
 	assert( victimPull.find(value.getSsdblkno() ) == victimPull.end() );
 	
 	if(tempBlock.getMinFutureDist() == INF ){
-		victimPull.insert(value.getSsdblkno());
+		PRINTV(logfile << "\tBlock rerefrence at INF, insert in infPull"<< endl;);
 		tempBlock.coldHeapIt = coldHeap.end();
+		victimPull.insert(value.getSsdblkno());
 	}
 	else{
+		PRINTV(logfile << "\tBlock rerefrence at distabce "<< tempBlock.getMinFutureDist() <<" , insert in maxHeap"<< endl;);
+		
 		ColdHeapIt it;
 		it = coldHeap.insert(tempBlock.meta);
 		tempBlock.coldHeapIt =  it;
@@ -188,6 +191,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 	
 	if( blkit ==  blkID_2_DS.end() ) {
 		// Block miss
+		PRINTV(logfile << "\t Block miss on BlockID: " << currSsdBlkNo << endl;);
 		status |= BLKMISS | PAGEMISS;
 		if(status & WRITE){
 			
@@ -201,13 +205,14 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 	}
 	else{
 		//Block Hit
+		PRINTV(logfile << "\t Block hit on BlockID: " << currSsdBlkNo << endl;);
 		status |= BLKHIT;
 		size_t valid_pages;
 		if(status & WRITE){
 			// loock up for pagehit or page miss
 			status |= blkit->second.findPage(value);
 			if(status & PAGEMISS){
-
+				PRINTV(logfile << "\t Page miss on pageID: " << k << endl;);
 				if(currSize == _capacity ){
 					evict();
 					status |= EVICT;
@@ -224,6 +229,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 				
 			}
 			else{
+				PRINTV(logfile << "\t Page hit on pageID: " << k << endl;);
 				assert(status & PAGEHIT);
 				uint32_t debugStatus=0;
 				assert( valid_pages = blkit->second.getPageSetSize() ); // read valid pages for debug 
@@ -238,10 +244,12 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 			//update block metadata in coldHeap and victimPull
 			ColdHeapIt it = blkit->second.coldHeapIt;
 			if( it  == coldHeap.end() ){
+				PRINTV(logfile << "\tcheck block in INF pull"<< endl;);
 				// block is in victimPull
 				victimIt itV = victimPull.find( blkit->second.getBlkID() );
 				assert( itV != victimPull.end() ); // make sure that block is in victimpull 
 				if(blkit->second.getMinFutureDist() != INF ){
+					PRINTV(logfile << "\terase block from INF pull, will rerefrence in distance of :"<< blkit->second.getMinFutureDist() << endl;);
 					// move block from victimpull to coldheap
 					victimPull.erase(blkit->second.getBlkID());
 					ColdHeapIt itRef;
@@ -250,6 +258,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 				}
 			}
 			else{
+				PRINTV(logfile << "\tcheck block in maxheap"<< endl;);
 				// block is in coldheap
 				assert( victimPull.find(blkit->second.getBlkID() ) == victimPull.end() );
 				// update coldheap
@@ -264,10 +273,12 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 				coldHeap.erase(it);
 				assert(heapSize = coldHeap.size() -1 ); // make sure it remove only one element from heap 
 				if(blkit->second.getMinFutureDist() == INF ){
-					victimPull.insert(value.getSsdblkno());
+					PRINTV(logfile << "\tmove block from maxheap to INF pull "<< endl;);
+					victimPull.insert(currSsdBlkNo);
 					blkit->second.coldHeapIt = coldHeap.end();
 				}
 				else{
+					PRINTV(logfile << "\tupdate block distance in maxHeap, new dist value : "<<blkit->second.getMinFutureDist() << endl;);
 					ColdHeapIt itRef;
 					itRef = coldHeap.insert(blkit->second.meta);
 					blkit->second.coldHeapIt =  itRef;
