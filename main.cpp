@@ -38,6 +38,7 @@ void	readTrace(deque<reqAtom> & memTrace)
 	while(getAndParseMSR(_gConfiguration.traceStream , &newAtom)){
 		//frop all reads
 		if(newAtom.flags & WRITE){
+#ifdef REQSIZE
 			uint32_t reqSize= newAtom.reqSize; 
 			newAtom.reqSize = 1;
 			//expand large request
@@ -45,6 +46,9 @@ void	readTrace(deque<reqAtom> & memTrace)
 				memTrace.push_back(newAtom);
 				++ newAtom.fsblkno; 
 			}
+#else
+			memTrace.push_back(newAtom);
+#endif
 		}
 		assert(lineNo < newAtom.lineNo ); 
 		IFDEBUG( lineNo = newAtom.lineNo;  );

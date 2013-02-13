@@ -236,8 +236,11 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 			
 			
 			//update block metadata in coldHeap and victimPull
-			ColdHeapIt it = coldHeap.find(blkit->second.coldHeapIt);
-			
+#ifdef REQSIZE
+			ColdHeapIt it = coldHeap.find(*blkit->second.coldHeapIt);
+#else
+			ColdHeapIt it = blkit->second.coldHeapIt;
+#endif
 			if( it  == coldHeap.end() ){
 				// block is in victimPull
 				victimIt itV = victimPull.find( blkit->second.getBlkID() );
@@ -254,7 +257,10 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 				// block is in coldheap
 				assert( victimPull.find(blkit->second.getBlkID() ) == victimPull.end() );
 				// update coldheap
+				size_t heapSize;
+				IFDEBUG(heapSize =  coldHeap.size() ;	);
 				coldHeap.erase(it);
+				assert(heapSize = coldHeap.size() -1 ); // make sure it remove only one element from heap 
 				if(blkit->second.getMinFutureDist() == INF ){
 					victimPull.insert(value.getSsdblkno());
 					blkit->second.coldHeapIt = coldHeap.end();
