@@ -19,9 +19,9 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 	set<uint64_t> uniqSet; 
 	pair<set<uint64_t>::iterator,bool> ret; 
 	deque<reqAtom>::iterator it = memTrace.begin(); // iterate over the memTrace
-	++ it; //skip over currLine
+	it++ ; //skip over currLine
 	
-	for( ; it != memTrace.end() ; ++ it ){
+	for( ; it != memTrace.end() ;  it++ ){
 		uint64_t tempFsblkno = it->fsblkno;
 		uint32_t tempLineNo = it->lineNo;
 		uint64_t tempSsdblkno = it->ssdblkno; 
@@ -236,7 +236,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 			
 			
 			//update block metadata in coldHeap and victimPull
-			ColdHeapIt it = blkit->second.coldHeapIt;
+			ColdHeapIt it = coldHeap.find(blkit->second.coldHeapIt);
 			
 			if( it  == coldHeap.end() ){
 				// block is in victimPull
