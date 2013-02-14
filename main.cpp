@@ -99,24 +99,12 @@ void reportProgress(){
 void RunBenchmark( deque<reqAtom> & memTrace){
 	PRINTV (logfile << "Start benchmarking" << endl;);
 	while( ! memTrace.empty() ){
+		uint32_t newFlags = 0;
 		reqAtom newReq = memTrace.front();	
-		unsigned offset=0;
-		
-		while(newReq.reqSize){ // reqSize expanded in upper layer to 1 in memTrace
-			reqAtom tempReq = newReq;
-			tempReq.reqSize=1;
-			tempReq.fsblkno+=offset;
-			tempReq.ssdblkno= tempReq.fsblkno/_gConfiguration.ssd2fsblkRatio;
-			cacheAtom newCacheAtom(tempReq);
-			uint32_t newFlags = 0;
-			//cach access
-			newFlags = _gTestCache->access(tempReq.fsblkno,newCacheAtom,tempReq.flags);
-			collectStat(newFlags);
-			newCacheAtom.clear();
-			tempReq.clear();
-			++ offset;
-			-- newReq.reqSize;
-		}
+		cacheAtom newCacheAtom(newReq);
+		//cach access
+		newFlags = _gTestCache->access(newReq.fsblkno,newCacheAtom,newReq.flags);
+		collectStat(newFlags);
 		memTrace.pop_front();
 		reportProgress();
 	}

@@ -76,7 +76,7 @@ void printStats(){
 		return;
 	}
 	
-	statStream<<_gConfiguration.testName<<",\t"<<_gConfiguration.GetAlgName()<<endl;
+	statStream<<_gConfiguration.testName<<",\t"<<_gConfiguration.GetAlgName()<<" "<<_gConfiguration.futureWindowSize<<endl;
 	Stat * tempStat;
 	while( ( tempStat = _gStats.next() ) ){
 		statStream<< tempStat->print() <<endl;

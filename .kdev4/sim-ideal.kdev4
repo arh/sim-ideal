@@ -29,7 +29,7 @@ Name=10K
 Type=Native Application
 
 [Launch][Launch Configuration 1][Data]
-Arguments=traces/src_10K.csv owbp  src_10K 1000 1000
+Arguments=Traces/src_10K.csv owbp  src_10K 1000 1000
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
@@ -47,7 +47,7 @@ Name=src_0
 Type=Native Application
 
 [Launch][Launch Configuration 2][Data]
-Arguments=Traces/usr_0.csv pagemin arh 1024 1024 \n
+Arguments=Traces/usr_0.csv blockmin arh 1024 1024 \n
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default

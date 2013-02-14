@@ -20,10 +20,10 @@ else
     CXX = g++
 endif
 
-CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall
+#CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall
 #CPPFLAG = -g -DDEBUG  -std=c++0x -Wall
 # CPPFLAG = -g -DDEBUG  -std=c++0x -Wall -DREQSIZE
-#CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall
+CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall
 
 all: main
 
