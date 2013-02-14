@@ -274,7 +274,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 #endif
 				assert(it->BlkID == currSsdBlkNo); //make sure we are deleting right block 
 				coldHeap.erase(it);
-				assert(heapSize - 1 = coldHeap.size()); // make sure it remove only one element from heap 
+				assert(heapSize - 1 == coldHeap.size()); // make sure it remove only one element from heap 
 				if(blkit->second.getMinFutureDist() == INF ){
 					PRINTV(logfile << "\tmove block from maxheap to INF pull "<< endl;);
 					victimPull.insert(currSsdBlkNo);
