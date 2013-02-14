@@ -149,9 +149,12 @@ void OwbpCache::insertNewBlk(cacheAtom& value){
 	assert( victimPull.find(value.getSsdblkno() ) == victimPull.end() );
 	
 	if(tempBlock.getMinFutureDist() == INF ){
-		PRINTV(logfile << "\tBlock rerefrence at INF, insert in infPull"<< endl;);
+		PRINTV(logfile << "\tBlock "<<currSsdBlkNo<<" rerefrence at INF, insert in infPull"<< endl;);
 		tempBlock.coldHeapIt = coldHeap.end();
-		victimPull.insert(value.getSsdblkno());
+		pair<victimIt,bool> vicPair;
+		vicPair = victimPull.insert(value.getSsdblkno());
+		assert( vicIt.//multiple block in victim pull != victimPull.end() ) ; 
+
 	}
 	else{
 		PRINTV(logfile << "\tBlock rerefrence at distabce "<< tempBlock.getMinFutureDist() <<" , insert in maxHeap"<< endl;);
@@ -312,7 +315,7 @@ void OwbpCache::evict(){
 		victimBlkID = itH->BlkID;
 		coldHeap.erase(itH);
 	}
-	PRINTV(logfile<<"\tevicting victim block ID"<< victimBlkID <<endl;);
+	PRINTV(logfile<<"\tEvicting victim block ID "<< victimBlkID <<endl;);
 	map< uint64_t, OwbpCacheBlock >::iterator itOw = blkID_2_DS.find(victimBlkID);
 	assert( itOw != blkID_2_DS.end() );
 	
