@@ -51,6 +51,7 @@ public:
 
 typedef multiset<OwbpCacheBlockMetaData,CompOwbpCacheBlockMetaData,allocator<OwbpCacheBlockMetaData>> ColdHeap_type;
 typedef multiset<OwbpCacheBlockMetaData,CompOwbpCacheBlockMetaData,allocator<OwbpCacheBlockMetaData>>::iterator ColdHeapIt;
+typedef multiset<OwbpCacheBlockMetaData,CompOwbpCacheBlockMetaData,allocator<OwbpCacheBlockMetaData>>::reverse_iterator ColdHeapRIt;
 typedef set<uint64_t>::iterator victimIt; 
 typedef set<uint64_t>::reverse_iterator victimRIt; 
 
@@ -73,6 +74,9 @@ public:
 	}
 	inline size_t getPageSetSize() const{
 		return pageSet.size();
+	}
+	inline void clearPageSet() {
+		pageSet.clear();
 	}
 	
 	inline uint64_t getBlkID() const{
@@ -140,7 +144,7 @@ private:
 	const size_t _capacity;
 	
 	// Purge the least-recently-used element in the cache
-	void evict(); 
+	void evict(uint64_t currBlkID); 
 	uint32_t blkHitAccess(const uint64_t& k  , cacheAtom& value, uint32_t status, OwbpCacheBlock & tempBlock);
 	void insertNewBlk( cacheAtom& value);
 };

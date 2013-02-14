@@ -153,7 +153,7 @@ void OwbpCache::insertNewBlk(cacheAtom& value){
 		tempBlock.coldHeapIt = coldHeap.end();
 		pair<victimIt,bool> vicPair;
 		vicPair = victimPull.insert(value.getSsdblkno());
-		assert( vicIt.//multiple block in victim pull != victimPull.end() ) ; 
+		assert( vicPair.second == true ) ; // we have block miss in this case, therefore, there should be no valid blockID with the same ID
 
 	}
 	else{
@@ -199,7 +199,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 		if(status & WRITE){
 			
 			if(currSize == _capacity ){
-				evict();
+				evict(currSsdBlkNo);
 				status |= EVICT;
 			}
 			insertNewBlk(value);
@@ -217,7 +217,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 			if(status & PAGEMISS){
 				PRINTV(logfile << "\t Page miss on pageID: " << k << endl;);
 				if(currSize == _capacity ){
-					evict();
+					evict(currSsdBlkNo);
 					status |= EVICT;
 				}
 				++ currSize;
@@ -301,19 +301,29 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 } //end access
 
 
-void OwbpCache::evict(){
+void OwbpCache::evict(uint64_t currBlkID){
 	assert( currSize == _capacity );
 	uint64_t victimBlkID;
 	if( victimPull.size() != 0 ){
 		victimIt itV = victimPull.begin() ;
 		victimBlkID = *itV;
-		victimPull.erase(itV);
+		if(victimBlkID == currBlkID){
+			PRINTV(logfile<<"\tFirst evict candidate is the same as current block, don't erase it from VictimPull"<<endl;);
+		}
+		else {
+			victimPull.erase(itV);
+		}
 	}
 	else{
 		assert( coldHeap.size() != 0 );
-		ColdHeapIt itH = -- coldHeap.end(); // assume there is no douplicated entry with the same condition in the multiset, this assumption is no longer valid, but the code funcionality is validated
+		ColdHeapIt itH = --coldHeap.end(); // assume there is no douplicated entry with the same condition in the multiset, this assumption is no longer valid, but the code funcionality is validated
 		victimBlkID = itH->BlkID;
-		coldHeap.erase(itH);
+		if(victimBlkID == currBlkID){
+			PRINTV(logfile<<"\tFirst evict candidate is the same as current block, don't erase it from coldHeap"<<endl;);
+		}
+		else{
+			coldHeap.erase(itH);
+		}
 	}
 	PRINTV(logfile<<"\tEvicting victim block ID "<< victimBlkID <<endl;);
 	map< uint64_t, OwbpCacheBlock >::iterator itOw = blkID_2_DS.find(victimBlkID);
@@ -324,7 +334,12 @@ void OwbpCache::evict(){
 	currSize -= victimSize;
 	
 	//remove from main table
-	blkID_2_DS.erase(itOw);
+	if(victimBlkID == currBlkID){
+		itOw->second.clearPageSet();
+	}
+	else{
+		blkID_2_DS.erase(itOw);
+	}
 }
 
 
