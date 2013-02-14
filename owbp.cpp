@@ -223,7 +223,7 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 				++ currSize;
 				
 				uint32_t debugStatus=0;
-				assert( valid_pages = blkit->second.getPageSetSize() );
+				IFDEBUG( valid_pages = blkit->second.getPageSetSize() );
 				debugStatus = blkit->second.writePage(value); //insert new page and update block metabata
 				assert(valid_pages + 1 == blkit->second.getPageSetSize() );
 				assert(debugStatus & PAGEMISS);
