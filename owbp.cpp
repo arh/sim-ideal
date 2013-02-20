@@ -32,7 +32,7 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 		if(tempSsdblkno == meta.BlkID ){
 			if(assignedFirstBlkRef == false){
 				assert(uniqSet.size());
-				meta.distance= uniqSet.size() ;
+				meta.distance= tempLineNo;
 				assignedFirstBlkRef = true;
 			}
 			if(tempFsblkno == value.getFsblkno() ){
