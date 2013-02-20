@@ -3,8 +3,17 @@ University of Minnesota
 
 sim-ideal
 =========
+A cache simulator for caching policy performance measurement. 
+
+
+Development Branches
+=========
+master: active development branch
+rmBoost: remoove boost library and bimap
+futureDistinctSet: uses distinct items in the future for future distance metadata value in OWBP algorithm
 
 TODO:
+=========
 - bound block min to future sliding window
 - block metadata update rate and update time ?
 - a request with reqSize > 1 will always have future distance block 1 , Do we need to fix it ? 
