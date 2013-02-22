@@ -89,6 +89,6 @@ void printStats(){
 	while( ( tempStat = _gStats.next() ) ){
 		statStream<< tempStat->print() <<endl;
 	}
-	
+	statStream<<endl;
 	statStream.close();
 }
