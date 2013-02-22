@@ -53,3 +53,9 @@ if( no future page hit)
 		
 	block hit, page miss
 		++ codlness
+		
+example:
+	valid_page	cold_page	hot_page	distance
+	20		8		12		100
+	25		6		19		210
+	15		5		10		107
