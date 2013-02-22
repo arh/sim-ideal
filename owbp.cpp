@@ -269,10 +269,17 @@ uint32_t OwbpCache::access(const uint64_t& k  , cacheAtom& value, uint32_t statu
 				size_t heapSize;
 				IFDEBUG(heapSize =  coldHeap.size() ;	);
 #ifdef REQSIZE
-				ColdHeapIt newIt = it;
-				newIt++;
-				if(newIt->coldPageCounter == it->coldPageCounter)
-					assert(0); // need to use equal_range
+				pair<ColdHeapIt,ColdHeapIt> pairIt = coldHeap.equal_range( *it);
+				
+				assert( pairIt.first != coldHeap.end() ); 
+				for( ColdHeapIt inIt =  pairIt.first ; inIt != pairIt.second ; inIt++){
+					
+					assert( inIt->coldPageCounter == it->coldPageCounter );
+					if(inIt->BlkID ==  currSsdBlkNo ){
+						it = inIt; 
+						break;
+					}
+				}
 #endif
 				assert(it->BlkID == currSsdBlkNo); //make sure we are deleting right block 
 				coldHeap.erase(it);

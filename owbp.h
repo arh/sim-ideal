@@ -45,9 +45,9 @@ public:
 		if( a.coldPageCounter != b.coldPageCounter ){
 			return a.coldPageCounter < b.coldPageCounter;
 		}
-		else if( a.validPageCount != b.validPageCount )
-			return a.validPageCount > b.validPageCount;  // there might be a chance to see two block with the same coldness value and distance, for this reason I used multiset
-	
+// 		else if( a.validPageCount != b.validPageCount )
+// 			return a.validPageCount > b.validPageCount;  // there might be a chance to see two block with the same coldness value and distance, for this reason I used multiset
+// 	
 		else
 			return a.distance < b.distance ; 
 	}
