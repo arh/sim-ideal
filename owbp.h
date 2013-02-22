@@ -32,6 +32,7 @@ public:
 	uint32_t coldPageCounter;
 	uint32_t distance; // min distinct ditance to the next page reference in future window, INF means there is no ref 
 	uint64_t BlkID;
+	size_t validPageCount;
 };
 
 
@@ -44,8 +45,11 @@ public:
 		if( a.coldPageCounter != b.coldPageCounter ){
 			return a.coldPageCounter < b.coldPageCounter;
 		}
+		else if( a.validPageCount != b.validPageCount )
+			return a.validPageCount > b.validPageCount;  // there might be a chance to see two block with the same coldness value and distance, for this reason I used multiset
+	
 		else
-			return a.distance < b.distance;  // there might be a chance to see two block with the same coldness value and distance, for this reason I used multiset
+			return a.distance < b.distance ; 
 	}
 };
 
@@ -88,6 +92,7 @@ public:
 		pageSet.clear();
 		meta.BlkID = 0;
 		meta.distance = 0;
+		meta.validPageCount = 0;
 		coldPageSet.clear();
 	}
 	inline uint32_t getMinFutureDist() const{

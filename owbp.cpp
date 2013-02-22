@@ -97,6 +97,7 @@ uint32_t OwbpCacheBlock::writePage(cacheAtom value)
 	pair < PageSetType::iterator , bool > ret =  pageSet.insert(value);
 	if( ret.second == true ){
 		assert( ret.first != pageSet.end() );
+		++ meta.validPageCount;
 		status = updateMetaDataOnPageInsert(value) ;
 		return status | PAGEMISS;
 	}

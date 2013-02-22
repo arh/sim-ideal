@@ -59,7 +59,7 @@ void collectStat( uint32_t newFlags){
 		
 		if( newFlags & COLD2COLD ){
 			++ _gStats.Cold2Cold;
-			assert( ! newFlags & COLD2HOT ); 
+			assert( ! (newFlags & COLD2HOT) ); 
 		}
 		if(newFlags & COLD2HOT)
 			++ _gStats.Cold2Hot; 
