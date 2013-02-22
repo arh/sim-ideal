@@ -56,6 +56,9 @@ public:
 	Stat BlockWriteMiss;
 	Stat BlockEvict; //11
 	
+	Stat Cold2Cold; //12
+	Stat Cold2Hot; 
+	
 	StatsDS()
 	: Ref("Total References")
 	, PageRead("Total Reads")
@@ -70,6 +73,8 @@ public:
 	, BlockWriteHit("Block Write Hit")
 	, BlockWriteMiss("Block Write Miss")
 	, BlockEvict("Block Evict")
+	, Cold2Cold("Cold2Cold")
+	, Cold2Hot("Cold2Hot")
 	{
 		returnIndex=0;
 	}
@@ -87,6 +92,8 @@ public:
 			case 9:		++returnIndex; return &BlockWriteHit;
 			case 10:	++returnIndex; return &BlockWriteMiss;
 			case 11:	++returnIndex; return &BlockEvict;
+			case 12:	++returnIndex; return &Cold2Cold;
+			case 13: 	++returnIndex; return &Cold2Hot; 
 			default:	return NULL;
 		}
 	}

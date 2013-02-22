@@ -56,6 +56,14 @@ void collectStat( uint32_t newFlags){
 		
 		if(newFlags	&	PAGEMISS && ! (newFlags	&BLKHIT ) && !(newFlags	&BLKMISS) ) // for page based algorithm
 			++ _gStats.PageWriteMiss;
+		
+		if( newFlags & COLD2COLD ){
+			++ _gStats.Cold2Cold;
+			assert( ! newFlags & COLD2HOT ); 
+		}
+		if(newFlags & COLD2HOT)
+			++ _gStats.Cold2Hot; 
+			
 	}
 	else{
 		cerr<<"Error: Unknown request type in stat collection"<<endl;
