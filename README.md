@@ -5,6 +5,13 @@ sim-ideal
 =========
 A cache simulator for caching policy performance measurement. 
 
+Compilation Macros
+=========
+DEBUG : enable debug mode
+VERB : enable verbous output in log.txt
+REQSIZE : expand Trace request based on the request size
+HITS : collect histogram for PIRD and BIRD
+
 
 Development Branches
 =========

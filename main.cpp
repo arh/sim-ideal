@@ -78,7 +78,7 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 	else if ( _gConfiguration.GetAlgName().compare("blockmin") == 0	 ){
 		_gTestCache = new BlockMinCache(cacheAll, _gConfiguration.L1cacheSize);
 	}
-	else if ( _gConfiguration.GetAlgName().compare("owbp") == 0	 ){
+	else if ( _gConfiguration.GetAlgName().find("owbp") != string::npos	 ){
 		_gTestCache = new OwbpCache(cacheAll, _gConfiguration.L1cacheSize);
 	}
 	else{

@@ -16,12 +16,18 @@
 #endif
 
 
-
 #ifdef VERB
 #define PRINTV(X)	do { X	}while(false)
 #else
 #define PRINTV(X)
 #endif
+
+#ifdef HIST
+#define IFHIST(X)	do { X	}while(false)
+#else
+#define IFHIST(X)
+#endif
+
 
 extern Configuration	_gConfiguration;
 

@@ -71,6 +71,37 @@ void collectStat( uint32_t newFlags){
 	}
 }
 
+// print histograms
+void printHist(){
+	ofstream pirdStream,birdStream;
+	string pirdName("Stats/");
+	pirdName.append(_gConfiguration.testName);
+	pirdName.append("-");
+	pirdName.append(_gConfiguration.GetAlgName());
+	string birdName(pirdName);
+	pirdName.append(".PIRD");
+	birdName.append(".BIRD");
+	
+	pirdStream.open(pirdName, ios::out|ios::trunc);
+	if( ! pirdStream.good() ){
+		cerr<<"Error: can not open PIRD file: "<<pirdName<<endl;
+		return;
+	}
+	birdStream.open(birdName, ios::out|ios::trunc);
+	if( ! birdStream.good() ){
+		cerr<<"Error: can not open BIRD file: "<<birdName<<endl;
+		return;
+	}
+	
+	for(unsigned i = 0; i < _gConfiguration.futureWindowSize  ; ++i ){
+		pirdStream<<i<<"\t"<<_gConfiguration.pirdHist[i]<<endl;
+		birdStream<<i<<"\t"<<_gConfiguration.birdHist[i]<<endl;
+	}
+	pirdStream.close();
+	birdStream.close();
+}
+
+//print stats
 void printStats(){
 	
 	ofstream statStream;
@@ -84,11 +115,14 @@ void printStats(){
 		return;
 	}
 	
-	statStream<<_gConfiguration.testName<<",\t"<<_gConfiguration.GetAlgName()<<" "<<_gConfiguration.futureWindowSize<<endl;
+	statStream<<_gConfiguration.testName<<",\t"<<_gConfiguration.GetAlgName()<<endl;
 	Stat * tempStat;
 	while( ( tempStat = _gStats.next() ) ){
 		statStream<< tempStat->print() <<endl;
 	}
 	statStream<<endl;
 	statStream.close();
+
+	IFHIST(printHist(););
+	
 }

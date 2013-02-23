@@ -19,9 +19,9 @@
 
 using namespace std;
 extern 	deque<reqAtom> memTrace; // in memory trace file
+
+
 //************** AccessOrdering **************//
-
-
 
 class AccessOrdering{
 private:

@@ -34,9 +34,11 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
 				assert(uniqSet.size());
 				meta.distance= tempLineNo;
 				assignedFirstBlkRef = true;
+				IFHIST(_gConfiguration.birdHist[uniqSet.size()]++; );
 			}
 			if(tempFsblkno == value.getFsblkno() ){
 				pageAccessInfutureWindow = true;
+				IFHIST(_gConfiguration.pirdHist[uniqSet.size()]++; );
 				break; 
 			}
 		}
