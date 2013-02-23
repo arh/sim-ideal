@@ -91,9 +91,10 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 void reportProgress(){
 
 	static uint64_t totalTraceLines = memTrace.size();
-	
+	static int lock= -1; 
 	int completePercent = ((totalTraceLines-memTrace.size())*100)/totalTraceLines ;
-	if(completePercent%10 == 0 && completePercent ){
+	if(completePercent%10 == 0 && lock != completePercent ){
+		lock = completePercent ;
 		std::cerr<<"\r--> "<<completePercent<<"% done"<<flush;
 	}
 	if(completePercent == 100 )
