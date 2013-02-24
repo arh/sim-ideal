@@ -20,7 +20,9 @@ ehthumbs.db
 Thumbs.db
 *~
 sim-ideal
-
+*.BIRD
+*.PIRD
+*.stat
 # Kdevelop files #
 ##################
 #*.kdev4
