@@ -1,5 +1,5 @@
-SRCS=$(wildcard *.cpp)
-OBJS :=   $(SRCS:%.cpp=objs/%.o)
+SRCS=$(wildcard src/*.cpp)
+OBJS :=   $(SRCS:%.cpp=%.o)
 
 ERR = $(shell which icpc >/dev/null; echo $$?)
 ifeq "$(ERR)" "0"
@@ -22,9 +22,9 @@ main: $(OBJS)
 	$(CXX) -o sim-ideal  $(OBJS) $(LDFLAG) $(CPPFLAG)
 
 
-objs/%.o: %.cpp
+%.o: %.cpp
 	$(CXX) $(CPPFLAG) -c $< -o $@
 
 clean:
-	rm -rf objs/*.o
-	rm -rf sim-ideal
+	rm -f src/*.o
+	rm -f sim-ideal
