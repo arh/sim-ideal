@@ -1,16 +1,4 @@
-SRCS  =    \
-	parser.cpp \
-	lru_stl.cpp \
-	global.cpp \
-	stats.cpp\
-	min.cpp\
-	sharedDS.cpp\
-	main.cpp\
-	owbp.cpp\
-	
-
-
-
+SRCS=$(wildcard *.cpp)
 OBJS :=   $(SRCS:%.cpp=objs/%.o)
 
 ERR = $(shell which icpc >/dev/null; echo $$?)

@@ -3,14 +3,28 @@ University of Minnesota
 
 sim-ideal
 =========
-A cache simulator for caching policy performance measurement. 
+Ideal multi-level cache simulator. This simulator has been implemented for the performance mesurement and design study of cache replacement policies.
+
+Implemented Replacement policies
+=========
+LRU
+Page-MIN
+Block-MIN
+OWBP
+
+
+Input Trace Format
+=========
+Microsoft Research trace format, published in SNIA IOTTA trace repository 
+
+
 
 Compilation Macros
 =========
 DEBUG : enable debug mode
 VERB : enable verbous output in log.txt
 REQSIZE : expand Trace request based on the request size (memTrace is bigger in this case)
-HITS : collect histogram for PIRD and BIRD
+HITS : collect histogram for PIRD (page level stack distance) and BIRD (block level stack distance)
 
 
 Development Branches
