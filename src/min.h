@@ -27,8 +27,9 @@ public:
 	// the maximum number of records to be stored.
 	PageMinCache(
 		cacheAtom(*f)(const uint64_t& , cacheAtom),
-		size_t c
-	) : _fn(f) , _capacity(c) {
+		size_t c,
+	      unsigned levelMinus
+	) : _fn(f) , _capacity(c), levelMinusMinus(levelMinus) {
 		        assert ( _capacity!=0 );
 			accessOrdering.pageBaseBuild();
 			
@@ -63,6 +64,7 @@ private:
 
 	// Key-to-value lookup
 	key_to_value_type _key_to_value;
+	unsigned levelMinusMinus;
 	
 	// Record a fresh key-value pair in the cache
 	int insert( uint64_t k, cacheAtom v);
@@ -78,8 +80,9 @@ public:
 	// the maximum number of records to be stored.
 	BlockMinCache(
 		cacheAtom(*f)(const uint64_t& , cacheAtom),
-		size_t c
-	) : _fn(f) , _capacity(c) {
+		size_t c,
+	       unsigned levelMinus
+	) : _fn(f) , _capacity(c) , levelMinusMinus(levelMinus) {
 		///ARH: Commented for single level cache implementation
 		        assert ( _capacity!=0 );
 			accessOrdering.blockBaseBuild();
@@ -107,6 +110,7 @@ private:
 	size_t cacheNum;
 	// Key-to-value lookup
 	key_to_block_type _key_to_block;
+	unsigned levelMinusMinus;
 	
 	// Record a fresh key-value pair in the cache
 	int insert( uint64_t k, cacheAtom v);

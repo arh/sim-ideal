@@ -120,8 +120,9 @@ public:
 	// the maximum number of records to be stored.
 	OwbpCache(
 		cacheAtom(*f)(const uint64_t& , cacheAtom),
-		size_t c
-	) : _fn(f) , _capacity(c) {
+		size_t c,
+		unsigned levelMinus
+	) : _fn(f) , _capacity(c) , levelMinusMinus(levelMinus){
 		///ARH: Commented for single level cache implementation
 		    assert ( _capacity!=0 );
 			currSize = 0; 
@@ -147,6 +148,7 @@ private:
 	cacheAtom(*_fn)(const uint64_t& , cacheAtom);
 	// Maximum number of key-value pairs to be retained
 	const size_t _capacity;
+	unsigned levelMinusMinus;
 	
 	// Purge the least-recently-used element in the cache
 	void evict(uint64_t currBlkID); 

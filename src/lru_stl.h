@@ -39,8 +39,9 @@ public:
 // the maximum number of records to be stored.
 	PageLRUCache(
 	        V(*f)(const K& , V),
-	        size_t c
-	) : _fn(f) , _capacity(c) {
+	        size_t c,
+	        unsigned levelMinus
+	) : _fn(f) , _capacity(c),levelMinusMinus(levelMinus)  {
 		///ARH: Commented for single level cache implementation
 //         assert ( _capacity!=0 );
 	}
@@ -151,6 +152,7 @@ private:
 	key_tracker_type _key_tracker;
 // Key-to-value lookup
 	key_to_value_type _key_to_value;
+	unsigned levelMinusMinus;
 };
 
 #endif //end lru_stl

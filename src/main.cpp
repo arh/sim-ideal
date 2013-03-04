@@ -73,16 +73,16 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 	
 	int i = 0; 
 	if( _gConfiguration.GetAlgName(i).compare("pagelru") == 0 ){
-		_gTestCache = new PageLRUCache<uint64_t,cacheAtom>(cacheAll, _gConfiguration.cacheSize[i]);
+		_gTestCache = new PageLRUCache<uint64_t,cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 	}
 	else if ( _gConfiguration.GetAlgName(i).compare("pagemin") == 0	 ){
-		_gTestCache = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i]);
+		_gTestCache = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
 	}
 	else if ( _gConfiguration.GetAlgName(i).compare("blockmin") == 0	 ){
-		_gTestCache = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i]);
+		_gTestCache = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
 	}
 	else if ( _gConfiguration.GetAlgName(i).find("owbp") != string::npos	 ){
-		_gTestCache = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i]);
+		_gTestCache = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
 	}
 	else{
 		cerr<< "Error: UnKnown Algorithm name " <<endl;

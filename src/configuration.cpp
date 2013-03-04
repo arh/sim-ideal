@@ -3,8 +3,9 @@
 
 void Configuration::allocateArrays(int totalLevels)
 {
-
+	outTraceStream = new std::ofstream[totalLevels];
 	policyName = new std::string[totalLevels];
+	
 	cacheSize =  new uint64_t[totalLevels];
 	cachePageSize = new uint64_t[totalLevels];
 	cacheBlkSize = new uint64_t[totalLevels];
@@ -114,16 +115,23 @@ bool Configuration::read(int argc, char **argv) {
 			tempStr = pTree.get<std::string>	(std::string( cacheStr[i] + "." + "blkSize") );
 			cacheBlkSize[i] = myString2intConverter(tempStr);
 			ssd2fsblkRatio[i] = cacheBlkSize[i]/fsblkSize;
-			
+
+			try{
+				tempStr = pTree.get<std::string>(std::string( cacheStr[i] + "." + "outTraceFile"));
+			}
+			catch(...){
+				//no log file specified
+				tempStr.clear();
+			}
+			if( ! tempStr.empty() ){
+				outTraceStream[i].open(tempStr.c_str(),std::ios::trunc);
+			}
 			
 			policyName[i] = pTree.get<std::string>		( std::string( cacheStr[i] + "." + "policy"  ) );
-			
-			
 			//read policy dependent configs
 			if(policyName[i].find("owbp") != std::string::npos ){
 				tempStr = pTree.get<std::string> ( std::string( cacheStr[i] + "." + "policy" + "." + "futureWindowSize"  ) );
 				futureWindowSize = myString2intConverter(tempStr) ;
-				
 			}
 		}
 	}
@@ -139,3 +147,51 @@ bool Configuration::read(int argc, char **argv) {
 	
 	return true;
 }
+
+void Configuration::initHist()
+{
+	assert(futureWindowSize);
+	for(unsigned i=0 ; i < futureWindowSize ; ++i ){
+		birdHist[i]=0;
+		pirdHist[i]=0;
+	}
+}
+
+Configuration::Configuration()
+{
+	traceName = NULL;
+	policyName = NULL;
+	cacheSize = NULL;
+	outTraceStream = NULL;
+	totalLevels = 0; 
+	testName = 0;
+	// 		ssdblkSize = 16384 ; 
+	maxLineNo = 0;
+	
+	birdHist = NULL;
+	pirdHist = NULL;
+
+}
+
+
+Configuration::~Configuration()
+{
+	IFHIST(delete pirdHist;);
+	IFHIST(delete birdHist;);
+	traceStream.close();
+	
+	//print end time
+	time_t now = time(0);
+	tm* localtm = localtime(&now);
+	logStream<<"End Logging at "<< asctime(localtm) <<std::endl;
+	logStream.close();
+	for(int i=0 ; i<totalLevels ; ++i)
+		outTraceStream[i].close();
+	delete [] cacheSize;
+	delete [] policyName;
+	delete [] cacheBlkSize;
+	delete [] cachePageSize;
+	delete [] ssd2fsblkRatio;
+	delete [] outTraceStream;
+}
+
