@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/info_parser.hpp>
 #include "cpp_framework.h"
 
 #ifdef HIST
@@ -25,16 +27,18 @@ public:
 	char* traceName;
 	std::ifstream traceStream;
 	std::ofstream logStream; 
-	char*	algName;
+	std::string * policyName;
 	char*   testName;
-	uint64_t L1cacheSize; // in page 
+	uint64_t * cacheSize;  // in pages 
 	uint64_t fsblkSize;
-	uint64_t ssdblkSize;
-	uint32_t ssd2fsblkRatio;
+	uint64_t *cachePageSize;
+	uint64_t *cacheBlkSize;
+	uint32_t *ssd2fsblkRatio;
 	uint64_t maxLineNo;
 	uint32_t futureWindowSize;
 	uint64_t *birdHist;
 	uint64_t *pirdHist;
+	int 	totalLevels;
 
 	void initHist(){
 		assert(futureWindowSize);
@@ -45,39 +49,16 @@ public:
 	}
 
 
-	bool read(int argc, char **argv) {
+	bool read(int argc, char **argv) ;
 
-		if(argc < 6)
-			return false;
-
-		int curr_arg = 1;
-		traceName = argv[curr_arg++];
-
-		if(GetTraceName().compare("stdin") != 0) {
-			_gTraceBased = true;
-		}
-		else{
-			std::cerr<<" Error: read from stdin is not implemented"<<std::endl;
-			exit(1);
-		}
-		algName 	= argv[curr_arg++];
-		testName	= argv[curr_arg++];
-		L1cacheSize = CMDR::Integer::parseInt(argv[curr_arg++]);
-		futureWindowSize = CMDR::Integer::parseInt(argv[curr_arg++]);
-		IFHIST(birdHist = new uint64_t[futureWindowSize];);
-		IFHIST(pirdHist = new uint64_t[futureWindowSize];);
-		IFHIST(initHist(););
-		return true;
-	}
-
-	std::string GetAlgName() {
-		if( strcmp(algName,"owbp") == 0){
+	std::string GetAlgName( int i ) {
+		if( policyName[i].find("owbp") != std::string::npos){
 			std::ostringstream convert;
-			convert << futureWindowSize/L1cacheSize ;
-			return std::string(algName).append("-").append(convert.str()).append("x");
+			convert << futureWindowSize/cacheSize[i] ;
+			return std::string(policyName[i] +  "-" + (convert.str()) + ("x") );
 		}
 		else
-			return std::string(algName);
+			return policyName[i];
 	}
 
 	std::string PrintTestName() {
@@ -90,21 +71,17 @@ public:
 
 	Configuration() {
 		traceName = NULL;
-		algName = NULL;
+		policyName = NULL;
+		cacheSize = NULL;
+		totalLevels = 0; 
 		testName = 0;
-		L1cacheSize = 0;
-		fsblkSize = 4096;
-		ssdblkSize = 256 * 1024 ; //64 page per ssd block
 // 		ssdblkSize = 16384 ; 
-		ssd2fsblkRatio = ssdblkSize / fsblkSize;
 		maxLineNo = 0;
-		logStream.open("log.txt",std::ios::trunc);
+		
 		birdHist = NULL;
 		pirdHist = NULL;
-		//print start time
-		time_t now = time(0);
-		tm* localtm = localtime(&now);
-		logStream<<"Start Logging at "<< asctime(localtm) <<std::endl;
+
+		
 	}
 
 	~Configuration() {
@@ -118,8 +95,16 @@ public:
 		tm* localtm = localtime(&now);
 		logStream<<"End Logging at "<< asctime(localtm) <<std::endl;
 		logStream.close();
+		delete [] cacheSize;
+		delete [] policyName;
+		delete [] cacheBlkSize;
+		delete [] cachePageSize;
+		delete [] ssd2fsblkRatio;
 	}
 
+	private:
+	void allocateArrays(int totalLevels);
+	uint64_t myString2intConverter(std::string temp);
 };
 
 

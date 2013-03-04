@@ -73,11 +73,14 @@ void collectStat( uint32_t newFlags){
 
 // print histograms
 void printHist(){
+	//TODO: print stat for each cache in hierarchy
+	
+	int i=0; 
 	ofstream pirdStream,birdStream;
 	string pirdName("Stats/");
 	pirdName.append(_gConfiguration.testName);
 	pirdName.append("-");
-	pirdName.append(_gConfiguration.GetAlgName());
+	pirdName.append(_gConfiguration.GetAlgName(i));
 	string birdName(pirdName);
 	pirdName.append(".PIRD");
 	birdName.append(".BIRD");
@@ -103,7 +106,8 @@ void printHist(){
 
 //print stats
 void printStats(){
-	
+	//TODO: print stat for each cache in hierarchy
+	int i = 0; 
 	ofstream statStream;
 	mkdir("Stats", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	string fileName("Stats/");
@@ -115,7 +119,7 @@ void printStats(){
 		return;
 	}
 	
-	statStream<<_gConfiguration.testName<<",\t"<<_gConfiguration.GetAlgName()<<endl;
+	statStream<<_gConfiguration.testName<<",\t"<<_gConfiguration.GetAlgName(i)<<endl;
 	Stat * tempStat;
 	while( ( tempStat = _gStats.next() ) ){
 		statStream<< tempStat->print() <<endl;

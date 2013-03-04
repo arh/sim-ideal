@@ -62,24 +62,27 @@ void	readTrace(deque<reqAtom> & memTrace)
 void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 {
 	if(!_gConfiguration.read(argc, argv)) {
-		cerr << "USAGE: <tracefilename> <AlgName> <TestName> <L1Size> <WindowSize>" << endl;
+		cerr << "USAGE: <TraceFilename> <CfgFileName> <TestName>" << endl;
 		exit(-1);
 	}
 
 	readTrace(memTrace);
 	assert(memTrace.size() != 0);
-// 	lru_stl< uint64_t , cacheAtom> LRUCache(cacheAll, _gConfiguration.L1cacheSize);
-	if( _gConfiguration.GetAlgName().compare("pagelru") == 0 ){
-		_gTestCache = new PageLRUCache<uint64_t,cacheAtom>(cacheAll, _gConfiguration.L1cacheSize);
+
+	//TODO: connect Hierarchy 
+	
+	int i = 0; 
+	if( _gConfiguration.GetAlgName(i).compare("pagelru") == 0 ){
+		_gTestCache = new PageLRUCache<uint64_t,cacheAtom>(cacheAll, _gConfiguration.cacheSize[i]);
 	}
-	else if ( _gConfiguration.GetAlgName().compare("pagemin") == 0	 ){
-		_gTestCache = new PageMinCache(cacheAll, _gConfiguration.L1cacheSize);
+	else if ( _gConfiguration.GetAlgName(i).compare("pagemin") == 0	 ){
+		_gTestCache = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i]);
 	}
-	else if ( _gConfiguration.GetAlgName().compare("blockmin") == 0	 ){
-		_gTestCache = new BlockMinCache(cacheAll, _gConfiguration.L1cacheSize);
+	else if ( _gConfiguration.GetAlgName(i).compare("blockmin") == 0	 ){
+		_gTestCache = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i]);
 	}
-	else if ( _gConfiguration.GetAlgName().find("owbp") != string::npos	 ){
-		_gTestCache = new OwbpCache(cacheAll, _gConfiguration.L1cacheSize);
+	else if ( _gConfiguration.GetAlgName(i).find("owbp") != string::npos	 ){
+		_gTestCache = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i]);
 	}
 	else{
 		cerr<< "Error: UnKnown Algorithm name " <<endl;

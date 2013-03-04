@@ -63,7 +63,8 @@ public:
 		fsblkno = tblkno;
 		reqSize = treqSize;
 		flags = rw;
-		ssdblkno = fsblkno / _gConfiguration.ssd2fsblkRatio;
+		//TODO: fix this line to dynamically adapt with multi levels
+		ssdblkno = fsblkno / _gConfiguration.ssd2fsblkRatio[0];
 	}
 	void clear(){
 		fsblkno = 0; //file system block number

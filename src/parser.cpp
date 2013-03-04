@@ -98,7 +98,8 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 // 				PRINT(fprintf(stderr, "line: %s", line););
 // 			} else {
 				newn->fsblkno = (byteoff / _gConfiguration.fsblkSize) ; //convert byte2sector and align to page size
-				newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio;
+				//TODO: fix this line
+				newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio[0];
 // 			}
 
 			bcount_temp = atoi((strtok(NULL, " ,")));   // read size
@@ -106,17 +107,16 @@ bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
 			if(!bcount_temp) {
 				continue;
 			}
-
 			if(!bcount_temp % 512) {
 				PRINT(fprintf(stderr, "ARH: request byte count is not aligned to sector size\n"););
 				PRINT(fprintf(stderr, "line: %s", line););
 			} else {
 				newn->reqSize = bcount_temp/_gConfiguration.fsblkSize;
-				if( newn->fsblkno % _gConfiguration.ssd2fsblkRatio + newn->reqSize >= _gConfiguration.ssd2fsblkRatio ){ // req size is big, going to share multiple block
-					newn->reqSize = _gConfiguration.ssd2fsblkRatio - newn->fsblkno% _gConfiguration.ssd2fsblkRatio;
+				//TODO: fix this line
+				if( newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0] + newn->reqSize >= _gConfiguration.ssd2fsblkRatio[0] ){ // req size is big, going to share multiple block
+					newn->reqSize = _gConfiguration.ssd2fsblkRatio[0] - newn->fsblkno% _gConfiguration.ssd2fsblkRatio[0];
 				}
 			}
-
 			fetched = 1;
 			newn->lineNo = lineno;
 		} //end if(time)
