@@ -1,5 +1,6 @@
 #include "configuration.h"
 #include "boost/lexical_cast.hpp"
+#include "boost/program_options.hpp" 
 
 void Configuration::allocateArrays(int totalLevels)
 {
@@ -144,6 +145,10 @@ bool Configuration::read(int argc, char **argv) {
 	IFHIST(pirdHist = new uint64_t[futureWindowSize];);
 	IFHIST(initHist(););
 	
+	//TODO generalize this with boost program_options
+	if( strcmp(argv[4],"-s") == 0 ){
+		cacheSize[0] = myString2intConverter(std::string(argv[5]) );
+	}
 	
 	return true;
 }

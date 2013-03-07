@@ -65,7 +65,7 @@ Name=Boost cfg
 Type=Native Application
 
 [Launch][Launch Configuration 3][Data]
-Arguments=Traces/usr_0.csv sample.cfg Test1
+Arguments=Traces/usr_0.csv sample.cfg Test1 -s 1023
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
