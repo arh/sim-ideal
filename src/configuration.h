@@ -49,8 +49,8 @@ public:
 	inline std::string GetAlgName( int i ) {
 		if( policyName[i].find("owbp") != std::string::npos){
 			std::ostringstream convert;
-			convert << futureWindowSize/cacheSize[i] ;
-			return std::string(policyName[i] +  "-" + (convert.str()) + ("x") );
+			convert << "futureWindowSize/" << cacheSize[i] ;
+			return std::string(policyName[i] +  "-" + (convert.str()) );
 		}
 		else
 			return policyName[i];
