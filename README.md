@@ -33,6 +33,12 @@ master: active development branch
 rmBoost: remoove boost library and bimap
 futureDistinctSet: uses distinct items in the future for future distance metadata value in OWBP algorithm
 
+
+Limimtations: 
+=========
+- only 4 caching layers hardcoded 
+- all cache layer in the hierachy need to maitain the same page size
+
 TODO:
 =========
 - bound block min to future sliding window

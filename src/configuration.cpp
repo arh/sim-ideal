@@ -105,6 +105,17 @@ bool Configuration::read(int argc, char **argv) {
 			logStream<<"Start Logging at "<< asctime(localtm) <<std::endl;
 		}
 		
+		try{
+			tempStr = pTree.get<std::string>("Global.writeOnly");
+		}
+		catch(...){
+			//no log file specified
+			
+		}
+		if( ! tempStr.empty() ){
+			writeOnly = (bool) myString2intConverter(tempStr);
+		}
+		
 		for( int i = 0; i < totalLevels ; ++i ){
 			
 			tempStr = pTree.get<std::string>		( std::string( cacheStr[i] + "." + "size"  ) );
@@ -169,6 +180,7 @@ Configuration::Configuration()
 	cacheSize = NULL;
 	outTraceStream = NULL;
 	totalLevels = 0; 
+	writeOnly = false; 
 	testName = 0;
 	// 		ssdblkSize = 16384 ; 
 	maxLineNo = 0;

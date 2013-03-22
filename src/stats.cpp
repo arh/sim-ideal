@@ -4,65 +4,65 @@
 #include "global.h"
 
 using namespace std; 
-extern StatsDS _gStats; 
+extern StatsDS *  _gStats; 
 
-void collectStat( uint32_t newFlags){
+void collectStat( int level, uint32_t newFlags){
 	
-	++ _gStats.Ref;
+	++ _gStats[level].Ref;
 	
 	// find read or write count
 	
 	if(newFlags	&	READ){
-		++_gStats.PageRead ;
+		++_gStats[level].PageRead ;
 		// Collect Read stats
 		if(newFlags	&	PAGEHIT){
-			++ _gStats.PageReadHit;
+			++ _gStats[level].PageReadHit;
 			assert( newFlags & BLKHIT);
 			assert( !(newFlags & PAGEMISS));
 		}
 		if(newFlags	&	PAGEMISS)
-			++ _gStats.PageReadMiss;
+			++ _gStats[level].PageReadMiss;
 		if(newFlags	&	BLKHIT){
-			++ _gStats.BlockWriteHit;
+			++ _gStats[level].BlockWriteHit;
 			assert( !(newFlags & BLKMISS) );
 		}
 		if(newFlags	&	BLKMISS){
-			++ _gStats.BlockReadMiss;
-			++ _gStats.PageReadMiss;
+			++ _gStats[level].BlockReadMiss;
+			++ _gStats[level].PageReadMiss;
 		}
 	}
 	else if(newFlags	&	WRITE){
-		++_gStats.PageWrite;
+		++_gStats[level].PageWrite;
 		// Collect Read stats
 		if(newFlags	&	PAGEHIT){
-			++ _gStats.PageWriteHit;
+			++ _gStats[level].PageWriteHit;
 			assert( newFlags & BLKHIT);
 			assert( !(newFlags & PAGEMISS));
 		}
 		
 		if(newFlags	&	BLKHIT){
-			++ _gStats.BlockWriteHit;
+			++ _gStats[level].BlockWriteHit;
 			assert( !(newFlags & BLKMISS) );
 			if(newFlags	&	PAGEMISS)
-				++ _gStats.PageWriteMiss;
+				++ _gStats[level].PageWriteMiss;
 		}
 		if(newFlags	&	BLKMISS){
 			assert( !(newFlags & BLKHIT) );
-			++ _gStats.BlockWriteMiss;
-			++ _gStats.PageWriteMiss;
+			++ _gStats[level].BlockWriteMiss;
+			++ _gStats[level].PageWriteMiss;
 		}
 		if(newFlags	&	EVICT)
-			++ _gStats.BlockEvict;
+			++ _gStats[level].BlockEvict;
 		
 		if(newFlags	&	PAGEMISS && ! (newFlags	&BLKHIT ) && !(newFlags	&BLKMISS) ) // for page based algorithm
-			++ _gStats.PageWriteMiss;
+			++ _gStats[level].PageWriteMiss;
 		
 		if( newFlags & COLD2COLD ){
-			++ _gStats.Cold2Cold;
+			++ _gStats[level].Cold2Cold;
 			assert( ! (newFlags & COLD2HOT) ); 
 		}
 		if(newFlags & COLD2HOT)
-			++ _gStats.Cold2Hot; 
+			++ _gStats[level].Cold2Hot; 
 			
 	}
 	else{
@@ -121,10 +121,15 @@ void printStats(){
 	
 	statStream<<_gConfiguration.testName<<",\t"<<_gConfiguration.GetAlgName(i)<<endl;
 	Stat * tempStat;
-	while( ( tempStat = _gStats.next() ) ){
-		statStream<< tempStat->print() <<endl;
+	
+	//print stat results for each level 
+	for( int i=0 ; i < _gConfiguration.totalLevels ; i++ ){
+		statStream << "Level "<<i+1<<endl; 
+		while( ( tempStat = _gStats[i].next() ) ){
+			statStream<< tempStat->print() <<endl;
+		}
+		statStream<<endl;
 	}
-	statStream<<endl;
 	statStream.close();
 
 	IFHIST(printHist(););

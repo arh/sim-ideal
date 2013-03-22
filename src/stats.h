@@ -30,7 +30,7 @@ public:
 	}
 };
 
-void collectStat( uint32_t newFlags);
+void collectStat( int level, uint32_t newFlags);
 
 void printStats();
 

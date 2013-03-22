@@ -40,6 +40,7 @@ public:
 	uint64_t *birdHist;
 	uint64_t *pirdHist;
 	int 	totalLevels;
+	bool writeOnly;
 
 	void initHist();
 	bool read(int argc, char **argv) ;

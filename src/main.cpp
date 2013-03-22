@@ -19,8 +19,8 @@ using namespace std;
 
 Configuration	_gConfiguration;
 bool _gTraceBased = false; 
-TestCache<uint64_t,cacheAtom> * _gTestCache;
-StatsDS _gStats;
+TestCache<uint64_t,cacheAtom> ** _gTestCache; // pointer to each cache class in the hierachy 
+StatsDS * _gStats;
 deque<reqAtom> memTrace; // in memory trace file
 
 
@@ -36,8 +36,8 @@ void	readTrace(deque<reqAtom> & memTrace)
 	reqAtom newAtom;
 	uint32_t lineNo = 0;
 	while(getAndParseMSR(_gConfiguration.traceStream , &newAtom)){
-		//frop all reads
-		if(newAtom.flags & WRITE){
+		//drop all reads if simulation setup is writeOnly
+		if(newAtom.flags & WRITE && _gConfiguration.writeOnly){
 #ifdef REQSIZE
 			uint32_t reqSize= newAtom.reqSize; 
 			newAtom.reqSize = 1;
@@ -68,25 +68,30 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 
 	readTrace(memTrace);
 	assert(memTrace.size() != 0);
-
-	//TODO: connect Hierarchy 
 	
-	int i = 0; 
-	if( _gConfiguration.GetAlgName(i).compare("pagelru") == 0 ){
-		_gTestCache = new PageLRUCache<uint64_t,cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
-	}
-	else if ( _gConfiguration.GetAlgName(i).compare("pagemin") == 0	 ){
-		_gTestCache = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
-	}
-	else if ( _gConfiguration.GetAlgName(i).compare("blockmin") == 0	 ){
-		_gTestCache = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
-	}
-	else if ( _gConfiguration.GetAlgName(i).find("owbp") != string::npos	 ){
-		_gTestCache = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
-	}
-	else{
-		cerr<< "Error: UnKnown Algorithm name " <<endl;
-		exit(1);
+	//Allocate StatDs
+	_gStats = new StatsDS[_gConfiguration.totalLevels]; 
+
+	//Allocate hierarchy 
+	_gTestCache = new TestCache<uint64_t,cacheAtom>*[_gConfiguration.totalLevels];
+	for( int i = 0; i < _gConfiguration.totalLevels ; i++){
+		if( _gConfiguration.GetAlgName(i).compare("pagelru") == 0 ){
+			_gTestCache[i] = new PageLRUCache<uint64_t,cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
+		}
+		else if ( _gConfiguration.GetAlgName(i).compare("pagemin") == 0	 ){
+			_gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+		}
+		else if ( _gConfiguration.GetAlgName(i).compare("blockmin") == 0	 ){
+			_gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+		}
+		else if ( _gConfiguration.GetAlgName(i).find("owbp") != string::npos	 ){
+			_gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
+		}
+		//esle if //add new policy name and dynamic allocation here
+		else{
+			cerr<< "Error: UnKnown Algorithm name " <<endl;
+			exit(1);
+		}
 	}
 	PRINTV (logfile << "Configuration and setup done" << endl;);
 	srand(0);
@@ -103,15 +108,33 @@ void reportProgress(){
 	if(completePercent == 100 )
 		std::cerr<<endl;
 }
+void recordOutTrace( int level, reqAtom newReq){
+	if(_gConfiguration.outTraceStream[level].is_open()){
+		_gConfiguration.outTraceStream[level] << newReq.issueTime << "," <<"OutLevel"<<level<<",0,";
+		if(newReq.flags & READ){
+			_gConfiguration.outTraceStream[level] << "Read,";
+		}
+		else
+			_gConfiguration.outTraceStream[level] << "Write,";
+		//FIXME: check math
+		_gConfiguration.outTraceStream[level] << newReq.fsblkno * 512 * 8 <<","<< newReq.reqSize * 512 << endl;
+		
+	}
+}
 void RunBenchmark( deque<reqAtom> & memTrace){
 	PRINTV (logfile << "Start benchmarking" << endl;);
 	while( ! memTrace.empty() ){
 		uint32_t newFlags = 0;
 		reqAtom newReq = memTrace.front();	
 		cacheAtom newCacheAtom(newReq);
-		//cach access
-		newFlags = _gTestCache->access(newReq.fsblkno,newCacheAtom,newReq.flags);
-		collectStat(newFlags);
+		//access hierachy from top layer
+		for( int i=0 ; i < _gConfiguration.totalLevels ; i++){
+			newFlags = _gTestCache[0]->access(newReq.fsblkno,newCacheAtom,newReq.flags);
+			collectStat(i,newFlags);
+			if(newFlags & PAGEHIT)
+				break; // no need to check further down in the hierachy
+			recordOutTrace(i,newReq);	
+		}
 		memTrace.pop_front();
 		reportProgress();
 	}
