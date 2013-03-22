@@ -129,11 +129,12 @@ void RunBenchmark( deque<reqAtom> & memTrace){
 		cacheAtom newCacheAtom(newReq);
 		//access hierachy from top layer
 		for( int i=0 ; i < _gConfiguration.totalLevels ; i++){
-			newFlags = _gTestCache[0]->access(newReq.fsblkno,newCacheAtom,newReq.flags);
+			newFlags = _gTestCache[i]->access(newReq.fsblkno,newCacheAtom,newReq.flags);
 			collectStat(i,newFlags);
 			if(newFlags & PAGEHIT)
 				break; // no need to check further down in the hierachy
-			recordOutTrace(i,newReq);	
+			recordOutTrace(i,newReq);
+			newFlags = 0; // reset flag
 		}
 		memTrace.pop_front();
 		reportProgress();
