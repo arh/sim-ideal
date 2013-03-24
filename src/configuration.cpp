@@ -157,9 +157,10 @@ bool Configuration::read(int argc, char **argv) {
 	IFHIST(initHist(););
 	
 	//TODO generalize this with boost program_options
-	if( strcmp(argv[4],"-s") == 0 ){
-		cacheSize[0] = myString2intConverter(std::string(argv[5]) );
-	}
+	if(argc > 4)
+		if( strcmp(argv[4],"-s") == 0 ){
+			cacheSize[0] = myString2intConverter(std::string(argv[5]) );
+		}
 	
 	return true;
 }

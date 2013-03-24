@@ -106,8 +106,7 @@ void printHist(){
 
 //print stats
 void printStats(){
-	//TODO: print stat for each cache in hierarchy
-	int i = 0; 
+
 	ofstream statStream;
 	mkdir("Stats", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	string fileName("Stats/");
@@ -119,12 +118,12 @@ void printStats(){
 		return;
 	}
 	
-	statStream<<_gConfiguration.testName<<",\t"<<_gConfiguration.GetAlgName(i)<<endl;
+	statStream<<_gConfiguration.testName<<endl;
 	Stat * tempStat;
 	
 	//print stat results for each level 
 	for( int i=0 ; i < _gConfiguration.totalLevels ; i++ ){
-		statStream << "Level "<<i+1<<endl; 
+		statStream << "Level "<<i+1<<",\t"<<_gConfiguration.GetAlgName(i)<<endl; 
 		while( ( tempStat = _gStats[i].next() ) ){
 			statStream<< tempStat->print() <<endl;
 		}

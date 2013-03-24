@@ -8,13 +8,15 @@ else
     CXX = g++
 endif
 
+# Compile in Debug mode :
 # CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall
-CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall -DREQSIZE
+# CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall -DREQSIZE
 # CPPFLAG = -g -DDEBUG  -std=c++0x -Wall
-# CPPFLAG = -g -DDEBUG  -std=c++0x -Wall -DREQSIZE
-#CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall -DREQSIZE
+
+# Compile in Resealese mode:
 # CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall
-#CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall -DHIST -DREQSIZE
+CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall -DREQSIZE
+# CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall -DHIST -DREQSIZE
 
 
 all: main
