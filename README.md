@@ -1,5 +1,5 @@
 Copyright: Alireza Haghdoost
-University of Minnesota
+University of Minnesota: Twin Cities
 
 sim-ideal
 =========

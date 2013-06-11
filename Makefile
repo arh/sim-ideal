@@ -9,13 +9,13 @@ else
 endif
 
 # Compile in Debug mode :
-# CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall
+CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall
 # CPPFLAG = -g -DDEBUG -DVERB -std=c++0x -Wall -DREQSIZE
 # CPPFLAG = -g -DDEBUG  -std=c++0x -Wall
 
 # Compile in Resealese mode:
 # CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall
-CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall -DREQSIZE
+# CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall -DREQSIZE
 # CPPFLAG = -O3 -DNDEBUG -std=c++0x -Wall -DHIST -DREQSIZE
 
 

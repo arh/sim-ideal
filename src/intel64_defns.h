@@ -89,21 +89,21 @@ typedef _u64               ptr_t;
 #define WMB() _GLIBCXX_WRITE_MEM_BARRIER
 #define MB()  __sync_synchronize()
 
-inline unsigned MUTEX_ENTER(unsigned volatile* x)
+inline unsigned MUTEX_ENTER(unsigned volatile *x)
 {
-	return __sync_lock_test_and_set(x, 0xFF);
+    return __sync_lock_test_and_set(x, 0xFF);
 }
 
-inline void MUTEX_EXIT(unsigned volatile* x)
+inline void MUTEX_EXIT(unsigned volatile *x)
 {
-	return __sync_lock_release(x);
+    return __sync_lock_release(x);
 }
 
 //////////////////////////////////////////////////////////////////////////
 //CPU counters
 //////////////////////////////////////////////////////////////////////////
 #define RDTICK() \
-	({ tick_t __t; __asm__ __volatile__ ("rdtsc" : "=A" (__t)); __t; })
+    ({ tick_t __t; __asm__ __volatile__ ("rdtsc" : "=A" (__t)); __t; })
 
 //////////////////////////////////////////////////////////////////////////
 //bit operations
@@ -113,34 +113,34 @@ inline void MUTEX_EXIT(unsigned volatile* x)
 
 inline_ int first_lsb_bit_indx(_u32 x)
 {
-	if(0 == x)
-		return -1;
+    if(0 == x)
+        return -1;
 
-	return __builtin_ffs(x) - 1;
+    return __builtin_ffs(x) - 1;
 }
 
 inline_ int first_lsb_bit_indx64(_u64 x)
 {
-	if(0 == x)
-		return -1;
+    if(0 == x)
+        return -1;
 
-	return __builtin_ffsll(x) - 1;
+    return __builtin_ffsll(x) - 1;
 }
 
 inline_ int first_msb_bit_indx(_u32 x)
 {
-	if(0 == x)
-		return -1;
+    if(0 == x)
+        return -1;
 
-	return  __builtin_clz(x) - 1;
+    return  __builtin_clz(x) - 1;
 }
 
 inline_ int first_msb_bit_indx64(_u64 x)
 {
-	if(0 == x)
-		return -1;
+    if(0 == x)
+        return -1;
 
-	return  __builtin_clzll(x) - 1;
+    return  __builtin_clzll(x) - 1;
 }
 
 #endif /* __INTEL_DEFNS_H__ */

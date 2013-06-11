@@ -8,121 +8,126 @@
 
 double  WindowsTickToUnixmiliSeconds(long long windowsTicks)
 {
-	return (double)((double)((double) windowsTicks / (double) WINDOWS_TICK) - SEC_TO_UNIX_EPOCH);
+    return (double)((double)((double) windowsTicks / (double) WINDOWS_TICK) - SEC_TO_UNIX_EPOCH);
 }
 
-bool  getAndParseMSR(std::ifstream & inputTrace, reqAtom *newn)
+bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
 {
-	int bcount_temp = 0;
-	long long int time = 0;
-	int fetched = 0;
-	unsigned long long int byteoff = 0;
-	char *tempchar;
-	char *r_w;
-	char line[201];
-	static uint32_t lineno=0;
-	static double old_time = 0;
-	
-	assert( inputTrace.good() ); 
+    int bcount_temp = 0;
+    long long int time = 0;
+    int fetched = 0;
+    unsigned long long int byteoff = 0;
+    char *tempchar;
+    char *r_w;
+    char line[201];
+    static uint32_t lineno = 0;
+    static double old_time = 0;
+    assert(inputTrace.good());
 
-	while(!fetched) {
-		
+    while(!fetched) {
+        std::string lineString;
+        std::getline(inputTrace,  lineString);
 
-		std::string lineString;
-		std::getline(inputTrace,  lineString);
-		if(inputTrace.eof()) {
-			//end of file
-			_gConfiguration.maxLineNo = lineno; // record last line number 
-			return false;
-		}
-		strcpy(line, lineString.c_str());
-		++ lineno;
-		// Sample MSR trace lien:
-		// 	Timestamp        ,Hostname,DiskNumber,Type  ,Offset     ,Size,ResponseTime
-		// 128166554283938750,wdev    ,3         ,Write ,3154152960,4096 ,   2170
-		tempchar = strtok(line, ",");
-		//FIXME: ARH: is this time satisfy disksim timing rules ? fixed for msr
-		time =  strtoll(tempchar, NULL, 10);
+        if(inputTrace.eof()) {
+            //end of file
+            _gConfiguration.maxLineNo = lineno; // record last line number
+            return false;
+        }
 
-		if(time) {
-			if(WindowsTickToUnixmiliSeconds(time) <= DBL_MAX) {
-				//FIXME: ARH: is this time satisfy disksim timing rules ?
-				newn->issueTime = (double) WindowsTickToUnixmiliSeconds(time);
+        strcpy(line, lineString.c_str());
+        ++ lineno;
+        // Sample MSR trace lien:
+        // 	Timestamp        ,Hostname,DiskNumber,Type  ,Offset     ,Size,ResponseTime
+        // 128166554283938750,wdev    ,3         ,Write ,3154152960,4096 ,   2170
+        tempchar = strtok(line, ",");
+        //FIXME: ARH: is this time satisfy disksim timing rules ? fixed for msr
+        time =  strtoll(tempchar, NULL, 10);
+
+        if(time) {
+            if(WindowsTickToUnixmiliSeconds(time) <= DBL_MAX) {
+                //FIXME: ARH: is this time satisfy disksim timing rules ?
+                newn->issueTime = (double) WindowsTickToUnixmiliSeconds(time);
 // 				new->time = new->time*1000; //manual scale by ARH
-			} else {
-				fprintf(stderr, "ARH: request time reach to the double boundry\n");
-				fprintf(stderr, "line: %s", line);
-				ExitNow(1);
-			}
+            }
+            else {
+                fprintf(stderr, "ARH: request time reach to the double boundry\n");
+                fprintf(stderr, "line: %s", line);
+                ExitNow(1);
+            }
 
 // 			if( old_time > newn->time){
 // 			  fprintf(stderr, "ARH: new time is small equal than old time\n");
 // 				fprintf(stderr, "line: %s", line);
 // 				ddbg_assert(0);
 // 			}
-			if(old_time >= newn->issueTime) {
-				newn->issueTime = old_time + 1;
-				/*				fprintf(stderr, "ARH: new time is small equal than old time\n");
-								fprintf(stderr, "line: %s", line);
-								ddbg_assert(0);*/
-			}
+            if(old_time >= newn->issueTime) {
+                newn->issueTime = old_time + 1;
+                /*				fprintf(stderr, "ARH: new time is small equal than old time\n");
+                				fprintf(stderr, "line: %s", line);
+                				ddbg_assert(0);*/
+            }
 
-			if(old_time > newn->issueTime) {
-				fprintf(stderr, "ARH: new time is small equal than old time\n");
-				fprintf(stderr, "line: %s", line);
-				ExitNow(1);
-			}
+            if(old_time > newn->issueTime) {
+                fprintf(stderr, "ARH: new time is small equal than old time\n");
+                fprintf(stderr, "line: %s", line);
+                ExitNow(1);
+            }
 
-			old_time = newn->issueTime;
-			strtok(NULL, ","); //step over host name
-			strtok(NULL, ","); //step over devno
-			//ARH: msr traces only have one dev
-			r_w = strtok(NULL, ","); //step over type
+            old_time = newn->issueTime;
+            strtok(NULL, ","); //step over host name
+            strtok(NULL, ","); //step over devno
+            //ARH: msr traces only have one dev
+            r_w = strtok(NULL, ","); //step over type
 
-			if(strcmp(r_w, "Write") == 0) {
-				newn->flags = WRITE;
-			} else if(strcmp(r_w, "Read") == 0) {
-				newn->flags = READ;
- 				continue; //only write acceess (Read bug dareh)
-			} else
-				continue;
+            if(strcmp(r_w, "Write") == 0) {
+                newn->flags = WRITE;
+            }
+            else
+                if(strcmp(r_w, "Read") == 0) {
+                    newn->flags = READ;
+                    continue; //only write acceess (Read bug dareh)
+                }
+                else
+                    continue;
 
-			byteoff = strtoull((strtok(NULL, " ,")) , NULL , 10) ;   //read byteoffset (byte)
-			//ARH: comment this line to accept blkno 0
+            byteoff = strtoull((strtok(NULL, " ,")) , NULL , 10) ;   //read byteoffset (byte)
+            //ARH: comment this line to accept blkno 0
 // 			if(!byteoff) {
 // 				continue;
 // 			}
-
 // 			if(!byteoff % 512) {
 // 				PRINT(fprintf(stderr, "ARH: request byte offset is not aligned to sector size\n"););
 // 				PRINT(fprintf(stderr, "line: %s", line););
 // 			} else {
-				newn->fsblkno = (byteoff / _gConfiguration.fsblkSize) ; //convert byte2sector and align to page size
-				//TODO: fix this line
-				newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio[0];
+            newn->fsblkno = (byteoff / _gConfiguration.fsblkSize) ; //convert byte2sector and align to page size
+            //TODO: fix this line
+            newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio[0];
 // 			}
+            bcount_temp = atoi((strtok(NULL, " ,")));   // read size
 
-			bcount_temp = atoi((strtok(NULL, " ,")));   // read size
-			
-			if(!bcount_temp) {
-				continue;
-			}
-			if(!bcount_temp % 512) {
-				PRINT(fprintf(stderr, "ARH: request byte count is not aligned to sector size\n"););
-				PRINT(fprintf(stderr, "line: %s", line););
-			} else {
-				newn->reqSize = bcount_temp/_gConfiguration.fsblkSize;
-				//TODO: fix this line
-				if( newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0] + newn->reqSize >= _gConfiguration.ssd2fsblkRatio[0] ){ // req size is big, going to share multiple block
-					newn->reqSize = _gConfiguration.ssd2fsblkRatio[0] - newn->fsblkno% _gConfiguration.ssd2fsblkRatio[0];
-				}
-			}
-			fetched = 1;
-			newn->lineNo = lineno;
-		} //end if(time)
-	}//end while fetched
+            if(!bcount_temp) {
+                continue;
+            }
 
-	return true;
+            if(!bcount_temp % 512) {
+                PRINT(fprintf(stderr, "ARH: request byte count is not aligned to sector size\n"););
+                PRINT(fprintf(stderr, "line: %s", line););
+            }
+            else {
+                newn->reqSize = bcount_temp / _gConfiguration.fsblkSize;
+
+                //TODO: fix this line
+                if(newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0] + newn->reqSize >= _gConfiguration.ssd2fsblkRatio[0]) {  // req size is big, going to share multiple block
+                    newn->reqSize = _gConfiguration.ssd2fsblkRatio[0] - newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0];
+                }
+            }
+
+            fetched = 1;
+            newn->lineNo = lineno;
+        } //end if(time)
+    }//end while fetched
+
+    return true;
 }
 
 
