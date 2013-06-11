@@ -8,8 +8,8 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
     assert(memTrace.size());
     uint32_t status = 0;
     uint32_t currLine = value.getLineNo();
-    assert(currLine == memTrace.front().lineNo);
-    assert(meta.BlkID == value.getSsdblkno());
+    assert( currLine == memTrace.front().lineNo );
+    assert( meta.BlkID == value.getSsdblkno() );
     bool assignedFirstBlkRef = false;
     bool pageAccessInfutureWindow = false;
     // find out min distance to future ref to the same block
@@ -19,31 +19,31 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
     deque<reqAtom>::iterator it = memTrace.begin(); // iterate over the memTrace
     it++ ; //skip over currLine
 
-    for(; it != memTrace.end() ;  it++) {
+    for( ; it != memTrace.end() ;  it++ ) {
         uint64_t tempFsblkno = it->fsblkno;
         uint32_t tempLineNo = it->lineNo;
         uint64_t tempSsdblkno = it->ssdblkno;
         assert(tempFsblkno && tempLineNo);
-        ret = uniqSet.insert(tempFsblkno); // insert page ID in the uniqSet to remove doublication
-        assert(ret.first != uniqSet.end());
-        assert(currLine <= tempLineNo);
+        ret = uniqSet.insert(tempFsblkno ); // insert page ID in the uniqSet to remove doublication
+        assert( ret.first != uniqSet.end() );
+        assert(  currLine <= tempLineNo );
 
-        if(tempSsdblkno == meta.BlkID) {
+        if(tempSsdblkno == meta.BlkID ) {
             if(assignedFirstBlkRef == false) {
                 assert(uniqSet.size());
                 meta.distance = tempLineNo;
                 assignedFirstBlkRef = true;
-                IFHIST(_gConfiguration.birdHist[uniqSet.size()]++;);
+                IFHIST(_gConfiguration.birdHist[uniqSet.size()]++; );
             }
 
-            if(tempFsblkno == value.getFsblkno()) {
+            if(tempFsblkno == value.getFsblkno() ) {
                 pageAccessInfutureWindow = true;
-                IFHIST(_gConfiguration.pirdHist[uniqSet.size()]++;);
+                IFHIST(_gConfiguration.pirdHist[uniqSet.size()]++; );
                 break;
             }
         }
 
-        if(uniqSet.size() >= (_gConfiguration.futureWindowSize - 1)) {  // -1 because currBlock is excluded from uniqSet, hopefully size() complexity is O(1)
+        if(uniqSet.size() >= ( _gConfiguration.futureWindowSize - 1) ) { // -1 because currBlock is excluded from uniqSet, hopefully size() complexity is O(1)
             break;
         }
     }
@@ -53,8 +53,8 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
     if(pageAccessInfutureWindow == false) {
         ret = coldPageSet.insert(value.getFsblkno());
 
-        if(ret.second == false) {
-            PRINTV(logfile << "\tpage " << value.getFsblkno() << " was already cold" << endl;);
+        if( ret.second == false ) {
+            PRINTV( logfile << "\tpage " << value.getFsblkno() << " was already cold" << endl; );
             status = COLD2COLD;
         }
     }
@@ -62,8 +62,8 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
         set<uint64_t>::iterator setit;
         setit =  coldPageSet.find(value.getFsblkno());
 
-        if(setit != coldPageSet.end()) { // page is in the block coldset
-            PRINTV(logfile << "\tpage " << value.getFsblkno() << " was cold and now is convert to hot" << endl;);
+        if(setit != coldPageSet.end() ) { // page is in the block coldset
+            PRINTV( logfile << "\tpage " << value.getFsblkno() << " was cold and now is convert to hot" << endl; );
             coldPageSet.erase(setit);
             status = COLD2HOT;
         }
@@ -76,7 +76,7 @@ uint32_t OwbpCacheBlock::updateMetaDataOnPageInsert(const cacheAtom value)
         meta.distance = INF;
     }
 
-    assert(meta.distance);
+    assert( meta.distance );
     return status;
 }
 
@@ -84,7 +84,7 @@ uint32_t OwbpCacheBlock::readPage(cacheAtom value)
 {
     PageSetType::iterator it =  pageSet.find(value);
 
-    if(it == pageSet.end()) {
+    if( it == pageSet.end() ) {
         return PAGEMISS;
     }
     else {
@@ -94,25 +94,25 @@ uint32_t OwbpCacheBlock::readPage(cacheAtom value)
 
 uint32_t OwbpCacheBlock::writePage(cacheAtom value)
 {
-    assert(memTrace.front().lineNo == value.getLineNo());  //make sure that write comes with the same sequence recorded in the queue
+    assert(memTrace.front().lineNo == value.getLineNo() ); //make sure that write comes with the same sequence recorded in the queue
     uint32_t status = 0;
     // update distance and coldness value
     pair < PageSetType::iterator , bool > ret =  pageSet.insert(value);
 
-    if(ret.second == true) {
-        assert(ret.first != pageSet.end());
+    if( ret.second == true ) {
+        assert( ret.first != pageSet.end() );
         ++ meta.validPageCount;
         status = updateMetaDataOnPageInsert(value) ;
         return status | PAGEMISS;
     }
     else {
-        assert(ret.first != pageSet.end()) ;
+        assert( ret.first != pageSet.end() ) ;
         size_t tempSize;
-        IFDEBUG(tempSize = pageSet.size(););
+        IFDEBUG( tempSize = pageSet.size(); );
         pageSet.erase(ret.first);
-        IFDEBUG(assert((tempSize - 1) == pageSet.size()););
+        IFDEBUG( assert( (tempSize - 1 ) == pageSet.size() ); );
         pageSet.insert(value);
-        IFDEBUG(assert(tempSize == pageSet.size()););
+        IFDEBUG( assert( tempSize == pageSet.size() ); );
         status = updateMetaDataOnPageInsert(value) ;
         return status | PAGEHIT;
     }
@@ -122,7 +122,7 @@ uint32_t OwbpCacheBlock::findPage(cacheAtom value)
 {
     PageSetType::iterator it =  pageSet.find(value);
 
-    if(it == pageSet.end()) {
+    if( it == pageSet.end() ) {
         return PAGEMISS;
     }
     else {
@@ -143,14 +143,14 @@ void OwbpCache::insertNewBlk(cacheAtom &value)
     // make sure it is not already there
 // 	assert( coldHeap.find(tempBlock.meta) == coldHeap.end() ); //this assertaion may fail because there might be multiple block with the same condition
     // failure of previous assert observerd,
-    assert(victimPull.find(value.getSsdblkno()) == victimPull.end());
+    assert( victimPull.find(value.getSsdblkno() ) == victimPull.end() );
 
-    if(tempBlock.getMinFutureDist() == INF) {
+    if(tempBlock.getMinFutureDist() == INF ) {
         PRINTV(logfile << "\tBlock " << currSsdBlkNo << " rerefrence at INF, insert in infPull" << endl;);
         tempBlock.coldHeapIt = coldHeap.end();
         pair<victimIt, bool> vicPair;
         vicPair = victimPull.insert(value.getSsdblkno());
-        assert(vicPair.second == true) ;   // we have block miss in this case, therefore, there should be no valid blockID with the same ID
+        assert( vicPair.second == true ) ; // we have block miss in this case, therefore, there should be no valid blockID with the same ID
     }
     else {
         PRINTV(logfile << "\tBlock rerefrence at distabce " << tempBlock.getMinFutureDist() << " , insert in maxHeap" << endl;);
@@ -161,12 +161,12 @@ void OwbpCache::insertNewBlk(cacheAtom &value)
         ColdHeapIt itDebug;
         itDebug = coldHeap.find(tempBlock.meta);
 // 		assert(it->coldPageCounter !=0);
-        assert(itDebug->coldPageCounter == it->coldPageCounter);
+        assert(itDebug->coldPageCounter == it->coldPageCounter );
     }
 
     //insert in blkID_2_DS 111
     ret = blkID_2_DS.insert(pair<uint64_t, OwbpCacheBlock>(currSsdBlkNo, tempBlock));
-    assert(ret.second == true) ;
+    assert ( ret.second == true ) ;
 }
 
 // access to a page
@@ -180,13 +180,13 @@ uint32_t OwbpCache::access(const uint64_t &k  , cacheAtom &value, uint32_t statu
     map< uint64_t, OwbpCacheBlock >::iterator 	blkit;
     blkit = blkID_2_DS.find(currSsdBlkNo);
 
-    if(blkit ==  blkID_2_DS.end()) {
+    if( blkit ==  blkID_2_DS.end() ) {
         // Block miss
         PRINTV(logfile << "\t Block miss on BlockID: " << currSsdBlkNo << endl;);
         status |= BLKMISS | PAGEMISS;
 
         if(status & WRITE) {
-            if(currSize == _capacity) {
+            if(currSize == _capacity ) {
                 evict(currSsdBlkNo);
                 status |= EVICT;
             }
@@ -208,16 +208,16 @@ uint32_t OwbpCache::access(const uint64_t &k  , cacheAtom &value, uint32_t statu
             if(status & PAGEMISS) {
                 PRINTV(logfile << "\t Page miss on pageID: " << k << endl;);
 
-                if(currSize == _capacity) {
+                if(currSize == _capacity ) {
                     evict(currSsdBlkNo);
                     status |= EVICT;
                 }
 
                 ++ currSize;
                 uint32_t debugStatus = 0;
-                IFDEBUG(valid_pages = blkit->second.getPageSetSize() ;);
+                IFDEBUG( valid_pages = blkit->second.getPageSetSize() ;);
                 debugStatus = blkit->second.writePage(value); //insert new page and update block metabata
-                assert(valid_pages + 1 == blkit->second.getPageSetSize());
+                assert(valid_pages + 1 == blkit->second.getPageSetSize() );
                 assert(debugStatus & PAGEMISS);
                 status |= debugStatus;
             }
@@ -225,9 +225,9 @@ uint32_t OwbpCache::access(const uint64_t &k  , cacheAtom &value, uint32_t statu
                 PRINTV(logfile << "\t Page hit on pageID: " << k << endl;);
                 assert(status & PAGEHIT);
                 uint32_t debugStatus = 0;
-                assert(valid_pages = blkit->second.getPageSetSize());   // read valid pages for debug
+                assert( valid_pages = blkit->second.getPageSetSize() ); // read valid pages for debug
                 debugStatus = blkit->second.writePage(value); //insert new page and update block metabata
-                assert(valid_pages == blkit->second.getPageSetSize());
+                assert( valid_pages == blkit->second.getPageSetSize() );
                 assert(debugStatus & PAGEHIT);
                 status |= debugStatus;
             }
@@ -235,13 +235,13 @@ uint32_t OwbpCache::access(const uint64_t &k  , cacheAtom &value, uint32_t statu
             //update block metadata in coldHeap and victimPull
             ColdHeapIt it = blkit->second.coldHeapIt;
 
-            if(it  == coldHeap.end()) {
+            if( it  == coldHeap.end() ) {
                 PRINTV(logfile << "\tcheck block in INF pull" << endl;);
                 // block is in victimPull
-                victimIt itV = victimPull.find(blkit->second.getBlkID());
-                assert(itV != victimPull.end());   // make sure that block is in victimpull
+                victimIt itV = victimPull.find( blkit->second.getBlkID() );
+                assert( itV != victimPull.end() ); // make sure that block is in victimpull
 
-                if(blkit->second.getMinFutureDist() != INF) {
+                if(blkit->second.getMinFutureDist() != INF ) {
                     PRINTV(logfile << "\terase block from INF pull, will rerefrence in distance of :" << blkit->second.getMinFutureDist() << endl;);
                     // move block from victimpull to coldheap
                     victimPull.erase(blkit->second.getBlkID());
@@ -253,18 +253,18 @@ uint32_t OwbpCache::access(const uint64_t &k  , cacheAtom &value, uint32_t statu
             else {
                 PRINTV(logfile << "\tcheck block in maxheap" << endl;);
                 // block is in coldheap
-                assert(victimPull.find(blkit->second.getBlkID()) == victimPull.end());
+                assert( victimPull.find(blkit->second.getBlkID() ) == victimPull.end() );
                 // update coldheap
                 size_t heapSize;
-                IFDEBUG(heapSize =  coldHeap.size() ;);
+                IFDEBUG(heapSize =  coldHeap.size() ;	);
 #ifdef REQSIZE
-                pair<ColdHeapIt, ColdHeapIt> pairIt = coldHeap.equal_range(*it);
-                assert(pairIt.first != coldHeap.end());
+                pair<ColdHeapIt, ColdHeapIt> pairIt = coldHeap.equal_range( *it);
+                assert( pairIt.first != coldHeap.end() );
 
-                for(ColdHeapIt inIt =  pairIt.first ; inIt != pairIt.second ; inIt++) {
-                    assert(inIt->coldPageCounter == it->coldPageCounter);
+                for( ColdHeapIt inIt =  pairIt.first ; inIt != pairIt.second ; inIt++) {
+                    assert( inIt->coldPageCounter == it->coldPageCounter );
 
-                    if(inIt->BlkID ==  currSsdBlkNo) {
+                    if(inIt->BlkID ==  currSsdBlkNo ) {
                         it = inIt;
                         break;
                     }
@@ -275,7 +275,7 @@ uint32_t OwbpCache::access(const uint64_t &k  , cacheAtom &value, uint32_t statu
                 coldHeap.erase(it);
                 assert(heapSize - 1 == coldHeap.size()); // make sure it remove only one element from heap
 
-                if(blkit->second.getMinFutureDist() == INF) {
+                if(blkit->second.getMinFutureDist() == INF ) {
                     PRINTV(logfile << "\tmove block from maxheap to INF pull " << endl;);
                     victimPull.insert(currSsdBlkNo);
                     blkit->second.coldHeapIt = coldHeap.end();
@@ -289,9 +289,9 @@ uint32_t OwbpCache::access(const uint64_t &k  , cacheAtom &value, uint32_t statu
             }
         }
         else { // read a page
-            IFDEBUG(valid_pages = blkit->second.getPageSetSize(););
+            IFDEBUG( valid_pages = blkit->second.getPageSetSize(); );
             status |= blkit->second.readPage(value);
-            IFDEBUG(assert(valid_pages == blkit->second.getPageSetSize()););
+            IFDEBUG( assert( valid_pages == blkit->second.getPageSetSize() ););
         }
     }
 
@@ -301,10 +301,10 @@ uint32_t OwbpCache::access(const uint64_t &k  , cacheAtom &value, uint32_t statu
 
 void OwbpCache::evict(uint64_t currBlkID)
 {
-    assert(currSize == _capacity);
+    assert( currSize == _capacity );
     uint64_t victimBlkID;
 
-    if(victimPull.size() != 0) {
+    if( victimPull.size() != 0 ) {
         victimIt itV = victimPull.begin() ;
         victimBlkID = *itV;
 
@@ -316,7 +316,7 @@ void OwbpCache::evict(uint64_t currBlkID)
         }
     }
     else {
-        assert(coldHeap.size() != 0);
+        assert( coldHeap.size() != 0 );
         ColdHeapIt itH = --coldHeap.end(); // assume there is no douplicated entry with the same condition in the multiset, this assumption is no longer valid, but the code funcionality is validated
         victimBlkID = itH->BlkID;
 
@@ -330,7 +330,7 @@ void OwbpCache::evict(uint64_t currBlkID)
 
     PRINTV(logfile << "\tEvicting victim block ID " << victimBlkID << endl;);
     map< uint64_t, OwbpCacheBlock >::iterator itOw = blkID_2_DS.find(victimBlkID);
-    assert(itOw != blkID_2_DS.end());
+    assert( itOw != blkID_2_DS.end() );
     size_t victimSize = itOw->second.getPageSetSize();
     assert(victimSize);
     currSize -= victimSize;

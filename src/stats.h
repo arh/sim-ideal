@@ -27,11 +27,15 @@ public:
         return (++ counter);
     }
     std::string print() {
-        return name.append(",\t").append(std::to_string((unsigned long long) counter));
+        return name.append(",\t").append( std::to_string((unsigned long long) counter)  );
     }
+    uint64_t getCounter() {
+        return counter;
+    }
+
 };
 
-void collectStat(int level, uint32_t newFlags);
+void collectStat( int level, uint32_t newFlags);
 
 void printStats();
 
@@ -60,6 +64,10 @@ public:
 
     Stat Cold2Cold; //12
     Stat Cold2Hot;
+    ///ziqi
+    Stat DirtyPage; //14
+    Stat SeqEviction;
+    Stat LessSeqEviction;
 
     StatsDS()
         : Ref("Total References")
@@ -76,55 +84,67 @@ public:
         , BlockWriteMiss("Block Write Miss")
         , BlockEvict("Block Evict")
         , Cold2Cold("Cold2Cold")
-        , Cold2Hot("Cold2Hot") {
+        , Cold2Hot("Cold2Hot")
+        , DirtyPage("DirtyPage") ///ziqi
+        , SeqEviction("SeqEviction") ///ziqi
+        , LessSeqEviction("LessSeqEviction") { ///ziqi
         returnIndex = 0;
     }
     Stat *next() {
         switch(returnIndex) {
-            case 0:
-                ++returnIndex;
-                return &Ref;
-            case 1:
-                ++returnIndex;
-                return &PageRead;
-            case 2:
-                ++returnIndex;
-                return &PageWrite;
-            case 3:
-                ++returnIndex;
-                return &PageReadHit;
-            case 4:
-                ++returnIndex;
-                return &PageReadMiss;
-            case 5:
-                ++returnIndex;
-                return &BlockReadHit;
-            case 6:
-                ++returnIndex;
-                return &BlockReadMiss;
-            case 7:
-                ++returnIndex;
-                return &PageWriteHit;
-            case 8:
-                ++returnIndex;
-                return &PageWriteMiss;
-            case 9:
-                ++returnIndex;
-                return &BlockWriteHit;
-            case 10:
-                ++returnIndex;
-                return &BlockWriteMiss;
-            case 11:
-                ++returnIndex;
-                return &BlockEvict;
-            case 12:
-                ++returnIndex;
-                return &Cold2Cold;
-            case 13:
-                ++returnIndex;
-                return &Cold2Hot;
-            default:
-                return NULL;
+        case 0:
+            ++returnIndex;
+            return &Ref;
+        case 1:
+            ++returnIndex;
+            return &PageRead;
+        case 2:
+            ++returnIndex;
+            return &PageWrite;
+        case 3:
+            ++returnIndex;
+            return &PageReadHit;
+        case 4:
+            ++returnIndex;
+            return &PageReadMiss;
+        case 5:
+            ++returnIndex;
+            return &BlockReadHit;
+        case 6:
+            ++returnIndex;
+            return &BlockReadMiss;
+        case 7:
+            ++returnIndex;
+            return &PageWriteHit;
+        case 8:
+            ++returnIndex;
+            return &PageWriteMiss;
+        case 9:
+            ++returnIndex;
+            return &BlockWriteHit;
+        case 10:
+            ++returnIndex;
+            return &BlockWriteMiss;
+        case 11:
+            ++returnIndex;
+            return &BlockEvict;
+        case 12:
+            ++returnIndex;
+            return &Cold2Cold;
+        case 13:
+            ++returnIndex;
+            return &Cold2Hot;
+        case 14:
+            ++returnIndex;
+            return &DirtyPage; ///ziqi
+        case 15:
+            ++returnIndex;
+            return &SeqEviction; ///ziqi
+        case 16:
+            ++returnIndex;
+            return &LessSeqEviction; ///ziqi
+        default:
+            return NULL;
         }
     }
 };

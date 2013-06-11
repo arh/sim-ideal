@@ -6,9 +6,26 @@
 using namespace std;
 extern StatsDS   *_gStats;
 
-void collectStat(int level, uint32_t newFlags)
+extern int totalSeqEvictedDirtyBlocks;
+
+extern int totalNonSeqEvictedDirtyBlocks;
+
+void collectStat( int level, uint32_t newFlags)
 {
     ++ _gStats[level].Ref;
+
+    ///ziqi: find dirty page number
+    if(newFlags & DIRTY) {
+        ++_gStats[level].DirtyPage ;
+    }
+
+    if(newFlags & SEQEVICT) {
+        ++_gStats[level].SeqEviction ;
+    }
+
+    if(newFlags & LESSSEQEVICT) {
+        ++_gStats[level].LessSeqEviction ;
+    }
 
     // find read or write count
 
@@ -18,8 +35,8 @@ void collectStat(int level, uint32_t newFlags)
         // Collect Read stats
         if(newFlags	&	PAGEHIT) {
             ++ _gStats[level].PageReadHit;
-            assert(newFlags & BLKHIT);
-            assert(!(newFlags & PAGEMISS));
+            assert( newFlags & BLKHIT);
+            assert( !(newFlags & PAGEMISS));
         }
 
         if(newFlags	&	PAGEMISS)
@@ -27,7 +44,7 @@ void collectStat(int level, uint32_t newFlags)
 
         if(newFlags	&	BLKHIT) {
             ++ _gStats[level].BlockWriteHit;
-            assert(!(newFlags & BLKMISS));
+            assert( !(newFlags & BLKMISS) );
         }
 
         if(newFlags	&	BLKMISS) {
@@ -42,20 +59,20 @@ void collectStat(int level, uint32_t newFlags)
             // Collect Read stats
             if(newFlags	&	PAGEHIT) {
                 ++ _gStats[level].PageWriteHit;
-                assert(newFlags & BLKHIT);
-                assert(!(newFlags & PAGEMISS));
+                assert( newFlags & BLKHIT);
+                assert( !(newFlags & PAGEMISS));
             }
 
             if(newFlags	&	BLKHIT) {
                 ++ _gStats[level].BlockWriteHit;
-                assert(!(newFlags & BLKMISS));
+                assert( !(newFlags & BLKMISS) );
 
                 if(newFlags	&	PAGEMISS)
                     ++ _gStats[level].PageWriteMiss;
             }
 
             if(newFlags	&	BLKMISS) {
-                assert(!(newFlags & BLKHIT));
+                assert( !(newFlags & BLKHIT) );
                 ++ _gStats[level].BlockWriteMiss;
                 ++ _gStats[level].PageWriteMiss;
             }
@@ -63,12 +80,12 @@ void collectStat(int level, uint32_t newFlags)
             if(newFlags	&	EVICT)
                 ++ _gStats[level].BlockEvict;
 
-            if(newFlags	&	PAGEMISS && !(newFlags	& BLKHIT) && !(newFlags	& BLKMISS))  // for page based algorithm
+            if(newFlags	&	PAGEMISS && ! (newFlags	& BLKHIT ) && !(newFlags	& BLKMISS) ) // for page based algorithm
                 ++ _gStats[level].PageWriteMiss;
 
-            if(newFlags & COLD2COLD) {
+            if( newFlags & COLD2COLD ) {
                 ++ _gStats[level].Cold2Cold;
-                assert(!(newFlags & COLD2HOT));
+                assert( ! (newFlags & COLD2HOT) );
             }
 
             if(newFlags & COLD2HOT)
@@ -95,19 +112,19 @@ void printHist()
     birdName.append(".BIRD");
     pirdStream.open(pirdName, ios::out | ios::trunc);
 
-    if(! pirdStream.good()) {
+    if( ! pirdStream.good() ) {
         cerr << "Error: can not open PIRD file: " << pirdName << endl;
         return;
     }
 
     birdStream.open(birdName, ios::out | ios::trunc);
 
-    if(! birdStream.good()) {
+    if( ! birdStream.good() ) {
         cerr << "Error: can not open BIRD file: " << birdName << endl;
         return;
     }
 
-    for(unsigned i = 0; i < _gConfiguration.futureWindowSize  ; ++i) {
+    for(unsigned i = 0; i < _gConfiguration.futureWindowSize  ; ++i ) {
         pirdStream << i << "\t" << _gConfiguration.pirdHist[i] << endl;
         birdStream << i << "\t" << _gConfiguration.birdHist[i] << endl;
     }
@@ -126,7 +143,7 @@ void printStats()
     fileName.append(".stat");
     statStream.open(fileName, ios::out | ios::app);
 
-    if(! statStream.good()) {
+    if( ! statStream.good() ) {
         cerr << "Error: can not open stat file: " << fileName << endl;
         return;
     }
@@ -135,13 +152,20 @@ void printStats()
     Stat *tempStat;
 
     //print stat results for each level
-    for(int i = 0 ; i < _gConfiguration.totalLevels ; i++) {
+    for( int i = 0 ; i < _gConfiguration.totalLevels ; i++ ) {
         statStream << "Level " << i + 1 << ",\t" << _gConfiguration.GetAlgName(i) << endl;
 
-        while((tempStat = _gStats[i].next())) {
+        while( ( tempStat = _gStats[i].next() ) ) {
             statStream << tempStat->print() << endl;
         }
 
+        uint64_t blockEvict = _gStats[i].BlockEvict.getCounter();
+        uint64_t seqEviction = _gStats[i].SeqEviction.getCounter();
+        uint64_t lessSeqEviction = _gStats[i].LessSeqEviction.getCounter();
+        statStream << "Total Seq Evicted Dirty Blocks, " << totalSeqEvictedDirtyBlocks << endl;
+        statStream << "Total NonSeq Evicted Dirty Blocks, " << totalNonSeqEvictedDirtyBlocks << endl;
+        statStream << "Total Evicted Clean Blocks, " << ((int)blockEvict - (int)seqEviction - (int)lessSeqEviction) << endl;
+        statStream << "Real Total Evicted Blocks, " << ((int)blockEvict - (int)seqEviction + totalSeqEvictedDirtyBlocks - (int)lessSeqEviction + totalNonSeqEvictedDirtyBlocks) << endl;
         statStream << endl;
     }
 

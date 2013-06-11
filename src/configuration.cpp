@@ -11,7 +11,7 @@ void Configuration::allocateArrays(int totalLevels)
     cacheBlkSize = new uint64_t[totalLevels];
     ssd2fsblkRatio = new uint32_t[totalLevels];
 
-    for(int i = 0 ; i < totalLevels ; i++) {
+    for( int i = 0 ; i < totalLevels ; i++) {
         cacheSize[i] = cachePageSize[i] = cacheBlkSize[i] = 0;
     }
 }
@@ -25,21 +25,21 @@ uint64_t Configuration::myString2intConverter(std::string str)
     }
     catch(...) {
         // for some (unkown) reason, lexical_cast cannot convert K M G !
-        if(str.find("K") != std::string::npos) {
+        if( str.find("K") != std::string::npos ) {
             size_t pos = str.find("K") ;
-            std::istringstream(str.substr(0, pos)) >> tempInt ;
+            std::istringstream( str.substr(0, pos) ) >> tempInt ;
             tempInt *= 1024 ; //convert to K
         }
 
-        if(str.find("M") != std::string::npos) {
+        if( str.find("M") != std::string::npos ) {
             size_t pos = str.find("K") ;
-            std::istringstream(str.substr(0, pos)) >> tempInt ;
+            std::istringstream( str.substr(0, pos) ) >> tempInt ;
             tempInt *= 1024 * 1024 ; //convert to M
         }
 
-        if(str.find("G") != std::string::npos) {
+        if( str.find("G") != std::string::npos ) {
             size_t pos = str.find("K") ;
-            std::istringstream(str.substr(0, pos)) >> tempInt ;
+            std::istringstream( str.substr(0, pos) ) >> tempInt ;
             tempInt *= 1024 * 1024 * 1024 ; //convert to G
         }
     }
@@ -70,15 +70,15 @@ bool Configuration::read(int argc, char **argv)
     try {
         read_info(argv[2], pTree);
     }
-    catch(boost::property_tree::info_parser_error e) {
-        throw std::runtime_error(std::string(e.what())) ;
+    catch (boost::property_tree::info_parser_error e) {
+        throw std::runtime_error( std::string(e.what()) ) ;
     }
 
     try {
         std::string cacheStr[] = { "L1_Cache", "L2_Cache", "L3_Cache", "L4_Cache"};
         totalLevels = pTree.get<int>("Global.levels");
 
-        if(totalLevels == 0 || totalLevels > 4) {
+        if( totalLevels == 0 || totalLevels > 4 ) {
             std::cerr << "Cfg file error, Invalid number of cache levels " << std::endl;
             exit(1);
         }
@@ -96,7 +96,7 @@ bool Configuration::read(int argc, char **argv)
             tempStr.clear();
         }
 
-        if(! tempStr.empty()) {
+        if( ! tempStr.empty() ) {
             logStream.open(tempStr.c_str(), std::ios::trunc);
             //print start time
             time_t now = time(0);
@@ -109,44 +109,58 @@ bool Configuration::read(int argc, char **argv)
         }
         catch(...) {
             //no log file specified
+            tempStr.clear();
         }
 
-        if(! tempStr.empty()) {
+        if( ! tempStr.empty() ) {
             writeOnly = (bool) myString2intConverter(tempStr);
         }
 
-        for(int i = 0; i < totalLevels ; ++i) {
-            tempStr = pTree.get<std::string>	(std::string(cacheStr[i] + "." + "size"));
+        ///ziqi: read out the value for seqThreshold
+        try {
+            tempStr = pTree.get<std::string>("Global.seqThreshold");
+        }
+        catch(...) {
+            //no log file specified
+            tempStr.clear();
+        }
+
+        if( ! tempStr.empty() ) {
+            seqThreshold = (int) myString2intConverter(tempStr);
+        }
+
+        for( int i = 0; i < totalLevels ; ++i ) {
+            tempStr = pTree.get<std::string>		( std::string( cacheStr[i] + "." + "size"  ) );
             cacheSize[i] = myString2intConverter(tempStr);
-            tempStr = pTree.get<std::string>	(std::string(cacheStr[i] + "." + "pageSize"));
+            tempStr = pTree.get<std::string>	(std::string( cacheStr[i] + "." + "pageSize") );
             cachePageSize[i] = myString2intConverter(tempStr);
-            tempStr = pTree.get<std::string>	(std::string(cacheStr[i] + "." + "blkSize"));
+            tempStr = pTree.get<std::string>	(std::string( cacheStr[i] + "." + "blkSize") );
             cacheBlkSize[i] = myString2intConverter(tempStr);
             ssd2fsblkRatio[i] = cacheBlkSize[i] / fsblkSize;
 
             try {
-                tempStr = pTree.get<std::string>(std::string(cacheStr[i] + "." + "outTraceFile"));
+                tempStr = pTree.get<std::string>(std::string( cacheStr[i] + "." + "outTraceFile"));
             }
             catch(...) {
                 //no log file specified
                 tempStr.clear();
             }
 
-            if(! tempStr.empty()) {
+            if( ! tempStr.empty() ) {
                 outTraceStream[i].open(tempStr.c_str(), std::ios::trunc);
             }
 
-            policyName[i] = pTree.get<std::string>	(std::string(cacheStr[i] + "." + "policy"));
+            policyName[i] = pTree.get<std::string>		( std::string( cacheStr[i] + "." + "policy"  ) );
 
             //read policy dependent configs
-            if(policyName[i].find("owbp") != std::string::npos) {
-                tempStr = pTree.get<std::string> (std::string(cacheStr[i] + "." + "policy" + "." + "futureWindowSize"));
+            if(policyName[i].find("owbp") != std::string::npos ) {
+                tempStr = pTree.get<std::string> ( std::string( cacheStr[i] + "." + "policy" + "." + "futureWindowSize"  ) );
                 futureWindowSize = myString2intConverter(tempStr) ;
             }
         }
     }
-    catch(boost::property_tree::ptree_bad_path e) {
-        throw std::runtime_error(std::string(e.what())) ;
+    catch (boost::property_tree::ptree_bad_path e) {
+        throw std::runtime_error( std::string(e.what()) ) ;
     }
 
     testName	= argv[3];
@@ -156,8 +170,8 @@ bool Configuration::read(int argc, char **argv)
 
     //TODO generalize this with boost program_options
     if(argc > 4)
-        if(strcmp(argv[4], "-s") == 0) {
-            cacheSize[0] = myString2intConverter(std::string(argv[5]));
+        if( strcmp(argv[4], "-s") == 0 ) {
+            cacheSize[0] = myString2intConverter(std::string(argv[5]) );
         }
 
     return true;
@@ -167,7 +181,7 @@ void Configuration::initHist()
 {
     assert(futureWindowSize);
 
-    for(unsigned i = 0 ; i < futureWindowSize ; ++i) {
+    for(unsigned i = 0 ; i < futureWindowSize ; ++i ) {
         birdHist[i] = 0;
         pirdHist[i] = 0;
     }
@@ -181,6 +195,8 @@ Configuration::Configuration()
     outTraceStream = NULL;
     totalLevels = 0;
     writeOnly = false;
+    ///ziqi
+    seqThreshold = 0;
     testName = 0;
     // 		ssdblkSize = 16384 ;
     maxLineNo = 0;

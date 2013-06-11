@@ -8,6 +8,7 @@
 #include "configuration.h"
 #include "parser.h"
 #include "lru_stl.h"
+#include "lru_ziqi.h"
 #include "stats.h"
 #include "min.h"
 
@@ -16,6 +17,12 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 //GLOBALS
 ////////////////////////////////////////////////////////////////////////////////
+
+int totalSeqEvictedDirtyBlocks;
+
+int totalNonSeqEvictedDirtyBlocks;
+
+int threshold;
 
 Configuration	_gConfiguration;
 bool _gTraceBased = false;
@@ -38,14 +45,32 @@ void	readTrace(deque<reqAtom> & memTrace)
     uint32_t lineNo = 0;
 
     while(getAndParseMSR(_gConfiguration.traceStream , &newAtom)) {
-        //drop all reads if simulation setup is writeOnly
-        if(newAtom.flags & WRITE && _gConfiguration.writeOnly) {
+        ///ziqi: if writeOnly is 1, only insert write cache miss page to cache
+        if(_gConfiguration.writeOnly) {
+            if(newAtom.flags & WRITE) {
+#ifdef REQSIZE
+                uint32_t reqSize = newAtom.reqSize;
+                newAtom.reqSize = 1;
+
+                //expand large request
+                for( uint32_t i = 0 ; i < reqSize ; ++ i) {
+                    memTrace.push_back(newAtom);
+                    ++ newAtom.fsblkno;
+                }
+
+#else
+                memTrace.push_back(newAtom);
+#endif
+            }
+        }
+        ///ziqi: if writeOnly is 0, insert both read & write cache miss page to cache
+        else {
 #ifdef REQSIZE
             uint32_t reqSize = newAtom.reqSize;
             newAtom.reqSize = 1;
 
             //expand large request
-            for(uint32_t i = 0 ; i < reqSize ; ++ i) {
+            for( uint32_t i = 0 ; i < reqSize ; ++ i) {
                 memTrace.push_back(newAtom);
                 ++ newAtom.fsblkno;
             }
@@ -55,8 +80,8 @@ void	readTrace(deque<reqAtom> & memTrace)
 #endif
         }
 
-        assert(lineNo < newAtom.lineNo);
-        IFDEBUG(lineNo = newAtom.lineNo;);
+        assert(lineNo < newAtom.lineNo );
+        IFDEBUG( lineNo = newAtom.lineNo;  );
         newAtom.clear();
     }
 
@@ -77,30 +102,34 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
     //Allocate hierarchy
     _gTestCache = new TestCache<uint64_t, cacheAtom>*[_gConfiguration.totalLevels];
 
-    for(int i = 0; i < _gConfiguration.totalLevels ; i++) {
-        if(_gConfiguration.GetAlgName(i).compare("pagelru") == 0) {
+    for( int i = 0; i < _gConfiguration.totalLevels ; i++) {
+        if( _gConfiguration.GetAlgName(i).compare("pagelru") == 0 ) {
             _gTestCache[i] = new PageLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
         }
         else
-            if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
-                _gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+            if( _gConfiguration.GetAlgName(i).compare("ziqilru") == 0 ) {
+                _gTestCache[i] = new ZiqiLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
             }
             else
-                if(_gConfiguration.GetAlgName(i).compare("blockmin") == 0) {
-                    _gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+                if ( _gConfiguration.GetAlgName(i).compare("pagemin") == 0	 ) {
+                    _gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
                 }
                 else
-                    if(_gConfiguration.GetAlgName(i).find("owbp") != string::npos) {
-                        _gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
+                    if ( _gConfiguration.GetAlgName(i).compare("blockmin") == 0	 ) {
+                        _gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
                     }
+                    else
+                        if ( _gConfiguration.GetAlgName(i).find("owbp") != string::npos	 ) {
+                            _gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
+                        }
         //esle if //add new policy name and dynamic allocation here
-                    else {
-                        cerr << "Error: UnKnown Algorithm name " << endl;
-                        exit(1);
-                    }
+                        else {
+                            cerr << "Error: UnKnown Algorithm name " << endl;
+                            exit(1);
+                        }
     }
 
-    PRINTV(logfile << "Configuration and setup done" << endl;);
+    PRINTV (logfile << "Configuration and setup done" << endl;);
     srand(0);
 }
 void reportProgress()
@@ -109,40 +138,64 @@ void reportProgress()
     static int lock = -1;
     int completePercent = ((totalTraceLines - memTrace.size()) * 100) / totalTraceLines ;
 
-    if(completePercent % 10 == 0 && lock != completePercent) {
+    if(completePercent % 10 == 0 && lock != completePercent ) {
         lock = completePercent ;
         std::cerr << "\r--> " << completePercent << "% done" << flush;
     }
 
-    if(completePercent == 100)
+    if(completePercent == 100 )
         std::cerr << endl;
 }
-void recordOutTrace(int level, reqAtom newReq)
+
+/*backup
+void recordOutTrace( int level, reqAtom newReq){
+	if(_gConfiguration.outTraceStream[level].is_open()){
+		_gConfiguration.outTraceStream[level] << newReq.issueTime << "," <<"OutLevel"<<level<<",0,";
+
+		//_gConfiguration.outTraceStream[level] <<"flags: "<< newReq.flags <<" !";
+
+		if(newReq.flags & READ){
+			_gConfiguration.outTraceStream[level] << "Read,";
+		}
+		else
+			_gConfiguration.outTraceStream[level] << "Write,";
+		//FIXME: check math
+		_gConfiguration.outTraceStream[level] << newReq.fsblkno * 512 * 8 <<","<< newReq.reqSize * 512 << endl;
+
+	}
+}
+*/
+
+///ziqi version
+void recordOutTrace( int level, reqAtom newReq)
 {
     if(_gConfiguration.outTraceStream[level].is_open()) {
-        _gConfiguration.outTraceStream[level] << newReq.issueTime << "," << "OutLevel" << level << ",0,";
-
-        if(newReq.flags & READ) {
-            _gConfiguration.outTraceStream[level] << "Read,";
+        _gConfiguration.outTraceStream[level] << newReq.issueTime << "!";
+        //_gConfiguration.outTraceStream[level] <<"flags: "<< newReq.flags <<" !";
+        /*
+        if(newReq.flags & READ){
+        	_gConfiguration.outTraceStream[level] << "Read,";
         }
         else
-            _gConfiguration.outTraceStream[level] << "Write,";
-
+        	_gConfiguration.outTraceStream[level] << "Write,";
+        */
         //FIXME: check math
-        _gConfiguration.outTraceStream[level] << newReq.fsblkno * 512 * 8 << "," << newReq.reqSize * 512 << endl;
+        _gConfiguration.outTraceStream[level] << newReq.fsblkno << endl;
+        //_gConfiguration.outTraceStream[level] << newReq.flags << endl;
     }
 }
-void RunBenchmark(deque<reqAtom> & memTrace)
-{
-    PRINTV(logfile << "Start benchmarking" << endl;);
 
-    while(! memTrace.empty()) {
+void RunBenchmark( deque<reqAtom> & memTrace)
+{
+    PRINTV (logfile << "Start benchmarking" << endl;);
+
+    while( ! memTrace.empty() ) {
         uint32_t newFlags = 0;
         reqAtom newReq = memTrace.front();
         cacheAtom newCacheAtom(newReq);
 
         //access hierachy from top layer
-        for(int i = 0 ; i < _gConfiguration.totalLevels ; i++) {
+        for( int i = 0 ; i < _gConfiguration.totalLevels ; i++) {
             newFlags = _gTestCache[i]->access(newReq.fsblkno, newCacheAtom, newReq.flags);
             collectStat(i, newFlags);
 
@@ -157,13 +210,16 @@ void RunBenchmark(deque<reqAtom> & memTrace)
         reportProgress();
     }
 
-    PRINTV(logfile << "Benchmarking Done" << endl;);
+    PRINTV (logfile << "Benchmarking Done" << endl;);
 }
 
 int main(int argc, char **argv)
 {
+    totalSeqEvictedDirtyBlocks = 0;
+    totalNonSeqEvictedDirtyBlocks = 0;
     //read benchmark configuration
     Initialize(argc, argv, memTrace);
+    threshold = _gConfiguration.seqThreshold;
     RunBenchmark(memTrace); // send reference memTrace
     ExitNow(0);
 }

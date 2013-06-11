@@ -103,7 +103,7 @@ inline void MUTEX_EXIT(unsigned volatile *x)
 //CPU counters
 //////////////////////////////////////////////////////////////////////////
 #define RDTICK() \
-    ({ tick_t __t; __asm__ __volatile__ ("rdtsc" : "=A" (__t)); __t; })
+	({ tick_t __t; __asm__ __volatile__ ("rdtsc" : "=A" (__t)); __t; })
 
 //////////////////////////////////////////////////////////////////////////
 //bit operations
