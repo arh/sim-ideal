@@ -30,7 +30,7 @@ public:
         size_t c,
         unsigned levelMinus
     ) : _fn(f) , _capacity(c), levelMinusMinus(levelMinus) {
-        assert ( _capacity != 0 );
+        assert(_capacity != 0);
         accessOrdering.pageBaseBuild();
     }
     // Obtain value of the cached function for k
@@ -66,7 +66,7 @@ private:
     unsigned levelMinusMinus;
 
     // Record a fresh key-value pair in the cache
-    int insert( uint64_t k, cacheAtom v);
+    int insert(uint64_t k, cacheAtom v);
     // Purge the least-recently-used element in the cache
     void evict();
 };
@@ -83,7 +83,7 @@ public:
         unsigned levelMinus
     ) : _fn(f) , _capacity(c) , levelMinusMinus(levelMinus) {
         ///ARH: Commented for single level cache implementation
-        assert ( _capacity != 0 );
+        assert(_capacity != 0);
         accessOrdering.blockBaseBuild();
         cacheNum = 0;
     }
@@ -112,7 +112,7 @@ private:
     unsigned levelMinusMinus;
 
     // Record a fresh key-value pair in the cache
-    int insert( uint64_t k, cacheAtom v);
+    int insert(uint64_t k, cacheAtom v);
     // Purge the least-recently-used element in the cache
     void evict(uint64_t ssdblkno);
 };

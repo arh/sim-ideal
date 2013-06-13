@@ -2048,7 +2048,7 @@ public://NOT THREAD SAFE, EACH THREAD SHOULD USE DIFFRENT OBJECT !!
 public://THREAD SAFE !!
     inline_ static _u64 getSeed() {
         //get random the seed
-        return (time(0) * System::read_cpu_ticks()) ^ (clock() * System::read_cpu_ticks());
+        return (time(0) * System::read_cpu_ticks()) ^(clock() * System::read_cpu_ticks());
     }
     inline_ static _u64 getRandom(_u64 seed) {
         if(0 == seed)
@@ -2083,11 +2083,11 @@ public://THREAD SAFE !!
 inline_ _u32 ptr_hash_func(ptr_t key)
 {
     key = ~key + (key << 15);
-    key = key ^ (key >> 12);
+    key = key ^(key >> 12);
     key = key + (key << 2);
-    key = key ^ (key >> 4);
+    key = key ^(key >> 4);
     key = (key + (key << 3)) + (key << 11);
-    key = key ^ (key >> 16);
+    key = key ^(key >> 16);
     return key;
 }
 
@@ -2096,11 +2096,11 @@ inline_ _u32 ptr_hash_func(ptr_t key)
 inline_ _u32 ptr_hash_func(ptr_t key)
 {
     key = (~key) + (key << 18);
-    key = key ^ (key >> 31);
+    key = key ^(key >> 31);
     key = key * 21;
-    key = key ^ (key >> 11);
+    key = key ^(key >> 11);
     key = key + (key << 6);
-    key = key ^ (key >> 22);
+    key = key ^(key >> 22);
     return (_u32) key;
 }
 #endif

@@ -22,7 +22,7 @@ bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
     char line[201];
     static uint32_t lineno = 0;
     static double old_time = 0;
-    assert( inputTrace.good() );
+    assert(inputTrace.good());
 
     while(!fetched) {
         std::string lineString;
@@ -118,7 +118,7 @@ bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
                 newn->reqSize = bcount_temp / _gConfiguration.fsblkSize;
 
                 //TODO: fix this line
-                if( newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0] + newn->reqSize >= _gConfiguration.ssd2fsblkRatio[0] ) { // req size is big, going to share multiple block
+                if(newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0] + newn->reqSize >= _gConfiguration.ssd2fsblkRatio[0]) {   // req size is big, going to share multiple block
                     newn->reqSize = _gConfiguration.ssd2fsblkRatio[0] - newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0];
                 }
             }

@@ -41,6 +41,12 @@ public:
     uint64_t *pirdHist;
     int 	totalLevels;
     bool writeOnly;
+    std::string diskSimuExe;
+    std::string diskSimPath;
+    std::string diskSimParv;
+    std::string diskSimOutv;
+    std::string cache2diskPipeFileName;
+
 
     ///ziqi: set the threshold for length of sequential write
     int seqThreshold;
@@ -50,11 +56,11 @@ public:
     Configuration();
     ~Configuration();
 
-    inline std::string GetAlgName( int i ) {
-        if( policyName[i].find("owbp") != std::string::npos) {
+    inline std::string GetAlgName(int i) {
+        if(policyName[i].find("owbp") != std::string::npos) {
             std::ostringstream convert;
             convert << futureWindowSize << "/" << cacheSize[i] ;
-            return std::string(policyName[i] +  "-" + (convert.str()) );
+            return std::string(policyName[i] +  "-" + (convert.str()));
         }
         else
             return policyName[i];

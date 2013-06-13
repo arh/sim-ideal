@@ -1,0 +1,16 @@
+dm_disk Seagate-Cheetah15k5.model {
+Number of data surfaces = 4,
+Number of cylinders = 72170,
+Block count = 286749487,
+Layout Model = source Seagate-Cheetah15k5-skews.layout,
+Mechanical Model = dm_mech_g1 {
+Access time type = trackSwitchPlusRotation,
+Seek type = extracted,
+Full seek curve = Seagate-Cheetah15k5.seeks,
+Add. write settling delay = 0.0,
+Head switch time = 0.001000,
+Rotation speed (in rpms) = 15020,
+Percent error in rpms = 0.035147
+   }
+} # end of Seagate-Cheetah15k5.model spec
+

@@ -38,7 +38,7 @@ public:
     void pageBaseBuild();
     void blockBaseBuild();
 
-    uint32_t nextAccess( uint64_t key, uint32_t currLine);
+    uint32_t nextAccess(uint64_t key, uint32_t currLine);
 
 
 };
@@ -62,7 +62,7 @@ public:
 class CompHeapAtom
 {
 public:
-    bool operator()( const HeapAtom &a , const HeapAtom &b ) {
+    bool operator()(const HeapAtom &a , const HeapAtom &b) {
 // 		return (a.lineNo < b.lineNo); //turns out that this line make a MIN-heap
         return (a.lineNo > b.lineNo); // debatin ...
     }

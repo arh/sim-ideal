@@ -107,7 +107,7 @@ public:
     reqAtom getReq() const {
         return req;
     }
-    void update( const cacheAtom &newValue) {
+    void update(const cacheAtom &newValue) {
         req = newValue.getReq();
     }
 
@@ -116,7 +116,7 @@ public:
         return req.flags;
     }
     ///ziqi
-    void updateFlags( uint32_t outerFlags) {
+    void updateFlags(uint32_t outerFlags) {
         req.flags = outerFlags;
     }
 };

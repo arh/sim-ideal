@@ -1,0 +1,5 @@
+#!/bin/sh
+set -x 
+#nice ./disksim Seagate-Cheetah15k5.parv random.outv validate random.trace 0 disk0 "Enable caching in buffer" 0  disk0 "Fast write level" 0 disk0 "Buffer continuous read" 0
+nice ./disksim Seagate-Cheetah15k5.parv random.outv ascii test.trace 0 disk0 "Enable caching in buffer" 0  disk0 "Fast write level" 0 disk0 "Buffer continuous read" 0
+

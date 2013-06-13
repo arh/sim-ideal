@@ -51,13 +51,13 @@ uint32_t PageMinCache::access(const uint64_t &k  , cacheAtom &value, uint32_t st
         range = maxHeap.equal_range(currHeapAtom);
 
         if(range.first != range.second) {
-            for(setit = range.first; setit != range.second ; ++setit ) {
-                if(setit->key == k ) {
+            for(setit = range.first; setit != range.second ; ++setit) {
+                if(setit->key == k) {
                     maxHeap.erase(setit);
                     currHeapAtom.lineNo = nextAccessLineNo;
                     multiset<HeapAtom>::iterator debugit;
                     debugit = maxHeap.insert(currHeapAtom);
-                    assert( debugit != maxHeap.end());
+                    assert(debugit != maxHeap.end());
                     IFDEBUG(updated = true;);
                     break;
                 }
@@ -77,7 +77,7 @@ uint32_t PageMinCache::access(const uint64_t &k  , cacheAtom &value, uint32_t st
 
 
 // Record a fresh key-value pair in the cache
-int PageMinCache::insert( uint64_t k, cacheAtom v)
+int PageMinCache::insert(uint64_t k, cacheAtom v)
 {
     PRINTV(logfile << "\tinsert key " << k  << endl;);
     int status = 0;
@@ -105,12 +105,12 @@ int PageMinCache::insert( uint64_t k, cacheAtom v)
     nextAccessLineNo = accessOrdering.nextAccess(k, tempLineNo);
 // 	}
     PRINTV(logfile << "\tnext access to pageID " << k << " is in lineNo " << nextAccessLineNo << endl;);
-    assert(  nextAccessLineNo <= _gConfiguration.maxLineNo || nextAccessLineNo == INF );
+    assert(nextAccessLineNo <= _gConfiguration.maxLineNo || nextAccessLineNo == INF);
     HeapAtom tempHeapAtom(nextAccessLineNo, k);
     //lookup in heap to find out block hit and update block-level metadate in case of block hit
     multiset<HeapAtom>::iterator setit;
     setit = maxHeap.insert(tempHeapAtom);
-    assert( setit != maxHeap.end() );
+    assert(setit != maxHeap.end());
     // Create the key-value entry,
     // linked to the usage record.
     _key_to_value.insert(make_pair(k, v));
@@ -164,10 +164,10 @@ uint32_t BlockMinCache::access(const uint64_t &k  , cacheAtom &value, uint32_t s
         SsdBlock_type::iterator pageit;
         pageit = it->second.find(k);
 
-        if(pageit == it->second.end() ) {
+        if(pageit == it->second.end()) {
             PRINTV(logfile << "\tMiss on key: " << k << endl;);
 
-            if( cacheNum == _capacity) {
+            if(cacheNum == _capacity) {
                 PRINTV(logfile << "\tCache is Full " << cacheNum << " pages" << endl;);
                 evict(value.getSsdblkno());
                 status |= EVICT;
@@ -175,7 +175,7 @@ uint32_t BlockMinCache::access(const uint64_t &k  , cacheAtom &value, uint32_t s
 
             (it->second).insert(k);
 // 			it->second.swap(tempBlock) ;
-            assert(it->second.size() );
+            assert(it->second.size());
             ++ cacheNum;
             status |= PAGEMISS ;
         }
@@ -191,19 +191,19 @@ uint32_t BlockMinCache::access(const uint64_t &k  , cacheAtom &value, uint32_t s
         currHeapAtom.key = value.getSsdblkno();
         uint32_t nextAccessLineNo = 0;
         deque<reqAtom>::iterator memit = memTrace.begin();
-        assert(memit->lineNo == currHeapAtom.lineNo );
+        assert(memit->lineNo == currHeapAtom.lineNo);
 
-        if( (++memit)->lineNo != currHeapAtom.lineNo ) { //if it need update do update
+        if((++memit)->lineNo != currHeapAtom.lineNo) {   //if it need update do update
             nextAccessLineNo = accessOrdering.nextAccess(currHeapAtom.key, currHeapAtom.lineNo);
             PRINTV(logfile << "\tNext access on Block: " << value.getSsdblkno() << " is in line " << nextAccessLineNo << endl;);
             // update max heap setit
             multiset<HeapAtom>::iterator setit;
             setit = maxHeap.find(currHeapAtom);
-            assert( setit != maxHeap.end());
+            assert(setit != maxHeap.end());
             maxHeap.erase(setit);
             currHeapAtom.lineNo = nextAccessLineNo;
             setit = maxHeap.insert(currHeapAtom);
-            assert( setit != maxHeap.end());
+            assert(setit != maxHeap.end());
         }
     } //end hit
 
@@ -211,16 +211,16 @@ uint32_t BlockMinCache::access(const uint64_t &k  , cacheAtom &value, uint32_t s
 } //end access
 
 
-int BlockMinCache::insert( uint64_t k, cacheAtom v)
+int BlockMinCache::insert(uint64_t k, cacheAtom v)
 {
     PRINTV(logfile << "\tinsert key " << k  << endl;);
     int status = 0;
     // Method is only called on block cache misses
     assert(_key_to_block.find(v.getSsdblkno()) == _key_to_block.end());
     // Make space if necessary
-    assert( _capacity );
+    assert(_capacity);
 
-    if( cacheNum == _capacity) {
+    if(cacheNum == _capacity) {
         PRINTV(logfile << "\tCache is Full " << cacheNum << " pages" << endl;);
         evict(v.getSsdblkno());
         status |= EVICT;
@@ -232,9 +232,9 @@ int BlockMinCache::insert( uint64_t k, cacheAtom v)
     uint32_t tempLineNo = v.getLineNo();
     uint32_t nextAccessLineNo = 0;
     deque<reqAtom>::iterator it = memTrace.begin();
-    assert(it->lineNo == tempLineNo );
+    assert(it->lineNo == tempLineNo);
 
-    if( (++it)->lineNo == tempLineNo ) {
+    if((++it)->lineNo == tempLineNo) {
         nextAccessLineNo = tempLineNo; // sequential requests
     }
     else {
@@ -242,11 +242,11 @@ int BlockMinCache::insert( uint64_t k, cacheAtom v)
     }
 
     PRINTV(logfile << "\tnext access to block " << tempSsdblkno << " is in lineNo " << nextAccessLineNo << endl;);
-    assert( nextAccessLineNo <= _gConfiguration.maxLineNo || nextAccessLineNo == INF );
+    assert(nextAccessLineNo <= _gConfiguration.maxLineNo || nextAccessLineNo == INF);
     HeapAtom tempHeapAtom(nextAccessLineNo, tempSsdblkno);
     multiset<HeapAtom>::iterator setit;
     setit = maxHeap.insert(tempHeapAtom);
-    assert(setit != maxHeap.end() );
+    assert(setit != maxHeap.end());
     // Create the key-value entry,
     SsdBlock_type tempBlock;
     tempBlock.clear();
@@ -264,7 +264,7 @@ void BlockMinCache::evict(uint64_t ssdblkno)
 {
     // Assert method is never called when cache is empty
     // Identify the key with max lineNo
-    assert( maxHeap.size() == _key_to_block.size() );
+    assert(maxHeap.size() == _key_to_block.size());
     multiset<HeapAtom>::iterator setit = maxHeap.begin();
     PRINTV(logfile << "\tevicting victim blockID " << setit->key << " with next lineNo " << setit->lineNo << endl;);
     key_to_block_type::iterator it 	= _key_to_block.find(setit->key);
@@ -274,7 +274,7 @@ void BlockMinCache::evict(uint64_t ssdblkno)
     cacheNum -= (it->second).size();
     (it->second).clear();
 
-    if( setit->key != ssdblkno ) { //it is possible to evict the same block that currant page blong to it.
+    if(setit->key != ssdblkno) {   //it is possible to evict the same block that currant page blong to it.
         // Erase both elements to completely purge record
         _key_to_block.erase(it);
         maxHeap.erase(setit);

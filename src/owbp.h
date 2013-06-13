@@ -13,9 +13,9 @@ using namespace std;
 class CompCacheAtom
 {
 public:
-    bool operator()(  const cacheAtom a ,  const cacheAtom  b ) {
-        assert (a.getSsdblkno() == b.getSsdblkno() );
-        return (a.getFsblkno() < b.getFsblkno() );
+    bool operator()(const cacheAtom a ,  const cacheAtom  b) {
+        assert(a.getSsdblkno() == b.getSsdblkno());
+        return (a.getFsblkno() < b.getFsblkno());
     }
 };
 
@@ -23,9 +23,9 @@ public:
 class CompBlkCacheAtom
 {
 public:
-    bool operator()(  cacheAtom &a ,  cacheAtom &b ) {
-        assert (a.getSsdblkno() == b.getSsdblkno() );
-        return (a.getFsblkno() < b.getFsblkno() );
+    bool operator()(cacheAtom &a ,  cacheAtom &b) {
+        assert(a.getSsdblkno() == b.getSsdblkno());
+        return (a.getFsblkno() < b.getFsblkno());
     }
 };
 
@@ -44,8 +44,8 @@ class CompOwbpCacheBlockMetaData
 {
 public:
     // return coldest block. if there are two block with the same coldness value, return a block with largest destance
-    bool operator()(  const OwbpCacheBlockMetaData &a , const OwbpCacheBlockMetaData &b ) {
-        if( a.coldPageCounter != b.coldPageCounter ) {
+    bool operator()(const OwbpCacheBlockMetaData &a , const OwbpCacheBlockMetaData &b) {
+        if(a.coldPageCounter != b.coldPageCounter) {
             return a.coldPageCounter < b.coldPageCounter;
         }
 // 		else if( a.validPageCount != b.validPageCount )
@@ -127,7 +127,7 @@ public:
         unsigned levelMinus
     ) : _fn(f) , _capacity(c) , levelMinusMinus(levelMinus) {
         ///ARH: Commented for single level cache implementation
-        assert ( _capacity != 0 );
+        assert(_capacity != 0);
         currSize = 0;
     }
     // Obtain value of the cached function for k
@@ -156,7 +156,7 @@ private:
     // Purge the least-recently-used element in the cache
     void evict(uint64_t currBlkID);
     uint32_t blkHitAccess(const uint64_t &k  , cacheAtom &value, uint32_t status, OwbpCacheBlock &tempBlock);
-    void insertNewBlk( cacheAtom &value);
+    void insertNewBlk(cacheAtom &value);
 };
 
 
