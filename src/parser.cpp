@@ -115,7 +115,12 @@ bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
                 PRINT(fprintf(stderr, "line: %s", line););
             }
             else {
-                newn->reqSize = bcount_temp / _gConfiguration.fsblkSize;
+		///ziqi: if the remaining request size is less than one block size, still count it as one. 
+		///ziqi: The following "if" statement works as getting the ceiling of bcount_temp / _gConfiguration.fsblkSize
+		if((bcount_temp % _gConfiguration.fsblkSize) == 0)
+		    newn->reqSize = bcount_temp / _gConfiguration.fsblkSize;
+		else
+		    newn->reqSize = bcount_temp / _gConfiguration.fsblkSize + 1;
 
                 //TODO: fix this line
                 if(newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0] + newn->reqSize >= _gConfiguration.ssd2fsblkRatio[0]) {   // req size is big, going to share multiple block
