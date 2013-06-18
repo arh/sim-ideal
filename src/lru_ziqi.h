@@ -162,6 +162,10 @@ private:
 // Record a fresh key-value pair in the cache
     int insert(const K &k, const V &v, uint32_t status) {
         ///PRINTV(logfile << "insert key " << k  << endl;);
+        
+        ///ziqi: test DISKSIMINPUTSTREAM working or not
+        ///PRINTV(DISKSIMINPUTSTREAM << "insert key " << k  << endl;);
+        
         int localStatus = 0;
 // Method is only called on cache misses
         assert(_key_to_value.find(k) == _key_to_value.end());

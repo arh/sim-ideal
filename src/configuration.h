@@ -27,6 +27,11 @@ public:
     char *traceName;
     std::ifstream traceStream;
     std::ofstream logStream;
+    
+    ///ziqi: diskSimInputStream is defined for logging dirty pages evicted from buffer cache and needed to be flushed back to storage. 
+    ///It works as an input trace file for DiskSim.
+    std::ofstream diskSimInputStream;
+    
     std::ofstream *outTraceStream;
     std::string *policyName;
     char   *testName;
