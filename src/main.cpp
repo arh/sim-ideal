@@ -204,7 +204,7 @@ void runDiskSim()
     ///ziqi: the line above is by Alireza. I use diskSimInputTraceName to denote the DiskSim input trace file name
     command += _gConfiguration.diskSimInputTraceName;
     
-    command += " 1";
+    command += " 0";
     PRINTV(logfile << "Running Disk Simulator with following command:" << endl;);
     PRINTV(logfile << command << endl;);
     system(command.c_str());

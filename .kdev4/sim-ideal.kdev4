@@ -47,7 +47,7 @@ Name=test-ziqi
 Type=Native Application
 
 [Launch][Launch Configuration 3][Data]
-Arguments=../trace/CAMWEBDEV-lvm0.csv sample.cfg test-Jun18
+Arguments=../trace/test.csv sample.cfg test-Jun18
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
