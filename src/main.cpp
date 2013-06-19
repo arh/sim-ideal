@@ -193,8 +193,10 @@ void runDiskSim()
     std::string command = _gConfiguration.diskSimPath ;
     command += _gConfiguration.diskSimuExe;
     command += " ";
+    command += _gConfiguration.diskSimPath;
     command += _gConfiguration.diskSimParv;
     command += " ";
+    command += _gConfiguration.diskSimPath;
     command += _gConfiguration.diskSimOutv;
     command += " ascii ";
     
@@ -202,7 +204,7 @@ void runDiskSim()
     ///ziqi: the line above is by Alireza. I use diskSimInputTraceName to denote the DiskSim input trace file name
     command += _gConfiguration.diskSimInputTraceName;
     
-    command += " 0";
+    command += " 1";
     PRINTV(logfile << "Running Disk Simulator with following command:" << endl;);
     PRINTV(logfile << command << endl;);
     system(command.c_str());

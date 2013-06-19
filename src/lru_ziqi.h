@@ -16,6 +16,7 @@
 #include <list>
 #include "cassert"
 #include "iostream"
+#include "iomanip"
 #include "global.h"
 #include "baseCache.h"
 
@@ -83,10 +84,10 @@ public:
         assert(_capacity != 0);
         ///PRINTV(logfile << "Access key: " << k << endl;);
 	
-	PRINTV(DISKSIMINPUTSTREAM << "Access key: " << k << endl;);
-	PRINTV(DISKSIMINPUTSTREAM << "on issueTime: " << value.getReq().issueTime << endl;);
+	///PRINTV(DISKSIMINPUTSTREAM << "Access key: " << k << endl;);
+	///PRINTV(DISKSIMINPUTSTREAM << "on issueTime: " << value.getReq().issueTime << endl;);
 
-        ///ziqi: if request is write, mark the page status as DIRTY
+///ziqi: if request is write, mark the page status as DIRTY
         if(status & WRITE) {
             status |= DIRTY;
             value.updateFlags(status);
@@ -110,7 +111,7 @@ public:
             ///PRINTV(logfile << "Miss on key: " << k << endl;);
 // Evaluate function and create new record
             const V v = _fn(k, value);
-            ///ziqi: inserts new elements on read and write miss
+///ziqi: inserts new elements on read and write miss
             status |=  insert(k, v, status);
             ///PRINTV(logfile << "Insert done on key: " << k << endl;);
             ///PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl;);
@@ -145,20 +146,32 @@ public:
         return (_key_to_value.rbegin())->first;
     }
 
-
-    void remove(const K &k) {
+///ziqi: k is used to denote the actual entry with key value of "k" to be evicted
+///ziqi: v is used to denote the original entry that passed to access() method. We only replace the time stamp of k by the time stamp of v
+///ziqi: seqEvictionLength is used to denote the sequential eviction length, which works as request size of one write operation
+    void remove(const K &k, const V &v, int seqEvictionLength) {
         ///PRINTV(logfile << "Removing key " << k << endl;);
 // Assert method is never called when cache is empty
         assert(!_key_tracker.empty());
 // Identify  key
-        const typename key_to_value_type::iterator it
-        = _key_to_value.find(k);
-        assert(it != _key_to_value.end());
+        typename key_to_value_type::iterator it = _key_to_value.find(k);
+	assert(it != _key_to_value.end());
+///ziqi: DiskSim format Request_arrival_time Device_number Block_number Request_size Request_flags
+///ziqi: Device_number is set to 1. About Request_flags, 0 is for write and 1 is for read
+	PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<setw(16)<<v.getReq().issueTime<<left<<setw(8)<<"1"<<left<<setw(8)<<it->second.first.getReq().fsblkno<<left<<setw(8)<<seqEvictionLength<<"0"<<endl;);	
+	
         ///PRINTV(logfile << "Remove value " << endl;);
-// Erase both elements to completely purge record
-        _key_to_value.erase(it);
-        _key_tracker.remove(k);
-        ///PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl;);
+	
+        // Erase both elements to completely purge record	
+	for(int z = 0; z < seqEvictionLength; z++) {
+          PRINTV(logfile << "evicting sequential dirty key " << (k+z) <<  endl;);
+          it = _key_to_value.find(k+z);
+	  assert(it != _key_to_value.end());
+          _key_to_value.erase(it);
+	  _key_tracker.remove(k+z);
+        }
+	
+        PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl;);
     }
 private:
 
@@ -166,7 +179,7 @@ private:
     int insert(const K &k, const V &v, uint32_t status) {
         ///PRINTV(logfile << "insert key " << k  << endl;);
         
-        ///ziqi: test DISKSIMINPUTSTREAM working or not
+///ziqi: test DISKSIMINPUTSTREAM working or not
         ///PRINTV(DISKSIMINPUTSTREAM << "insert key " << k  << endl;);
         
         int localStatus = 0;
@@ -177,7 +190,7 @@ private:
 // Make space if necessary
         if(_key_to_value.size() == _capacity) {
             ///PRINTV(logfile << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
-            status |= evict(status);
+            status |= evict(k, v, status);
             localStatus = EVICT | status;
         }
 
@@ -210,7 +223,7 @@ private:
     }
 
 // Purge the least-recently-used element in the cache
-    int evict(uint32_t status) {
+    int evict(const K &k, const V &v, uint32_t status) {
         assert(_key_to_value.size() <= _capacity);
 // Assert method is never called when cache is empty
         assert(!_key_tracker.empty());
@@ -243,12 +256,12 @@ private:
             ///if there is, seqLengh++, if not, check seqLength, if above threshold, evict, if not, check next cacheAtom in the for loop
             ///if none is good, evict the cacheAtom located by  _key_tracker.front()
             typename key_tracker_type::iterator itTracker;
-            ///ziqi: itSeq is used to check whether their are other sequential dirty page in the map
+///ziqi: itSeq is used to check whether their are other sequential dirty page in the map
             typename key_to_value_type::iterator itSeq;
             typename key_to_value_type::iterator itSeqTemp;
-            ///ziqi: denote whether any page has been evicted. If none is evicted, evict the origianl dirty page
+///ziqi: denote whether any page has been evicted. If none is evicted, evict the origianl dirty page
             bool evictSth = false;
-            ///ziqi: denote the first sequential fs block number
+///ziqi: denote the first sequential fs block number
             uint64_t firstSeqFsblkno = 0;
 
             for(itTracker = _key_tracker.begin(); itTracker != _key_tracker.end(); itTracker++) {
@@ -269,25 +282,23 @@ private:
                         itSeqTemp = _key_to_value.find(firstSeqFsblkno);
 
                         if(itSeqTemp == _key_to_value.end() || !((itSeqTemp->second.first.getReq().flags) & DIRTY)) {
-                            ///ziqi: if the seqLength is above the threshold, evict them all
+///ziqi: if the seqLength is above the threshold, evict them all
                             if(seqLength > threshold - 1) {
                                 status |= SEQEVICT;
                                 evictSth = true;
                                 PRINTV(logfile << "evicting sequential dirty key length " << seqLength <<  endl;);
                                 totalSeqEvictedDirtyBlocks += seqLength;
-
-                                for(int z = 0; z < seqLength; z++) {
-                                    ///PRINTV(logfile << "evicting sequential dirty key " << ((*itTracker)+z) <<  endl;);
-                                    remove((*itTracker) + z);
-                                }
-
+      
+                                ///PRINTV(logfile << "evicting sequential dirty key " << ((*itTracker)+z) <<  endl;);
+                                remove((*itTracker), v, seqLength);
+                        
                                 ///PRINTV(logfile << "total sequential evicted block length " << totalSeqEvictedDirtyBlocks <<  endl;);
                             }
 
                             //cout<<"would break"<<endl;
                             break;
                         }
-                        ///ziqi: find a sequential block, sequential length plus 1
+///ziqi: find a sequential block, sequential length plus 1
                         else {
                             firstSeqFsblkno++;
                             seqLength++;
@@ -304,7 +315,7 @@ private:
             }
 
             if(!evictSth) {
-                ///ziqi: changed at Jun 6 that not only evicting the original dirty page but also other dirty page that sequential to the victim page
+///ziqi: changed at Jun 6 that not only evicting the original dirty page but also other dirty page that sequential to the victim page
                 ///PRINTV(logfile << "found no sequential dirty key, evicting original first dirty key along with the sequential ones to it " <<  endl;);
                 //cout<<it->second.first.getReq().flags<<endl;
                 // Erase both elements to completely purge record
@@ -318,21 +329,19 @@ private:
                     itSeqTemp = _key_to_value.find(firstSeqFsblkno);
 
                     if(itSeqTemp == _key_to_value.end() || !((itSeqTemp->second.first.getReq().flags) & DIRTY)) {
-                        ///ziqi: if the seqLength is above the threshold, evict them all
+///ziqi: if the seqLength is above the threshold, evict them all
                         status |= LESSSEQEVICT;
                         PRINTV(logfile << "evicting less than threshold sequential dirty key length " << seqLength <<  endl;);
                         totalNonSeqEvictedDirtyBlocks += seqLength;
 
-                        for(int z = 0; z < seqLength; z++) {
-                            ///PRINTV(logfile << "evicting less than threshold sequential dirty key " << ((*itTracker)+z) <<  endl;);
-                            remove((*itTracker) + z);
-                        }
+                         ///PRINTV(logfile << "evicting less than threshold sequential dirty key " << ((*itTracker)+z) <<  endl;);
+                         remove((*itTracker), v, seqLength);
 
                         ///PRINTV(logfile << "total non-sequential evicted block length " << totalNonSeqEvictedDirtyBlocks <<  endl;);
                         //cout<<"would break"<<endl;
                         break;
                     }
-                    ///ziqi: find a sequential block, sequential length plus 1
+ ///ziqi: find a sequential block, sequential length plus 1
                     else {
                         firstSeqFsblkno++;
                         seqLength++;
