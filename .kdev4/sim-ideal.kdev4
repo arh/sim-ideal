@@ -2,7 +2,25 @@
 BuildItems=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x01\x00\x00\x00\x12\x00s\x00i\x00m\x00-\x00i\x00d\x00e\x00a\x00l)
 
 [Launch]
-Launch Configurations=Launch Configuration 3
+Launch Configurations=Launch Configuration 3,Launch Configuration 0
+
+[Launch][Launch Configuration 0]
+Configured Launch Modes=execute
+Configured Launchers=nativeAppLauncher
+Name=smallTest-ziqi
+Type=Native Application
+
+[Launch][Launch Configuration 0][Data]
+Arguments=../trace/smallTest.csv sample.cfg test-Jun19
+Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
+Dependency Action=Nothing
+EnvironmentGroup=default
+Executable=file:///home/fan/sim-ideal/sim-ideal
+External Terminal=konsole --noclose --workdir %workdir -e %exe
+Project Target=
+Use External Terminal=false
+Working Directory=file:///home/fan/sim-ideal
+isExecutable=true
 
 [Launch][Launch Configuration 3]
 Configured Launch Modes=execute

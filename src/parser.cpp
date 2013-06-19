@@ -6,9 +6,9 @@
 #define WINDOWS_TICK 10000000
 #define SEC_TO_UNIX_EPOCH 11644473600LL
 
-unsigned  WindowsTickToUnixmiliSeconds(long long windowsTicks)
+double  WindowsTickToUnixMilliSeconds(long long windowsTicks)
 {
-    return (unsigned)(windowsTicks / WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
+    return (double)(((double)windowsTicks / (double)WINDOWS_TICK - (double)SEC_TO_UNIX_EPOCH) * (double)1000);
 }
 
 bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
@@ -21,10 +21,19 @@ bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
     char *r_w;
     char line[201];
     static uint32_t lineno = 0;
-    static double old_time = 0;
+    
+    ///ziqi: don't forget to use static. If not, baseTime would be reset to 0 in the while loop at the start of a new loop
+    static double baseTime = 0;
+    
+    ///ziqi: FIXME bug here
+    //static double old_time = 0;
+    
     assert(inputTrace.good());
+    
 
-    while(!fetched) {
+
+    while(!fetched) {       
+	
         std::string lineString;
         std::getline(inputTrace,  lineString);
 
@@ -40,40 +49,48 @@ bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
         // 	Timestamp        ,Hostname,DiskNumber,Type  ,Offset     ,Size,ResponseTime
         // 128166554283938750,wdev    ,3         ,Write ,3154152960,4096 ,   2170
         tempchar = strtok(line, ",");
-        //FIXME: ARH: is this time satisfy disksim timing rules ? fixed for msr
-        time =  strtoll(tempchar, NULL, 10);
+	
+	///ziqi: if it is the first line, denote its time stamp as base time. The following entry's time stamp need to be substracted by base time.
+	if(lineno == 1) {
+	  time = strtoll(tempchar, NULL, 10);
+	  if(WindowsTickToUnixMilliSeconds(time) <= DBL_MAX) {
+            baseTime = WindowsTickToUnixMilliSeconds(time);
+	  }
+	}
+	else {
+	  time = strtoll(tempchar, NULL, 10);
+	}
 
-        if(time) {
-            if(WindowsTickToUnixmiliSeconds(time) <= DBL_MAX) {
-                ///ziqi: change from double to unsigned//FIXME: ARH: is this time satisfy disksim timing rules ?
-                newn->issueTime = WindowsTickToUnixmiliSeconds(time);
-// 				new->time = new->time*1000; //manual scale by ARH
+        if(time) {	  
+            if(WindowsTickToUnixMilliSeconds(time) <= DBL_MAX) {
+                newn->issueTime = WindowsTickToUnixMilliSeconds(time) - baseTime;
             }
             else {
                 fprintf(stderr, "ARH: request time reach to the double boundry\n");
                 fprintf(stderr, "line: %s", line);
                 ExitNow(1);
             }
-
+///ziqi: FIXME I don't know what does the old_time doing here
 // 			if( old_time > newn->time){
 // 			  fprintf(stderr, "ARH: new time is small equal than old time\n");
 // 				fprintf(stderr, "line: %s", line);
 // 				ddbg_assert(0);
 // 			}
-            if(old_time >= newn->issueTime) {
-                newn->issueTime = old_time + 1;
+
+//            if(old_time >= newn->issueTime) {
+//                newn->issueTime = old_time + 1;
                 /*				fprintf(stderr, "ARH: new time is small equal than old time\n");
                 				fprintf(stderr, "line: %s", line);
                 				ddbg_assert(0);*/
-            }
+//          }
 
-            if(old_time > newn->issueTime) {
-                fprintf(stderr, "ARH: new time is small equal than old time\n");
-                fprintf(stderr, "line: %s", line);
-                ExitNow(1);
-            }
+//            if(old_time > newn->issueTime) {
+//                fprintf(stderr, "ARH: new time is small equal than old time\n");
+//                fprintf(stderr, "line: %s", line);
+//                ExitNow(1);
+//            }
 
-            old_time = newn->issueTime;
+//            old_time = newn->issueTime;
             strtok(NULL, ","); //step over host name
             strtok(NULL, ","); //step over devno
             //ARH: msr traces only have one dev

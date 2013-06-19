@@ -167,23 +167,25 @@ void recordOutTrace( int level, reqAtom newReq){
 }
 */
 
-///ziqi version
+///ziqi: this has no use by Jun 19 2013
 void recordOutTrace(int level, reqAtom newReq)
 {
+  /*
     if(_gConfiguration.outTraceStream[level].is_open()) {
         _gConfiguration.outTraceStream[level] << newReq.issueTime << "!";
         //_gConfiguration.outTraceStream[level] <<"flags: "<< newReq.flags <<" !";
-        /*
+        
         if(newReq.flags & READ){
         	_gConfiguration.outTraceStream[level] << "Read,";
         }
         else
         	_gConfiguration.outTraceStream[level] << "Write,";
-        */
+        
         //FIXME: check math
         _gConfiguration.outTraceStream[level] << newReq.fsblkno << endl;
         //_gConfiguration.outTraceStream[level] << newReq.flags << endl;
     }
+  */
 }
 
 void runDiskSim()
@@ -195,7 +197,11 @@ void runDiskSim()
     command += " ";
     command += _gConfiguration.diskSimOutv;
     command += " ascii ";
-    command += _gConfiguration.cache2diskPipeFileName;
+    
+    //command += _gConfiguration.cache2diskPipeFileName;
+    ///ziqi: the line above is by Alireza. I use diskSimInputTraceName to denote the DiskSim input trace file name
+    command += _gConfiguration.diskSimInputTraceName;
+    
     command += " 0";
     PRINTV(logfile << "Running Disk Simulator with following command:" << endl;);
     PRINTV(logfile << command << endl;);

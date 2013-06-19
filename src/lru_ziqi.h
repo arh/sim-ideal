@@ -82,6 +82,9 @@ public:
         assert(_key_to_value.size() <= _capacity);
         assert(_capacity != 0);
         ///PRINTV(logfile << "Access key: " << k << endl;);
+	
+	PRINTV(DISKSIMINPUTSTREAM << "Access key: " << k << endl;);
+	PRINTV(DISKSIMINPUTSTREAM << "on issueTime: " << value.getReq().issueTime << endl;);
 
         ///ziqi: if request is write, mark the page status as DIRTY
         if(status & WRITE) {

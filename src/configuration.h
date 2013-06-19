@@ -51,6 +51,9 @@ public:
     std::string diskSimParv;
     std::string diskSimOutv;
     std::string cache2diskPipeFileName;
+    
+    ///ziqi
+    std::string diskSimInputTraceName;
 
 
     ///ziqi: set the threshold for length of sequential write

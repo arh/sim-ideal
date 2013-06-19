@@ -58,8 +58,8 @@ public:
     uint64_t fsblkno; //file system block number (from trace file)
     uint32_t reqSize; // request size from trace file
     uint64_t ssdblkno; //ssd block number
-    ///ziqi: change from double to unsigned
-    unsigned issueTime; // time stapt in the trace
+    ///ziqi: change back to double from unsigned on Jun 19 2013
+    double issueTime; // time stapt in the trace
     uint32_t lineNo; // line number in the trace
     uint32_t flags;
     reqAtom() {

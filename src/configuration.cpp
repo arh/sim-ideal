@@ -115,10 +115,11 @@ bool Configuration::read(int argc, char **argv)
 
         if(! tempStr.empty()) {
             diskSimInputStream.open(tempStr.c_str(), std::ios::trunc);
+	    diskSimInputTraceName = tempStr;
             //print start time
-            time_t now = time(0);
-            tm *localtm = localtime(&now);
-            diskSimInputStream << "Start Logging DiskSim input trace at " << asctime(localtm) << std::endl;
+            //time_t now = time(0);
+            //tm *localtm = localtime(&now);
+            //diskSimInputStream << "Start Logging DiskSim input trace at " << asctime(localtm) << std::endl;
         }
         
 
