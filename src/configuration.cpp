@@ -104,6 +104,8 @@ bool Configuration::read(int argc, char **argv)
             logStream << "Start Logging at " << asctime(localtm) << std::endl;
         }
         
+        
+        /*
         ///ziqi: read out diskSimInputTrace name from cfg file
         try {
             tempStr = pTree.get<std::string>("Global.diskSimInputTrace");
@@ -116,11 +118,8 @@ bool Configuration::read(int argc, char **argv)
         if(! tempStr.empty()) {
             diskSimInputStream.open(tempStr.c_str(), std::ios::trunc);
 	    diskSimInputTraceName = tempStr;
-            //print start time
-            //time_t now = time(0);
-            //tm *localtm = localtime(&now);
-            //diskSimInputStream << "Start Logging DiskSim input trace at " << asctime(localtm) << std::endl;
         }
+        */
         
 
         try {
@@ -174,7 +173,22 @@ bool Configuration::read(int argc, char **argv)
             }
 
             policyName[i] = pTree.get<std::string>	(std::string(cacheStr[i] + "." + "policy"));
+	    
+	    ///ziqi: read out diskSimInputTrace name from cfg file
+	    try {
+		tempStr = pTree.get<std::string>("Global.diskSimInputTrace");
+	    }
+	    catch(...) {
+		//no log file specified
+		tempStr.clear();
+	    }
 
+	    if(! tempStr.empty()) {
+		diskSimInputStream.open((policyName[i]+tempStr).c_str(), std::ios::trunc);
+		diskSimInputTraceName = policyName[i]+tempStr;
+	    }
+	    ///end here
+	    
             //read policy dependent configs
             if(policyName[i].find("owbp") != std::string::npos) {
                 tempStr = pTree.get<std::string> (std::string(cacheStr[i] + "." + "policy" + "." + "futureWindowSize"));
