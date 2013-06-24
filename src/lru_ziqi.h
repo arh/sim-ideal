@@ -190,7 +190,7 @@ private:
 // Make space if necessary
         if(_key_to_value.size() == _capacity) {
             ///PRINTV(logfile << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
-            status |= evict(k, v, status);
+            status |= evict(v, status);
             localStatus = EVICT | status;
         }
 
@@ -223,7 +223,7 @@ private:
     }
 
 // Purge the least-recently-used element in the cache
-    int evict(const K &k, const V &v, uint32_t status) {
+    int evict(const V &v, uint32_t status) {
         assert(_key_to_value.size() <= _capacity);
 // Assert method is never called when cache is empty
         assert(!_key_tracker.empty());
@@ -240,7 +240,7 @@ private:
 ///ziqi: above threshold count as one sequential write
         //int threshold = 4;
 
-///ziqi: if the key is not dirty, evict it
+///ziqi: if the key is clean, evict it
         if(!((it->second.first.getReq().flags) & DIRTY)) {
             ///PRINTV(logfile << "evicting victim non-dirty key " << (*it).first <<  endl;);
             //cout<<it->second.first.getReq().flags<<endl;
