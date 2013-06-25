@@ -55,8 +55,9 @@ public:
 
     uint32_t access(const K &k  , V &value, uint32_t status) {
         assert(_capacity != 0);
-        PRINTV(logfile << "Access key: " << k << endl;);
-	PRINTV(logfile << "Key dirty bit status: " << bitset<10>(status) << endl;);
+        PRINTV(logfile << "Access key: " << k << endl;);	
+	PRINTV(logfile << "At time: " << value.getReq().issueTime << endl;);
+	PRINTV(logfile << "Key dirty bit status: " << bitset<10>(status)<< endl;);
 	
 	typename key_tracker_type::iterator itTracker;
 	typename key_to_value_type::iterator itDirty;
@@ -73,7 +74,7 @@ public:
 	
 	uint32_t CLEAN = ~DIRTY;
 	
-	///ziqi: if the accessed entry's issueTime is the first one bigger than a multiple of 30s, prepare to flush back all the dirty pages residing on cache
+	///ziqi: if the accessed entry's issueTime is the first one bigger or equal than a multiple of 30s, prepare to flush back all the dirty pages residing on cache
 	if(value.getReq().issueTime >= (flushTimeGap*multipleFlushTimeGap)){
 	  
 	  ///ziqi: loop through cache and find out those dirty pages. Group sequential ones together and log to DiskSim input trace.
@@ -105,7 +106,9 @@ public:
 	      itDirty->second.first.updateFlags(itDirty->second.first.getReq().flags & CLEAN);
 	    }
 	  }
-	  multipleFlushTimeGap++;
+	  
+          multipleFlushTimeGap += (uint32_t(value.getReq().issueTime) - flushTimeGap*multipleFlushTimeGap) / flushTimeGap + 1;
+	  PRINTV(logfile << "multipleFlushTimeGap: " << multipleFlushTimeGap << endl;);
 	}
 	
 	///ziqi: if request is write, mark the page status as DIRTY
@@ -126,11 +129,13 @@ public:
             const V v = _fn(k, value);
             status |=  insert(k, v);
             PRINTV(logfile << "Insert done on key: " << k << endl;);
-	    PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl;);
+	    PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl;);
+	    PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
             return (status | PAGEMISS);
         }
         else {
             PRINTV(logfile << "Hit on key: " << k << endl;);
+	    
             /*
             // We do have it. Before returning value,
             // update access record by moving accessed
@@ -144,6 +149,8 @@ public:
             return (status | PAGEHIT | BLKHIT);
 
             */
+	    ///ziqi: find out the original page's dirty bit status by "it->second.first.getReq().flags & DIRTY", and add it to new value by "| value.getReq().flags"
+	    value.updateFlags((it->second.first.getReq().flags & DIRTY) | value.getReq().flags);
             _key_to_value.erase(it);
             _key_tracker.remove(k);
             assert(_key_to_value.size() < _capacity);
@@ -154,6 +161,9 @@ public:
             // Create the key-value entry,
             // linked to the usage record.
             _key_to_value.insert(make_pair(k, make_pair(v, itNew)));
+	    
+	    PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl<<endl;);
+	    
             return (status | PAGEHIT | BLKHIT);
         }
     } //end operator access
@@ -196,6 +206,8 @@ public:
         typename key_to_value_type::iterator it = _key_to_value.find(k);
 	assert(it != _key_to_value.end());
 	
+	PRINTV(logfile << "Before eviting, key bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+	
 	if(it->second.first.getReq().flags & DIRTY) {
 	
 ///ziqi: DiskSim format Request_arrival_time Device_number Block_number Request_size Request_flags
@@ -212,15 +224,16 @@ public:
 	  _key_to_value.erase(it);
 	  _key_tracker.remove(k);
 	  
-	  PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl;);
+	  PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
 	}
 	else {
 	  PRINTV(logfile << "evicting clean key without flushing back to DiskSim input trace " << k <<  endl;);
-	  PRINTV(logfile << "Key dirty bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+	  PRINTV(logfile << "Key clean bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
 	  it = _key_to_value.find(k);
 	  assert(it != _key_to_value.end());
 	  _key_to_value.erase(it);
 	  _key_tracker.remove(k);  
+	  PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
 	}
 	
     }
@@ -230,6 +243,7 @@ private:
 // Record a fresh key-value pair in the cache
     int insert(const K &k, const V &v) {
         PRINTV(logfile << "insert key " << k  << endl;);
+	PRINTV(logfile << "Key bit status: " << bitset<10>(v.getReq().flags) << endl;);
         int status = 0;
 // Method is only called on cache misses
         assert(_key_to_value.find(k) == _key_to_value.end());
@@ -240,7 +254,7 @@ private:
             evict(v);
             status = EVICT;
         }
-
+        
 // Record k as most-recently-used key
         typename key_tracker_type::iterator it
         = _key_tracker.insert(_key_tracker.end(), k);

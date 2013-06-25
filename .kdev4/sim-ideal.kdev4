@@ -25,11 +25,11 @@ isExecutable=true
 [Launch][Launch Configuration 1]
 Configured Launch Modes=execute
 Configured Launchers=nativeAppLauncher
-Name=bigTest
+Name=testTraceJun18
 Type=Native Application
 
 [Launch][Launch Configuration 1][Data]
-Arguments=../trace/CAMWEBDEV-lvm0.csv sample.cfg test-Jun19
+Arguments=../trace/testTraceJun18.csv sample.cfg test-Jun19
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
