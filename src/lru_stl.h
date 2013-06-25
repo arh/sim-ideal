@@ -17,6 +17,7 @@
 #include "cassert"
 #include "iostream"
 #include "iomanip"
+#include "bitset"
 #include "global.h"
 #include "baseCache.h"
 
@@ -55,40 +56,62 @@ public:
     uint32_t access(const K &k  , V &value, uint32_t status) {
         assert(_capacity != 0);
         PRINTV(logfile << "Access key: " << k << endl;);
+	PRINTV(logfile << "Key dirty bit status: " << bitset<10>(status) << endl;);
 	
 	typename key_tracker_type::iterator itTracker;
 	typename key_to_value_type::iterator itDirty;
+	typename key_to_value_type::iterator itSeqTemp;
+	
+	uint64_t firstSeqFsblkno = 0;
+	
+	int seqLength = 0;
+	
+	///ziqi: time gap of every two flush backs in milliseconds
+	uint32_t flushTimeGap = 30000;
+	///ziqi: denote how many 30s flush back has been operated
+	static uint32_t multipleFlushTimeGap = 1;
 	
 	uint32_t CLEAN = ~DIRTY;
 	
 	///ziqi: if the accessed entry's issueTime is the first one bigger than a multiple of 30s, prepare to flush back all the dirty pages residing on cache
-	if(value.getReq().issueTime){
-	  
+	if(value.getReq().issueTime >= (flushTimeGap*multipleFlushTimeGap)){
 	  
 	  ///ziqi: loop through cache and find out those dirty pages. Group sequential ones together and log to DiskSim input trace.
-	  for(itTracker = _key_tracker.begin(); itTracker != _key_tracker.end(); itTracker++) {
-	    itDirty = _key_to_value.find(*itTracker);
-	  }
-	  
 	  ///ziqi: CLEAN is used to toggle DIRTY status after the dirty page has been flushed back.
 	  for(itTracker = _key_tracker.begin(); itTracker != _key_tracker.end(); itTracker++) {
 	    itDirty = _key_to_value.find(*itTracker);
+	    firstSeqFsblkno = *itTracker;
+	    seqLength = 0;
 	    
-	    if(itDirty.getReq().flags & DIRTY) {
-	      itDirty.getReq().flags &= CLEAN;
-	      itDirty.updateFlags(itDirty.getReq().flags);
+	    if(itDirty->second.first.getReq().flags & DIRTY) {   
+	      
+	      while(true) {
+		itSeqTemp = _key_to_value.find(firstSeqFsblkno);
+		
+		if(itSeqTemp == _key_to_value.end() || !((itSeqTemp->second.first.getReq().flags) & DIRTY)) {
+                  ///ziqi: DiskSim format Request_arrival_time Device_number Block_number Request_size Request_flags
+                  ///ziqi: Device_number is set to 1. About Request_flags, 0 is for write and 1 is for read
+	          PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(16)<<flushTimeGap*multipleFlushTimeGap<<left<<setw(8)<<"0"<<left<<fixed<<setw(8)<<itDirty->second.first.getReq().fsblkno<<left<<fixed<<setw(8)<<seqLength<<"0"<<endl;);	
+                  break;
+                }
+                else {
+	          itSeqTemp->second.first.updateFlags(itSeqTemp->second.first.getReq().flags & CLEAN);
+		  
+                  firstSeqFsblkno++;
+                  seqLength++;
+		}
+              }
+             
+	      itDirty->second.first.updateFlags(itDirty->second.first.getReq().flags & CLEAN);
 	    }
 	  }
-	  
+	  multipleFlushTimeGap++;
 	}
 	
 	///ziqi: if request is write, mark the page status as DIRTY
         if(status & WRITE) {
             status |= DIRTY;
             value.updateFlags(status);
-            //cout<<"flags are "<<value.getFlags()<<endl;
-            //const V v1 = _fn(k, value);
-            //insertDirtyPage(k, v1);
         }
         
         
@@ -103,6 +126,7 @@ public:
             const V v = _fn(k, value);
             status |=  insert(k, v);
             PRINTV(logfile << "Insert done on key: " << k << endl;);
+	    PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl;);
             return (status | PAGEMISS);
         }
         else {
@@ -171,20 +195,34 @@ public:
 // Identify  key
         typename key_to_value_type::iterator it = _key_to_value.find(k);
 	assert(it != _key_to_value.end());
+	
+	if(it->second.first.getReq().flags & DIRTY) {
+	
 ///ziqi: DiskSim format Request_arrival_time Device_number Block_number Request_size Request_flags
 ///ziqi: Device_number is set to 1. About Request_flags, 0 is for write and 1 is for read
-	PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(16)<<v.getReq().issueTime<<left<<setw(8)<<"0"<<left<<fixed<<setw(8)<<it->second.first.getReq().fsblkno<<left<<fixed<<setw(8)<<it->second.first.getReq().reqSize<<"0"<<endl;);	
+	  PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(16)<<v.getReq().issueTime<<left<<setw(8)<<"0"<<left<<fixed<<setw(8)<<it->second.first.getReq().fsblkno<<left<<fixed<<setw(8)<<it->second.first.getReq().reqSize<<"0"<<endl;);	
+	  
+	  ///PRINTV(logfile << "Remove value " << endl;);
+	  
+	  // Erase both elements to completely purge record	
+	  PRINTV(logfile << "evicting dirty key " << k <<  endl;);
+	  PRINTV(logfile << "Key dirty bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+	  it = _key_to_value.find(k);
+	  assert(it != _key_to_value.end());
+	  _key_to_value.erase(it);
+	  _key_tracker.remove(k);
+	  
+	  PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl;);
+	}
+	else {
+	  PRINTV(logfile << "evicting clean key without flushing back to DiskSim input trace " << k <<  endl;);
+	  PRINTV(logfile << "Key dirty bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+	  it = _key_to_value.find(k);
+	  assert(it != _key_to_value.end());
+	  _key_to_value.erase(it);
+	  _key_tracker.remove(k);  
+	}
 	
-        ///PRINTV(logfile << "Remove value " << endl;);
-	
-        // Erase both elements to completely purge record	
-        PRINTV(logfile << "evicting dirty key " << k <<  endl;);
-        it = _key_to_value.find(k);
-	assert(it != _key_to_value.end());
-        _key_to_value.erase(it);
-        _key_tracker.remove(k);
-	
-        PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl;);
     }
     
 private:
