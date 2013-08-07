@@ -158,7 +158,7 @@ public:
 	assert(it != _key_to_value.end());
 ///ziqi: DiskSim format Request_arrival_time Device_number Block_number Request_size Request_flags
 ///ziqi: Device_number is set to 1. About Request_flags, 0 is for write and 1 is for read
-	PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(16)<<v.getReq().issueTime<<left<<setw(8)<<"0"<<left<<fixed<<setw(8)<<it->second.first.getReq().fsblkno<<left<<fixed<<setw(8)<<seqEvictionLength<<"0"<<endl;);	
+	PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(25)<<v.getReq().issueTime<<left<<setw(8)<<"0"<<left<<fixed<<setw(12)<<it->second.first.getReq().fsblkno<<left<<fixed<<setw(8)<<seqEvictionLength<<"0"<<endl;);	
 	
         ///PRINTV(logfile << "Remove value " << endl;);
 	
