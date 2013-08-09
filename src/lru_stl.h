@@ -55,15 +55,18 @@ public:
 
     uint32_t access(const K &k  , V &value, uint32_t status) {
         assert(_capacity != 0);
-        PRINTV(logfile << "Access key: " << k << endl;);	
-	PRINTV(logfile << "At time: " << value.getReq().issueTime << endl;);
-	PRINTV(logfile << "Key dirty bit status: " << bitset<10>(status)<< endl;);
+        ///PRINTV(logfile << "Access key: " << k << endl;);	
+	///PRINTV(logfile << "At time: " << value.getReq().issueTime << endl;);
+	///PRINTV(logfile << "Key dirty bit status: " << bitset<10>(status)<< endl;);
 	
 	typename key_tracker_type::iterator itTracker;
 	typename key_to_value_type::iterator itDirty;
 	typename key_to_value_type::iterator itSeqTemp;
 	
-	uint64_t firstSeqFsblkno = 0;
+///ziqi: on Aug 9, 2013: denote the first sequential fs block number that counting consecutive pages after the victim page
+        uint64_t firstSeqFsblknoForAfter = 0;
+///ziqi: on Aug 9, 2013: denote the first sequential fs block number that counting consecutive pages before the victim page
+        uint64_t firstSeqFsblknoForBefore = 0;
 	
 	int seqLength = 0;
 	
@@ -81,24 +84,40 @@ public:
 	  ///ziqi: CLEAN is used to toggle DIRTY status after the dirty page has been flushed back.
 	  for(itTracker = _key_tracker.begin(); itTracker != _key_tracker.end(); itTracker++) {
 	    itDirty = _key_to_value.find(*itTracker);
-	    firstSeqFsblkno = *itTracker;
+	    firstSeqFsblknoForAfter = *itTracker;
+	    firstSeqFsblknoForBefore = *itTracker;
 	    seqLength = 0;
 	    
 	    if(itDirty->second.first.getReq().flags & DIRTY) {   
-	      
+///ziqi: on Aug 9, 2013: find the number of consecutive blocks after the selected page   	      
 	      while(true) {
-		itSeqTemp = _key_to_value.find(firstSeqFsblkno);
+		itSeqTemp = _key_to_value.find(firstSeqFsblknoForAfter);
+		
+		if(itSeqTemp == _key_to_value.end() || !((itSeqTemp->second.first.getReq().flags) & DIRTY)) {
+                  break;
+                }
+                else {
+	          itSeqTemp->second.first.updateFlags(itSeqTemp->second.first.getReq().flags & CLEAN);	  
+                  firstSeqFsblknoForAfter++;
+                  seqLength++;
+		}
+              }
+              
+///ziqi: on Aug 9, 2013: find the number of consecutive blocks before the selected page               
+              firstSeqFsblknoForBefore--;
+              while(true) {
+		itSeqTemp = _key_to_value.find(firstSeqFsblknoForBefore);
 		
 		if(itSeqTemp == _key_to_value.end() || !((itSeqTemp->second.first.getReq().flags) & DIRTY)) {
                   ///ziqi: DiskSim format Request_arrival_time Device_number Block_number Request_size Request_flags
                   ///ziqi: Device_number is set to 1. About Request_flags, 0 is for write and 1 is for read
-	          PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(25)<<flushTimeGap*multipleFlushTimeGap<<left<<setw(8)<<"0"<<left<<fixed<<setw(12)<<itDirty->second.first.getReq().fsblkno<<left<<fixed<<setw(8)<<seqLength<<"0"<<endl;);	
+///ziqi: on Aug 9, 2013: made change to Block_number, because the starting block number is changed.
+	          PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(25)<<flushTimeGap*multipleFlushTimeGap<<left<<setw(8)<<"0"<<left<<fixed<<setw(12)<<(firstSeqFsblknoForBefore+1)<<left<<fixed<<setw(8)<<seqLength<<"0"<<endl;);	
                   break;
                 }
                 else {
 	          itSeqTemp->second.first.updateFlags(itSeqTemp->second.first.getReq().flags & CLEAN);
-		  
-                  firstSeqFsblkno++;
+                  firstSeqFsblknoForBefore--;
                   seqLength++;
 		}
               }
@@ -108,7 +127,7 @@ public:
 	  }
 	  
           multipleFlushTimeGap += (uint32_t(value.getReq().issueTime) - flushTimeGap*multipleFlushTimeGap) / flushTimeGap + 1;
-	  PRINTV(logfile << "multipleFlushTimeGap: " << multipleFlushTimeGap << endl;);
+	  ///PRINTV(logfile << "multipleFlushTimeGap: " << multipleFlushTimeGap << endl;);
 	}
 	
 	///ziqi: if request is write, mark the page status as DIRTY
@@ -124,17 +143,17 @@ public:
 
         if(it == _key_to_value.end()) {
 // We don’t have it:
-            PRINTV(logfile << "Miss on key: " << k << endl;);
+            ///PRINTV(logfile << "Miss on key: " << k << endl;);
 // Evaluate function and create new record
             const V v = _fn(k, value);
             status |=  insert(k, v);
-            PRINTV(logfile << "Insert done on key: " << k << endl;);
-	    PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl;);
-	    PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
+            ///PRINTV(logfile << "Insert done on key: " << k << endl;);
+	    ///PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl;);
+	    ///PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
             return (status | PAGEMISS);
         }
         else {
-            PRINTV(logfile << "Hit on key: " << k << endl;);
+            ///PRINTV(logfile << "Hit on key: " << k << endl;);
 	    
             /*
             // We do have it. Before returning value,
@@ -162,7 +181,7 @@ public:
             // linked to the usage record.
             _key_to_value.insert(make_pair(k, make_pair(v, itNew)));
 	    
-	    PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl<<endl;);
+	    ///PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl<<endl;);
 	    
             return (status | PAGEHIT | BLKHIT);
         }
@@ -206,7 +225,7 @@ public:
         typename key_to_value_type::iterator it = _key_to_value.find(k);
 	assert(it != _key_to_value.end());
 	
-	PRINTV(logfile << "Before eviting, key bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+	///PRINTV(logfile << "Before eviting, key bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
 	
 	if(it->second.first.getReq().flags & DIRTY) {
 	
@@ -217,23 +236,23 @@ public:
 	  ///PRINTV(logfile << "Remove value " << endl;);
 	  
 	  // Erase both elements to completely purge record	
-	  PRINTV(logfile << "evicting dirty key " << k <<  endl;);
-	  PRINTV(logfile << "Key dirty bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+	  ///PRINTV(logfile << "evicting dirty key " << k <<  endl;);
+	  ///PRINTV(logfile << "Key dirty bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
 	  it = _key_to_value.find(k);
 	  assert(it != _key_to_value.end());
 	  _key_to_value.erase(it);
 	  _key_tracker.remove(k);
 	  
-	  PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
+	  ///PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
 	}
 	else {
-	  PRINTV(logfile << "evicting clean key without flushing back to DiskSim input trace " << k <<  endl;);
-	  PRINTV(logfile << "Key clean bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+	  ///PRINTV(logfile << "evicting clean key without flushing back to DiskSim input trace " << k <<  endl;);
+	  ///PRINTV(logfile << "Key clean bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
 	  it = _key_to_value.find(k);
 	  assert(it != _key_to_value.end());
 	  _key_to_value.erase(it);
 	  _key_tracker.remove(k);  
-	  PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
+	  ///PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
 	}
 	
     }
@@ -242,15 +261,15 @@ private:
 
 // Record a fresh key-value pair in the cache
     int insert(const K &k, const V &v) {
-        PRINTV(logfile << "insert key " << k  << endl;);
-	PRINTV(logfile << "Key bit status: " << bitset<10>(v.getReq().flags) << endl;);
+        ///PRINTV(logfile << "insert key " << k  << endl;);
+	///PRINTV(logfile << "Key bit status: " << bitset<10>(v.getReq().flags) << endl;);
         int status = 0;
 // Method is only called on cache misses
         assert(_key_to_value.find(k) == _key_to_value.end());
 
 // Make space if necessary
         if(_key_to_value.size() == _capacity) {
-            PRINTV(logfile << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
+            ///PRINTV(logfile << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
             evict(v);
             status = EVICT;
         }
