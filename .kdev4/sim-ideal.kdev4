@@ -11,7 +11,7 @@ Name=smallTest-ziqi
 Type=Native Application
 
 [Launch][Launch Configuration 0][Data]
-Arguments=../trace/smallTest.csv sample.cfg test-Jun19
+Arguments=../trace/smallTest.csv sample.cfg test-Aug-9
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default
