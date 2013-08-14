@@ -103,24 +103,7 @@ bool Configuration::read(int argc, char **argv)
             tm *localtm = localtime(&now);
             logStream << "Start Logging at " << asctime(localtm) << std::endl;
         }
-        
-        
-        /*
-        ///ziqi: read out diskSimInputTrace name from cfg file
-        try {
-            tempStr = pTree.get<std::string>("Global.diskSimInputTrace");
-        }
-        catch(...) {
-            //no log file specified
-            tempStr.clear();
-        }
-
-        if(! tempStr.empty()) {
-            diskSimInputStream.open(tempStr.c_str(), std::ios::trunc);
-	    diskSimInputTraceName = tempStr;
-        }
-        */
-        
+               
 
         try {
             tempStr = pTree.get<std::string>("Global.writeOnly");
@@ -144,6 +127,7 @@ bool Configuration::read(int argc, char **argv)
         }
 
         if(! tempStr.empty()) {
+	    seqThresholdStringType = tempStr;
             seqThreshold = (int) myString2intConverter(tempStr);
         }
 
@@ -184,8 +168,13 @@ bool Configuration::read(int argc, char **argv)
 	    }
 
 	    if(! tempStr.empty()) {
-		diskSimInputStream.open((policyName[i]+tempStr).c_str(), std::ios::trunc);
-		diskSimInputTraceName = policyName[i]+tempStr;
+	        std::string traceNameStringType = traceName;
+		std::cout<<"traceNameStringType "<<traceNameStringType<<std::endl;
+	        int lastSlash = traceNameStringType.find_last_of('/');
+		int lastDot = traceNameStringType.find_last_of('.');
+		std::cout<<"lastSlash "<<lastSlash<<" lastDot "<<lastDot<<std::endl;
+		diskSimInputTraceName = tempStr+"-Policy_"+policyName[i]+"-Threshold_"+seqThresholdStringType+"-MSRTrace_"+traceNameStringType.substr(lastSlash+1,lastDot-lastSlash-1)+".trace";
+		diskSimInputStream.open((diskSimInputTraceName).c_str(), std::ios::trunc);
 	    }
 	    ///end here
 	    
@@ -217,6 +206,21 @@ bool Configuration::read(int argc, char **argv)
                 std::cerr << "Error: There is no output Trace file specified in the cfg for the last level cache to feed the Disk Simulator";
                 exit(1);
             }
+        }
+        
+        tempStr.clear();
+	
+	try {
+            tempStr = pTree.get<std::string>(std::string("Seq_Length.seqLengthAnalysisApp"));
+        }
+        catch(...) {
+            // no disk Simulator provided
+            tempStr.clear();
+        }
+
+        if(! tempStr.empty()) {
+            analysisAppExe = tempStr;
+            analysisAppPath = pTree.get<std::string>(std::string("Seq_Length.analysisAppPath"));
         }
     }
     catch(boost::property_tree::ptree_bad_path e) {

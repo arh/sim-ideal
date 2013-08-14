@@ -54,10 +54,13 @@ public:
     
     ///ziqi
     std::string diskSimInputTraceName;
+    std::string analysisAppExe;
+    std::string analysisAppPath;
 
 
     ///ziqi: set the threshold for length of sequential write
     int seqThreshold;
+    std::string seqThresholdStringType;
 
     void initHist();
     bool read(int argc, char **argv) ;

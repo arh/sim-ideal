@@ -192,7 +192,7 @@ void recordOutTrace(int level, reqAtom newReq)
 
 void runDiskSim()
 {
-    std::string command = _gConfiguration.diskSimPath ;
+    std::string command = _gConfiguration.diskSimPath;
     command += _gConfiguration.diskSimuExe;
     command += " ";
     command += _gConfiguration.diskSimPath;
@@ -210,6 +210,21 @@ void runDiskSim()
     PRINTV(logfile << "Running Disk Simulator with following command:" << endl;);
     PRINTV(logfile << command << endl;);
     system(command.c_str());
+}
+
+void runSeqLengthAnalysis()
+{
+    std::string command = _gConfiguration.analysisAppPath;
+    command += _gConfiguration.analysisAppExe;
+    command += " ";
+    command += _gConfiguration.diskSimInputTraceName;
+    command += " ";
+    command += "analyzed-"+_gConfiguration.diskSimInputTraceName;
+    
+    PRINTV(logfile << "Running Seq Length Analysis App with following command:" << endl;);
+    PRINTV(logfile << command << endl;);
+    system(command.c_str());
+    
 }
 
 void RunBenchmark(deque<reqAtom> & memTrace)
@@ -240,6 +255,11 @@ void RunBenchmark(deque<reqAtom> & memTrace)
     if(! _gConfiguration.diskSimuExe.empty()) {
         PRINTV(logfile << "Multi-level Cache Simulation is Done, Start Timing Simulation with Disk simulator" << endl;);
         runDiskSim();
+    }
+    
+    if(! _gConfiguration.analysisAppExe.empty()) {
+        PRINTV(logfile << "Timing Simulation is Done, Start Sequential Length Analysis" << endl;);
+        runSeqLengthAnalysis();
     }
 
     PRINTV(logfile << "Benchmarking Done" << endl;);

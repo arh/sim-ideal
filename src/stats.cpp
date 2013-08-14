@@ -164,9 +164,9 @@ void printStats()
             statStream << tempStat->print() << endl;
         }
 
-        uint64_t blockEvict = _gStats[i].BlockEvict.getCounter();
-        uint64_t seqEviction = _gStats[i].SeqEviction.getCounter();
-        uint64_t lessSeqEviction = _gStats[i].LessSeqEviction.getCounter();
+        ///uint64_t blockEvict = _gStats[i].BlockEvict.getCounter();
+        ///uint64_t seqEviction = _gStats[i].SeqEviction.getCounter();
+        ///uint64_t lessSeqEviction = _gStats[i].LessSeqEviction.getCounter();
         statStream << "Total Seq Evicted Dirty Pages, " << totalSeqEvictedDirtyPages << endl;
         statStream << "Total NonSeq Evicted Dirty Pages, " << totalNonSeqEvictedDirtyPages << endl;
         //statStream << "Total Evicted Clean Pages, " << ((int)blockEvict - (int)seqEviction - (int)lessSeqEviction) << endl;
