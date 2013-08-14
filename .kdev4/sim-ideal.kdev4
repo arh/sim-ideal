@@ -29,7 +29,7 @@ Name=testTraceJun18
 Type=Native Application
 
 [Launch][Launch Configuration 1][Data]
-Arguments=../trace/testTraceJun18.csv sample.cfg test-Jun19
+Arguments=../trace/test_backup.csv sample.cfg test-Aug14
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default

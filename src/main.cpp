@@ -19,9 +19,11 @@ using namespace std;
 //GLOBALS
 ////////////////////////////////////////////////////////////////////////////////
 
-int totalSeqEvictedDirtyBlocks;
+int totalSeqEvictedDirtyPages;
 
-int totalNonSeqEvictedDirtyBlocks;
+int totalNonSeqEvictedDirtyPages;
+
+int totalEvictedCleanPages;
 
 int threshold;
 
@@ -245,8 +247,9 @@ void RunBenchmark(deque<reqAtom> & memTrace)
 
 int main(int argc, char **argv)
 {
-    totalSeqEvictedDirtyBlocks = 0;
-    totalNonSeqEvictedDirtyBlocks = 0;
+    totalEvictedCleanPages = 0;
+    totalSeqEvictedDirtyPages = 0;
+    totalNonSeqEvictedDirtyPages = 0;
     //read benchmark configuration
     Initialize(argc, argv, memTrace);
     threshold = _gConfiguration.seqThreshold;

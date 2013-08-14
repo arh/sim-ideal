@@ -22,10 +22,11 @@
 
 using namespace std;
 
+extern int totalEvictedCleanPages;
 
-extern int totalSeqEvictedDirtyBlocks;
+extern int totalSeqEvictedDirtyPages;
 
-extern int totalNonSeqEvictedDirtyBlocks;
+extern int totalNonSeqEvictedDirtyPages;
 
 
 ///ziqi: above threshold count as one sequential write
@@ -245,6 +246,7 @@ private:
             // Erase both elements to completely purge record
             _key_to_value.erase(it);
             _key_tracker.pop_front();
+	    totalEvictedCleanPages++;
             ///PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl;);
         }
 ///ziqi: if the key is dirty, check its sequential length
@@ -318,7 +320,7 @@ private:
                                 status |= SEQEVICT;
                                 evictSth = true;
                                 ///PRINTV(logfile << "evicting sequential dirty key length " << seqLength <<  endl;);
-                                totalSeqEvictedDirtyBlocks += seqLength;
+                                totalSeqEvictedDirtyPages += seqLength;
       
                                 ///PRINTV(logfile << "evicting sequential dirty key starting at " << (firstSeqFsblknoForBefore+1) <<  endl;);
                                 remove(firstSeqFsblknoForBefore+1, v, seqLength);
@@ -381,7 +383,7 @@ private:
 ///ziqi: if the seqLength is above the threshold, evict them all
                         status |= LESSSEQEVICT;
                         ///PRINTV(logfile << "evicting less than threshold sequential dirty key length " << seqLength <<  endl;);
-                        totalNonSeqEvictedDirtyBlocks += seqLength;
+                        totalNonSeqEvictedDirtyPages += seqLength;
 
                          ///PRINTV(logfile << "evicting less than threshold sequential dirty key starting at " << (firstSeqFsblknoForBefore+1) <<  endl;);
                          remove(firstSeqFsblknoForBefore+1, v, seqLength);

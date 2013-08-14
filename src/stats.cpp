@@ -6,9 +6,11 @@
 using namespace std;
 extern StatsDS   *_gStats;
 
-extern int totalSeqEvictedDirtyBlocks;
+extern int totalEvictedCleanPages;
 
-extern int totalNonSeqEvictedDirtyBlocks;
+extern int totalSeqEvictedDirtyPages;
+
+extern int totalNonSeqEvictedDirtyPages;
 
 void collectStat(int level, uint32_t newFlags)
 {
@@ -51,6 +53,9 @@ void collectStat(int level, uint32_t newFlags)
             ++ _gStats[level].BlockReadMiss;
             ++ _gStats[level].PageReadMiss;
         }
+        ///ziqi: added! read could also generate EVICT. Previously, only when newFlags is WRITE, having the following code.
+        if(newFlags	&	EVICT)
+            ++ _gStats[level].BlockEvict;
     }
     else
         if(newFlags	&	WRITE) {
@@ -162,10 +167,17 @@ void printStats()
         uint64_t blockEvict = _gStats[i].BlockEvict.getCounter();
         uint64_t seqEviction = _gStats[i].SeqEviction.getCounter();
         uint64_t lessSeqEviction = _gStats[i].LessSeqEviction.getCounter();
-        statStream << "Total Seq Evicted Dirty Blocks, " << totalSeqEvictedDirtyBlocks << endl;
-        statStream << "Total NonSeq Evicted Dirty Blocks, " << totalNonSeqEvictedDirtyBlocks << endl;
-        statStream << "Total Evicted Clean Blocks, " << ((int)blockEvict - (int)seqEviction - (int)lessSeqEviction) << endl;
-        statStream << "Real Total Evicted Blocks, " << ((int)blockEvict - (int)seqEviction + totalSeqEvictedDirtyBlocks - (int)lessSeqEviction + totalNonSeqEvictedDirtyBlocks) << endl;
+        statStream << "Total Seq Evicted Dirty Pages, " << totalSeqEvictedDirtyPages << endl;
+        statStream << "Total NonSeq Evicted Dirty Pages, " << totalNonSeqEvictedDirtyPages << endl;
+        //statStream << "Total Evicted Clean Pages, " << ((int)blockEvict - (int)seqEviction - (int)lessSeqEviction) << endl;
+	statStream << "Total Evicted Clean Pages, " << totalEvictedCleanPages << endl;
+        //statStream << "Real Total Evicted Pages, " << ((int)blockEvict - (int)seqEviction + totalSeqEvictedDirtyPages - (int)lessSeqEviction + totalNonSeqEvictedDirtyPages) << endl;
+	statStream << "Real Total Evicted Pages, " << totalSeqEvictedDirtyPages + totalNonSeqEvictedDirtyPages + totalEvictedCleanPages << endl;
+	
+	statStream << "Page read cache hit ratio, " << double(_gStats[i].PageReadHit.getCounter()) / double(_gStats[i].Ref.getCounter()) * 100 <<"%"<<endl;
+	statStream << "Page write cache hit ratio, " << double(_gStats[i].PageWriteHit.getCounter()) / double(_gStats[i].Ref.getCounter()) * 100 <<"%"<<endl;
+	statStream << "Total cache hit ratio, " << (double(_gStats[i].PageReadHit.getCounter()) + double(_gStats[i].PageWriteHit.getCounter())) / double(_gStats[i].Ref.getCounter()) * 100 <<"%"<<endl;
+	
         statStream << endl;
     }
 
