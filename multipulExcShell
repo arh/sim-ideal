@@ -1,0 +1,2 @@
+./sim-ideal ../trace/smallTest.csv sample.cfg 1
+./sim-ideal ../trace/test.csv sample.cfg 2

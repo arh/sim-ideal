@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 	  }
 	  else
 	  {	  
-		  cout<<"length with "<<j<<" has number of "<<blockNumList[j]<<endl;
+		  //cout<<"length with "<<j<<" has number of "<<blockNumList[j]<<endl;
 		  fout<<"length with "<<j<<" has number of "<<blockNumList[j]<<endl;
 	  }
 	  

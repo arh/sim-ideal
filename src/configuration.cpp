@@ -169,10 +169,10 @@ bool Configuration::read(int argc, char **argv)
 
 	    if(! tempStr.empty()) {
 	        std::string traceNameStringType = traceName;
-		std::cout<<"traceNameStringType "<<traceNameStringType<<std::endl;
+		//std::cout<<"traceNameStringType "<<traceNameStringType<<std::endl;
 	        int lastSlash = traceNameStringType.find_last_of('/');
 		int lastDot = traceNameStringType.find_last_of('.');
-		std::cout<<"lastSlash "<<lastSlash<<" lastDot "<<lastDot<<std::endl;
+		//std::cout<<"lastSlash "<<lastSlash<<" lastDot "<<lastDot<<std::endl;
 		diskSimInputTraceName = tempStr+"-Policy_"+policyName[i]+"-Threshold_"+seqThresholdStringType+"-MSRTrace_"+traceNameStringType.substr(lastSlash+1,lastDot-lastSlash-1)+".trace";
 		diskSimInputStream.open((diskSimInputTraceName).c_str(), std::ios::trunc);
 	    }
