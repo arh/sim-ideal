@@ -55,9 +55,9 @@ public:
 
     uint32_t access(const K &k  , V &value, uint32_t status) {
         assert(_capacity != 0);
-        ///PRINTV(logfile << "Access key: " << k << endl;);	
-	///PRINTV(logfile << "At time: " << value.getReq().issueTime << endl;);
-	///PRINTV(logfile << "Key dirty bit status: " << bitset<10>(status)<< endl;);
+        PRINTV(logfile << "Access key: " << k << endl;);	
+	PRINTV(logfile << "At time: " << value.getReq().issueTime << endl;);
+	PRINTV(logfile << "Key dirty bit status: " << bitset<10>(status)<< endl;);
 	
 	typename key_tracker_type::iterator itTracker;
 	typename key_to_value_type::iterator itDirty;
@@ -127,7 +127,7 @@ public:
 	  }
 	  
           multipleFlushTimeGap += (uint32_t(value.getReq().issueTime) - flushTimeGap*multipleFlushTimeGap) / flushTimeGap + 1;
-	  ///PRINTV(logfile << "multipleFlushTimeGap: " << multipleFlushTimeGap << endl;);
+	  PRINTV(logfile << "multipleFlushTimeGap: " << multipleFlushTimeGap << endl;);
 	}
 	
 	///ziqi: if request is write, mark the page status as DIRTY
@@ -143,17 +143,17 @@ public:
 
         if(it == _key_to_value.end()) {
 // We don’t have it:
-            ///PRINTV(logfile << "Miss on key: " << k << endl;);
+            PRINTV(logfile << "Miss on key: " << k << endl;);
 // Evaluate function and create new record
             const V v = _fn(k, value);
             status |=  insert(k, v);
-            ///PRINTV(logfile << "Insert done on key: " << k << endl;);
-	    ///PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl;);
-	    ///PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
+            PRINTV(logfile << "Insert done on key: " << k << endl;);
+	    PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl;);
+	    PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
             return (status | PAGEMISS);
         }
         else {
-            ///PRINTV(logfile << "Hit on key: " << k << endl;);
+            PRINTV(logfile << "Hit on key: " << k << endl;);
 	    
             /*
             // We do have it. Before returning value,
@@ -181,7 +181,7 @@ public:
             // linked to the usage record.
             _key_to_value.insert(make_pair(k, make_pair(v, itNew)));
 	    
-	    ///PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl<<endl;);
+	    PRINTV(logfile << "Key bit status: " << bitset<10>(value.getReq().flags) << endl<<endl;);
 	    
             return (status | PAGEHIT | BLKHIT);
         }
@@ -218,7 +218,7 @@ public:
 ///ziqi: k is used to denote the actual entry with key value of "k" to be evicted
 ///ziqi: v is used to denote the original entry that passed to access() method. We only replace the time stamp of k by the time stamp of v
     void remove(const K &k, const V &v) {
-        ///PRINTV(logfile << "Removing key " << k << endl;);
+        PRINTV(logfile << "Removing key " << k << endl;);
 // Assert method is never called when cache is empty
         assert(!_key_tracker.empty());
 // Identify  key
@@ -233,26 +233,26 @@ public:
 ///ziqi: Device_number is set to 1. About Request_flags, 0 is for write and 1 is for read
 	  PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(25)<<v.getReq().issueTime<<left<<setw(8)<<"0"<<left<<fixed<<setw(12)<<it->second.first.getReq().fsblkno<<left<<fixed<<setw(8)<<it->second.first.getReq().reqSize<<"0"<<endl;);	
 	  
-	  ///PRINTV(logfile << "Remove value " << endl;);
+	  PRINTV(logfile << "Remove value " << endl;);
 	  
 	  // Erase both elements to completely purge record	
-	  ///PRINTV(logfile << "evicting dirty key " << k <<  endl;);
-	  ///PRINTV(logfile << "Key dirty bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+	  PRINTV(logfile << "evicting dirty key " << k <<  endl;);
+	  PRINTV(logfile << "Key dirty bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
 	  it = _key_to_value.find(k);
 	  assert(it != _key_to_value.end());
 	  _key_to_value.erase(it);
 	  _key_tracker.remove(k);
 	  
-	  ///PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
+	  PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
 	}
 	else {
-	  ///PRINTV(logfile << "evicting clean key without flushing back to DiskSim input trace " << k <<  endl;);
+	  PRINTV(logfile << "evicting clean key without flushing back to DiskSim input trace " << k <<  endl;);
 	  ///PRINTV(logfile << "Key clean bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
 	  it = _key_to_value.find(k);
 	  assert(it != _key_to_value.end());
 	  _key_to_value.erase(it);
 	  _key_tracker.remove(k);  
-	  ///PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
+	  PRINTV(logfile << "Cache utilization: " << _key_to_value.size() <<"/"<<_capacity <<endl<<endl;);
 	}
 	
     }
@@ -261,15 +261,15 @@ private:
 
 // Record a fresh key-value pair in the cache
     int insert(const K &k, const V &v) {
-        ///PRINTV(logfile << "insert key " << k  << endl;);
-	///PRINTV(logfile << "Key bit status: " << bitset<10>(v.getReq().flags) << endl;);
+        PRINTV(logfile << "insert key " << k  << endl;);
+	PRINTV(logfile << "Key bit status: " << bitset<10>(v.getReq().flags) << endl;);
         int status = 0;
 // Method is only called on cache misses
         assert(_key_to_value.find(k) == _key_to_value.end());
 
 // Make space if necessary
         if(_key_to_value.size() == _capacity) {
-            ///PRINTV(logfile << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
+            PRINTV(logfile << "Cache is Full " << _key_to_value.size() << " sectors" << endl;);
             evict(v);
             status = EVICT;
         }

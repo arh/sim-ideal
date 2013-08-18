@@ -201,6 +201,11 @@ bool Configuration::read(int argc, char **argv)
             diskSimPath = pTree.get<std::string>(std::string("Disk_Array.simulatorPath"));
             diskSimParv = pTree.get<std::string>(std::string("Disk_Array.parvFile"));
             diskSimOutv = pTree.get<std::string>(std::string("Disk_Array.outvFile"));
+	    
+	    std::string traceNameStringType = traceName;
+	    int lastSlash = traceNameStringType.find_last_of('/');
+	    int lastDot = traceNameStringType.find_last_of('.');
+	    diskSimOutv += "-Policy_"+policyName[0]+"-Threshold_"+seqThresholdStringType+"-MSRTrace_"+traceNameStringType.substr(lastSlash+1,lastDot-lastSlash-1)+".outv";
 
             if(cache2diskPipeFileName.empty()) {
                 std::cerr << "Error: There is no output Trace file specified in the cfg for the last level cache to feed the Disk Simulator";

@@ -276,8 +276,14 @@ int main(int argc, char **argv)
     totalSeqEvictedDirtyPages = 0;
     totalNonSeqEvictedDirtyPages = 0;
     //read benchmark configuration
-    Initialize(argc, argv, memTrace);
-    threshold = _gConfiguration.seqThreshold;
+    Initialize(argc, argv, memTrace);   
+    
+    if(_gConfiguration.GetAlgName(0).compare("dynamiclru") == 0) {
+      threshold = 1;
+    }
+    else
+      threshold = _gConfiguration.seqThreshold;
+    
     RunBenchmark(memTrace); // send reference memTrace
     ExitNow(0);
 }
