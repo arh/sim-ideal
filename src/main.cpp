@@ -12,6 +12,7 @@
 #include "lru_ziqi.h"
 #include "lru_dynamic.h"
 #include "lru_dynamicB.h"
+#include "lru_hotCold.h"
 #include "stats.h"
 #include "min.h"
 
@@ -124,22 +125,26 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 		    _gTestCache[i] = new DynamicBLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 		  }
 		  else
-		    if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
-			_gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+		    if(_gConfiguration.GetAlgName(i).compare("hotcoldlru") == 0) {
+		      _gTestCache[i] = new HotColdLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 		    }
 		    else
-			if(_gConfiguration.GetAlgName(i).compare("blockmin") == 0) {
-			    _gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
-			}
-			else
-			    if(_gConfiguration.GetAlgName(i).find("owbp") != string::npos) {
-				_gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
-			    }
-	    //esle if //add new policy name and dynamic allocation here
-			    else {
-				cerr << "Error: UnKnown Algorithm name " << endl;
-				exit(1);
-			    }
+		      if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
+			  _gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+		      }
+		      else
+			  if(_gConfiguration.GetAlgName(i).compare("blockmin") == 0) {
+			      _gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+			  }
+			  else
+			      if(_gConfiguration.GetAlgName(i).find("owbp") != string::npos) {
+				  _gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
+			      }
+	      //esle if //add new policy name and dynamic allocation here
+			      else {
+				  cerr << "Error: UnKnown Algorithm name " << endl;
+				  exit(1);
+			      }
     }
 
     PRINTV(logfile << "Configuration and setup done" << endl;);
@@ -283,7 +288,10 @@ int main(int argc, char **argv)
     //read benchmark configuration
     Initialize(argc, argv, memTrace);   
     
-    if(_gConfiguration.GetAlgName(0).compare("dynamiclru") == 0 ||_gConfiguration.GetAlgName(0).compare("dynamicBlru") == 0) {
+    if(_gConfiguration.GetAlgName(0).compare("dynamiclru") == 0 
+      ||_gConfiguration.GetAlgName(0).compare("dynamicBlru") == 0
+      ||_gConfiguration.GetAlgName(0).compare("hotcoldlru") == 0) 
+    {
       threshold = 1;
     }
     else
