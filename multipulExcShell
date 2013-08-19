@@ -1,4 +1,4 @@
-./sim-ideal ../trace/CAMRESIRA01-lvm0.csv dynamic_2.cfg dynamic2_8-18-13
-./sim-ideal ../trace/CAMRESWEBA03-lvm0.csv dynamic_3.cfg dynamic3_8-18-13
-./sim-ideal ../trace/CAMWEBDEV-lvm0.csv dynamic_4.cfg dynamic4_8-18-13
-
+./sim-ideal ../trace/CAM-01-SRV-lvm0.csv dynamicB_1.cfg dynamicB_1_8-19-13
+./sim-ideal ../trace/CAMRESIRA01-lvm0.csv dynamicB_2.cfg dynamicB_2_8-19-13
+./sim-ideal ../trace/CAMRESWEBA03-lvm0.csv dynamicB_3.cfg dynamicB_3_8-19-13
+./sim-ideal ../trace/CAMWEBDEV-lvm0.csv dynamicB_4.cfg dynamicB_4_8-19-13
