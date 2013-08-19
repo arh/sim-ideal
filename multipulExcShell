@@ -1,2 +1,4 @@
-./sim-ideal ../trace/smallTest.csv sample.cfg 1
-./sim-ideal ../trace/test.csv sample.cfg 2
+./sim-ideal ../trace/CAMRESIRA01-lvm0.csv dynamic_2.cfg dynamic2_8-18-13
+./sim-ideal ../trace/CAMRESWEBA03-lvm0.csv dynamic_3.cfg dynamic3_8-18-13
+./sim-ideal ../trace/CAMWEBDEV-lvm0.csv dynamic_4.cfg dynamic4_8-18-13
+

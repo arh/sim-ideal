@@ -14,6 +14,8 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   
+  int lineNum = 0;
+  
   string line;
   string subLine1;
   ifstream myfile (argv[1]);
@@ -28,7 +30,7 @@ int main(int argc, char *argv[]) {
   
   int total=0;
   
-  int blockNumList[1000];
+  int blockNumList[10000];
   
   int l1=0;
   int l2to3=0;
@@ -51,6 +53,7 @@ int main(int argc, char *argv[]) {
   {
     while ( myfile.good() )
     {
+	  lineNum++;
       getline (myfile,line);
       if(line.length() < 10)
 		continue;
@@ -58,7 +61,7 @@ int main(int argc, char *argv[]) {
 	  subLine1 = line.substr(45,50);
 	  stringstream ss1(subLine1);
 	  ss1>>lessLength;
-	  //cout << lessLength << endl;
+	  //cout << "lineNum = "<<lineNum<< ", "<< lessLength << endl;
 	  blockNumList[lessLength]++;
 	}
     myfile.close();
