@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
   //int sumAboveThreshold=0;
   
   int total=0;
+  long totalPageNumber=0;
   
   int blockNumList[10000];
   
@@ -72,6 +73,7 @@ int main(int argc, char *argv[]) {
   for(int j=0; j< 1000; j++)
   {
 	  total+=blockNumList[j];
+	  totalPageNumber+=(blockNumList[j]*j);
 	  if(blockNumList[j] == 0)
 	  {
 		  continue;
@@ -136,7 +138,8 @@ int main(int argc, char *argv[]) {
   cout<<"length between 256 and 511 has the percentage of "<<double(l256to511)/double(total)*100<<"%"<<endl;
   cout<<"length equal and greater than 512 has the percentage of "<<double(l512plus)/double(total)*100<<"%"<<endl;
   * */
-  
+  cout<<"total synced page number is "<<totalPageNumber<<endl;
+  fout<<"total synced page number is "<<totalPageNumber<<endl;
   fout<<"length equal to 1 has the percentage of "<<double(l1)/double(total)*100<<"%"<<endl;
   fout<<"length between 2 and 3 has the percentage of "<<double(l2to3)/double(total)*100<<"%"<<endl;
   fout<<"length between 4 and 7 has the percentage of "<<double(l4to7)/double(total)*100<<"%"<<endl;
