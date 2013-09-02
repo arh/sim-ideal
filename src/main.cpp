@@ -14,6 +14,7 @@
 #include "lru_dynamicB.h"
 #include "lru_dynamicC.h"
 #include "lru_hotCold.h"
+#include "lru_pure.h"
 #include "stats.h"
 #include "min.h"
 
@@ -126,30 +127,34 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 		    _gTestCache[i] = new DynamicBLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 		  }
 		  else
-		  if(_gConfiguration.GetAlgName(i).compare("dynamicClru") == 0) {
-		    _gTestCache[i] = new DynamicCLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
-		  }
+		    if(_gConfiguration.GetAlgName(i).compare("dynamicClru") == 0) {
+		      _gTestCache[i] = new DynamicCLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
+		    }
 		    else
 		      if(_gConfiguration.GetAlgName(i).compare("hotcoldlru") == 0) {
 			_gTestCache[i] = new HotColdLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 		      }
 		      else
-			if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
-			    _gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+			if(_gConfiguration.GetAlgName(i).compare("purelru") == 0) {
+			  _gTestCache[i] = new PureLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 			}
 			else
+			  if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
+			      _gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+			  }
+			  else
 			    if(_gConfiguration.GetAlgName(i).compare("blockmin") == 0) {
 				_gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
 			    }
 			    else
-				if(_gConfiguration.GetAlgName(i).find("owbp") != string::npos) {
-				    _gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
-				}
-		//esle if //add new policy name and dynamic allocation here
-				else {
-				    cerr << "Error: UnKnown Algorithm name " << endl;
-				    exit(1);
-				}
+			      if(_gConfiguration.GetAlgName(i).find("owbp") != string::npos) {
+				  _gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
+			      }
+		  //esle if //add new policy name and dynamic allocation here
+			      else {
+				 cerr << "Error: UnKnown Algorithm name " << endl;
+				 exit(1);
+			      }
     }
 
     PRINTV(logfile << "Configuration and setup done" << endl;);
@@ -296,7 +301,8 @@ int main(int argc, char **argv)
     if(_gConfiguration.GetAlgName(0).compare("dynamiclru") == 0 
       ||_gConfiguration.GetAlgName(0).compare("dynamicBlru") == 0
       ||_gConfiguration.GetAlgName(0).compare("dynamicClru") == 0
-      ||_gConfiguration.GetAlgName(0).compare("hotcoldlru") == 0) 
+      ||_gConfiguration.GetAlgName(0).compare("hotcoldlru") == 0
+      ||_gConfiguration.GetAlgName(0).compare("purelru") == 0) 
     {
       threshold = 1;
     }
