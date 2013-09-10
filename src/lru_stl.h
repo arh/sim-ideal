@@ -23,6 +23,8 @@
 
 using namespace std;
 
+extern int totalSeqEvictedDirtyPages;
+
 ///ziqi: in access(), if the value's time stamp is the first one that equal or bigger than a multiple of 30s, then flushing back all the dirty pages in buffer cache.
 ///Then change the dirty pages status to clean. Log these dirty pages into DiskSim input trace.
 ///ziqi: in access(), for status is write, add dirty page notation to the status.
@@ -112,6 +114,7 @@ public:
                   ///ziqi: DiskSim format Request_arrival_time Device_number Block_number Request_size Request_flags
                   ///ziqi: Device_number is set to 1. About Request_flags, 0 is for write and 1 is for read
 ///ziqi: on Aug 9, 2013: made change to Block_number, because the starting block number is changed.
+	          totalSeqEvictedDirtyPages += seqLength;
 	          PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(25)<<flushTimeGap*multipleFlushTimeGap<<left<<setw(8)<<"0"<<left<<fixed<<setw(12)<<(firstSeqFsblknoForBefore+1)<<left<<fixed<<setw(8)<<seqLength<<"0"<<endl;);	
                   break;
                 }
@@ -231,6 +234,7 @@ public:
 	
 ///ziqi: DiskSim format Request_arrival_time Device_number Block_number Request_size Request_flags
 ///ziqi: Device_number is set to 1. About Request_flags, 0 is for write and 1 is for read
+	  totalSeqEvictedDirtyPages += (it->second.first.getReq().reqSize);
 	  PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(25)<<v.getReq().issueTime<<left<<setw(8)<<"0"<<left<<fixed<<setw(12)<<it->second.first.getReq().fsblkno<<left<<fixed<<setw(8)<<it->second.first.getReq().reqSize<<"0"<<endl;);	
 	  
 	  PRINTV(logfile << "Remove value " << endl;);
