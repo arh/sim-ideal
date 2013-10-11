@@ -15,6 +15,7 @@
 #include "lru_dynamicC.h"
 #include "lru_hotCold.h"
 #include "lru_pure.h"
+#include "arc.h"
 #include "stats.h"
 #include "min.h"
 
@@ -139,22 +140,26 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 			  _gTestCache[i] = new PureLRUCache<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 			}
 			else
-			  if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
-			      _gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+			  if(_gConfiguration.GetAlgName(i).compare("arc") == 0) {
+			    _gTestCache[i] = new ARC<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 			  }
 			  else
-			    if(_gConfiguration.GetAlgName(i).compare("blockmin") == 0) {
-				_gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+			    if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
+				_gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
 			    }
 			    else
-			      if(_gConfiguration.GetAlgName(i).find("owbp") != string::npos) {
-				  _gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
+			      if(_gConfiguration.GetAlgName(i).compare("blockmin") == 0) {
+				  _gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
 			      }
-		  //esle if //add new policy name and dynamic allocation here
-			      else {
-				 cerr << "Error: UnKnown Algorithm name " << endl;
-				 exit(1);
-			      }
+			      else
+				if(_gConfiguration.GetAlgName(i).find("owbp") != string::npos) {
+				    _gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
+				}
+		    //esle if //add new policy name and dynamic allocation here
+				else {
+				  cerr << "Error: UnKnown Algorithm name " << endl;
+				  exit(1);
+				}
     }
 
     PRINTV(logfile << "Configuration and setup done" << endl;);
@@ -302,7 +307,8 @@ int main(int argc, char **argv)
       ||_gConfiguration.GetAlgName(0).compare("dynamicBlru") == 0
       ||_gConfiguration.GetAlgName(0).compare("dynamicClru") == 0
       ||_gConfiguration.GetAlgName(0).compare("hotcoldlru") == 0
-      ||_gConfiguration.GetAlgName(0).compare("purelru") == 0) 
+      ||_gConfiguration.GetAlgName(0).compare("purelru") == 0
+      ||_gConfiguration.GetAlgName(0).compare("arc") == 0)
     {
       threshold = 1;
     }

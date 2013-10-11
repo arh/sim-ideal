@@ -11,6 +11,7 @@ Implemented Replacement policies
 - Page-MIN
 - Block-MIN
 - OWBP
+- ARC
 - lru-ziqi: Based on PRAM environment. If the victim is clean, evict it. If the victim is dirty, evict consecutive dirty pages whose length is above the threshold. If none is bigger the threshold, evict the first dirty page along with its consecutive dirty ones.
 - lru-dynamic: Based on lru-ziqi. But the threshold is dynamic and initialized to 1. If in the cache, consecutive dirty pages' length is bigger than the threshold could be found, add the threshold by 1. If not, cut the threshold into half. 
 - lru-dynamicB: Based on lru-ziqi. But the threshold is dynamic and initialized to 1. If in the cache, consecutive dirty pages' length is bigger than the threshold could be found, add the threshold by 1. If not, decrease the threshold by 1. 
