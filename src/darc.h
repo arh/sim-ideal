@@ -9,8 +9,8 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 
-#ifndef ARC_H
-#define ARC_H
+#ifndef DARC_H
+#define DARC_H
 
 #include <map>
 #include <list>
@@ -36,7 +36,7 @@ extern int totalNonSeqEvictedDirtyPages;
 // LRU-replacement cache of a function with signature
 // V f(K)
 template <typename K, typename V>
-class ARC : public TestCache<K, V>
+class DARC : public TestCache<K, V>
 {
 public:
 // Key access history, most recent at back
@@ -46,7 +46,7 @@ public:
     < K, pair<V, typename key_tracker_type::iterator> > 	key_to_value_type;
 // Constuctor specifies the cached function and
 // the maximum number of records to be stored.
-    ARC(
+    DARC(
         V(*f)(const K & , V),
         size_t c,
         unsigned levelMinus
@@ -84,14 +84,11 @@ public:
 	const typename key_to_value_type::iterator it_b2	= b2.find(k);
         //const typename key_to_value_type::iterator itNew	= _key_to_value.find(k);
     
-	///ziqi: ARC Case I: x hit in t1 or t2, then move x to t2
-        if((it_t1 != t1.end()) || (it_t2 != t2.end())) {
+	///ziqi: DARC Case I: x hit in t1, then move x to t1 if it's a read, or to t2 if it's a write
+        if((it_t1 != t1.end()) && (it_t2 == t2.end())) {
 	    assert(!((it_t1 != t1.end()) && (it_t2 != t2.end())));
-	    if((it_t1 != t1.end()) && (it_t2 == t2.end())) {
-	      PRINTV(logfile << "Case I Hit on t1 " << k << endl;);	
-	      
-	      value.updateFlags(status | (it_t1->second.first.getReq().flags & DIRTY));
-	      
+	    if(it_t1->second.first.getReq().flags & DIRTY) {
+	      PRINTV(logfile << "Case I Write hit on t1 " << k << endl;);	
 	      t1.erase(it_t1);
 	      t1_key.remove(k);
 	      assert(t1.size() < _capacity);
@@ -102,40 +99,56 @@ public:
 	      // Create the key-value entry,
 	      // linked to the usage record.
 	      t2.insert(make_pair(k, make_pair(v, itNew)));
-	      PRINTV(logfile << "Case I insert key to t2: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);	      
+	      PRINTV(logfile << "Case I insert dirty key to t2: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);	      
 	      return (status | PAGEHIT | BLKHIT);
-	    }
-	    
-	    if((it_t2 != t2.end()) && (it_t1 == t1.end())) {
-	      PRINTV(logfile << "Case I Hit on t2 " << k << endl;);
-	      
-	      value.updateFlags(status | (it_t2->second.first.getReq().flags & DIRTY));
-	      
-	      t2.erase(it_t2);
-	      t2_key.remove(k);
-	      assert(t2.size() < _capacity);
+	    }	    
+	    else {
+	      PRINTV(logfile << "Case I Read hit on t1 " << k << endl;);
+	      t1.erase(it_t1);
+	      t1_key.remove(k);
+	      assert(t1.size() < _capacity);
 	      const V v = _fn(k, value);
 	      // Record k as most-recently-used key
 	      typename key_tracker_type::iterator itNew
-	      = t2_key.insert(t2_key.end(), k);
+	      = t1_key.insert(t1_key.end(), k);
 	      // Create the key-value entry,
 	      // linked to the usage record.
-	      t2.insert(make_pair(k, make_pair(v, itNew)));
-	      PRINTV(logfile << "Case I insert key to t2: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
+	      t1.insert(make_pair(k, make_pair(v, itNew)));
+	      PRINTV(logfile << "Case I insert clean key to t1: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
 	      return (status | PAGEHIT | BLKHIT);	      
 	    }
          
         }
-        ///ziqi: ARC Case II: x hit in b1, then enlarge t1 and move x from b1 to t2
+        
+        ///ziqi: DARC Case II: x hit in t2, then move x to MRU of t2
+        if((it_t2 != t2.end()) && (it_t1 == t1.end())) {
+	    assert(!((it_t1 != t1.end()) && (it_t2 != t2.end())));
+	    
+	    value.updateFlags(status | (it_t2->second.first.getReq().flags & DIRTY));
+	    
+	    t2.erase(it_t2);
+	    t2_key.remove(k);
+	    assert(t2.size() < _capacity);
+	    const V v = _fn(k, value);
+	    // Record k as most-recently-used key
+	    typename key_tracker_type::iterator itNew = t2_key.insert(t2_key.end(), k);
+	    // Create the key-value entry,
+	    // linked to the usage record.
+	    t2.insert(make_pair(k, make_pair(v, itNew)));
+	    PRINTV(logfile << "Case II insert key to t2: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);	      
+	    return (status | PAGEHIT | BLKHIT);
+	          
+	}      
+        ///ziqi: ARC Case III: x hit in b1, then enlarge t1, and move x from b1 to t1 if it's a read or to t2 if it's a write
         else if(it_b1 != b1.end()){
 	    ///ziqi: delta denotes the step in each ADAPTATION
 	    int delta;
 	    
-	    PRINTV(logfile << "Case II Hit on b1: " << k << endl;);
-	    if(b1.size() >= b2.size())
+	    PRINTV(logfile << "Case III Hit on b1: " << k << endl;);
+	    //if(b1.size() >= b2.size())
 	      delta = 1;
-	    else
-	      delta = int(b2.size()/b1.size());
+	    //else
+	      //delta = int(b2.size()/b1.size());
 	    
 	    PRINTV(logfile << "ADAPTATION: p increases from " << p << " to ";);
 	    
@@ -145,37 +158,64 @@ public:
 	      p = p+delta;
 	   
 	    PRINTV(logfile << p << endl;);
-	   
-	    ///value.updateFlags(status | (it_b1->second.first.getReq().flags & DIRTY));	  
 	    
 	    const V v = _fn(k, value);
 	    
 	    REPLACE(k, v, p);
-	     
+	    
 	    b1.erase(it_b1);
 	    b1_key.remove(k);
 	    
-	    PRINTV(logfile << "Case II evicting b1 " << k <<  endl;);
+	    PRINTV(logfile << "Case III evicting b1 " << k <<  endl;);
 	    
-	    // Record k as most-recently-used key
-	    typename key_tracker_type::iterator itNew
-	    = t2_key.insert(t2_key.end(), k);
-	    // Create the key-value entry,
-	    // linked to the usage record.
-	    t2.insert(make_pair(k, make_pair(v, itNew)));
-	    PRINTV(logfile << "Case II insert key to t2: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
+	    if(status & DIRTY) {	    
+	      // Record k as most-recently-used key
+	      typename key_tracker_type::iterator itNew = t2_key.insert(t2_key.end(), k);
+	      // Create the key-value entry,
+	      // linked to the usage record.
+	      t2.insert(make_pair(k, make_pair(v, itNew)));
+	      PRINTV(logfile << "Case III insert key to t2: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
+	    }
+	    else {
+	       // Record k as most-recently-used key
+	      typename key_tracker_type::iterator itNew = t1_key.insert(t1_key.end(), k);
+	      // Create the key-value entry,
+	      // linked to the usage record.
+	      t1.insert(make_pair(k, make_pair(v, itNew)));
+	      PRINTV(logfile << "Case III insert key to t1: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
+	      
+	      if(t1.size() + b1.size() > _capacity) {	      
+		if(b1.size() > 0) {
+		  typename key_tracker_type::iterator itLRU = b1_key.begin();
+		  assert(itLRU != b1_key.end());		
+		  typename key_to_value_type::iterator it = b1.find(*itLRU);		
+		  b1.erase(it);
+		  b1_key.remove(*itLRU);
+		  PRINTV(logfile << "Case III evicting b1 " << *itLRU <<  endl;);
+		}
+		else {
+		  typename key_tracker_type::iterator itLRU = t1_key.begin();
+		  assert(itLRU != t1_key.end());		
+		  typename key_to_value_type::iterator it = t1.find(*itLRU);		
+		  t1.erase(it);
+		  t1_key.remove(*itLRU);
+		  totalEvictedCleanPages++;
+		  PRINTV(logfile << "Case III evicting t1 without flushing back to DiskSim input trace " << *itLRU <<  endl;);
+		}
+	      }
+	    }
 	    return (status | PAGEMISS);		    
 	}
-	///ziqi: ARC Case III: x hit in b2, then enlarge t2 and move x from b2 to t2
+	///ziqi: ARC Case IV: x hit in b2, then enlarge t2, and move x from b2 to t1 if it's a read or to t2 if it's a write
 	else if(it_b2 != b2.end()){
 	    ///ziqi: delta denotes the step in each ADAPTATION
 	    int delta;
 	    
-	    PRINTV(logfile << "Hit on b2: " << k << endl;);	
+	    PRINTV(logfile << "Case IV Hit on b2: " << k << endl;);	
 	    if(b2.size() >= b1.size())
-	      delta = 1;
+	      delta = 4;
 	    else
-	      delta = int(b1.size()/b2.size());
+	      delta = int(4*b1.size()/b2.size());
 	    
 	    PRINTV(logfile << "ADAPTATION: p decreases from " << p << " to ";);
 	    
@@ -186,8 +226,6 @@ public:
 	   
 	    PRINTV(logfile << p << endl;);
 	    
-	    ///value.updateFlags(status | (it_b2->second.first.getReq().flags & DIRTY));	  
-	    
 	    const V v = _fn(k, value);
 	    
 	    REPLACE(k, v, p);
@@ -195,20 +233,49 @@ public:
 	    b2.erase(it_b2);
 	    b2_key.remove(k);
 	    
-	    PRINTV(logfile << "Case III evicting b2 " << k <<  endl;);
+	    PRINTV(logfile << "Case IV evicting b2 " << k <<  endl;);
 
-	    // Record k as most-recently-used key
-	    typename key_tracker_type::iterator itNew
-	    = t2_key.insert(t2_key.end(), k);
-	    // Create the key-value entry,
-	    // linked to the usage record.
-	    t2.insert(make_pair(k, make_pair(v, itNew)));
-	    PRINTV(logfile << "Case III insert key to t2: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
+	    if(status & DIRTY) {	    
+	      // Record k as most-recently-used key
+	      typename key_tracker_type::iterator itNew = t2_key.insert(t2_key.end(), k);
+	      // Create the key-value entry,
+	      // linked to the usage record.
+	      t2.insert(make_pair(k, make_pair(v, itNew)));
+	      PRINTV(logfile << "Case IV insert key to t2: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
+	    }
+	    else {
+	       // Record k as most-recently-used key
+	      typename key_tracker_type::iterator itNew = t1_key.insert(t1_key.end(), k);
+	      // Create the key-value entry,
+	      // linked to the usage record.
+	      t1.insert(make_pair(k, make_pair(v, itNew)));
+	      PRINTV(logfile << "Case IV insert key to t1: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
+	      
+	      if(t1.size() + b1.size() > _capacity) {	      
+		if(b1.size() > 0) {
+		  typename key_tracker_type::iterator itLRU = b1_key.begin();
+		  assert(itLRU != b1_key.end());		
+		  typename key_to_value_type::iterator it = b1.find(*itLRU);		
+		  b1.erase(it);
+		  b1_key.remove(*itLRU);
+		  PRINTV(logfile << "Case IV evicting b1 " << *itLRU <<  endl;);
+		}
+		else {
+		  typename key_tracker_type::iterator itLRU = t1_key.begin();
+		  assert(itLRU != t1_key.end());		
+		  typename key_to_value_type::iterator it = t1.find(*itLRU);		
+		  t1.erase(it);
+		  t1_key.remove(*itLRU);
+		  totalEvictedCleanPages++;
+		  PRINTV(logfile << "Case IV evicting t1 without flushing back to DiskSim input trace " << *itLRU <<  endl;);
+		}
+	      }
+	    }
 	    return (status | PAGEMISS);		    	    
 	} 
-	///ziqi: ARC Case IV: x is cache miss  
+	///ziqi: ARC Case V: x is cache miss  
         else {
-            PRINTV(logfile << "Case IV miss on key: " << k << endl;);
+            PRINTV(logfile << "Case V miss on key: " << k << endl;);
 	    
 	    if((t1.size() + b1.size()) == _capacity) {	    
 	      if(t1.size() < _capacity) {
@@ -217,7 +284,6 @@ public:
 		typename key_to_value_type::iterator it = b1.find(*itLRU);
 		b1.erase(it);
 	        b1_key.remove(*itLRU);
-		PRINTV(logfile << "Case IV evicting b1 " << *itLRU <<  endl;);
 		
 		const V v = _fn(k, value);
 		
@@ -237,22 +303,22 @@ public:
 		  PRINTV(DISKSIMINPUTSTREAM << setfill(' ')<<left<<fixed<<setw(25)<<v.getReq().issueTime<<left<<setw(8)<<"0"<<left<<fixed<<setw(12)<<it->second.first.getReq().fsblkno<<left<<fixed<<setw(8)<<it->second.first.getReq().reqSize<<"0"<<endl;);	
 		  
 		  // Erase both elements to completely purge record	
-		  PRINTV(logfile << "Case IV evicting dirty key " << k <<  endl;);
+		  PRINTV(logfile << "Case V evicting dirty key " << k <<  endl;);
 		  totalNonSeqEvictedDirtyPages++;
-		  PRINTV(logfile << "Case IV Key dirty bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+		  PRINTV(logfile << "Case V Key dirty bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
 		  t1.erase(it);
 		  t1_key.remove(*itLRU);
 		  
-		  PRINTV(logfile << "Case IV t1 size: " << t1.size() <<endl;);
+		  PRINTV(logfile << "Case V t1 size: " << t1.size() <<endl;);
 		}
 		else {
-		  PRINTV(logfile << "Case IV evicting clean key without flushing back to DiskSim input trace " << k <<  endl;);
+		  PRINTV(logfile << "Case V evicting clean key without flushing back to DiskSim input trace " << k <<  endl;);
 		  totalEvictedCleanPages++;
-		  PRINTV(logfile << "Case IV Key clean bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
+		  PRINTV(logfile << "Case V Key clean bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
 
 		  t1.erase(it);
 		  t1_key.remove(*itLRU);
-		  PRINTV(logfile << "Case IV t1 size: " << t1.size() <<endl;);
+		  PRINTV(logfile << "Case V t1 size: " << t1.size() <<endl;);
 		}
 	      }
 	    }
@@ -264,7 +330,6 @@ public:
 		  typename key_to_value_type::iterator it = b2.find(*itLRU);
 		  b2.erase(it);
 		  b2_key.remove(*itLRU);
-		  PRINTV(logfile << "Case IV evicting b2 " << *itLRU <<  endl;);
 		}
 		
 		const V v = _fn(k, value);
@@ -274,12 +339,24 @@ public:
 	    }
 	   
 	    const V v = _fn(k, value);
-	    // Record k as most-recently-used key
-	    typename key_tracker_type::iterator itNew = t1_key.insert(t1_key.end(), k);
-	    // Create the key-value entry,
-	    // linked to the usage record.
-	    t1.insert(make_pair(k, make_pair(v, itNew)));
-	    PRINTV(logfile << "Case IV insert key to t1: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
+	    
+	    if(status & DIRTY) {	    
+	      // Record k as most-recently-used key
+	      typename key_tracker_type::iterator itNew = t2_key.insert(t2_key.end(), k);
+	      // Create the key-value entry,
+	      // linked to the usage record.
+	      t2.insert(make_pair(k, make_pair(v, itNew)));
+	      PRINTV(logfile << "Case V insert key to t2: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);
+	    }
+	    else {
+	       // Record k as most-recently-used key
+	      typename key_tracker_type::iterator itNew = t1_key.insert(t1_key.end(), k);
+	      // Create the key-value entry,
+	      // linked to the usage record.
+	      t1.insert(make_pair(k, make_pair(v, itNew)));
+	      PRINTV(logfile << "Case V insert key to t1: " << k << "** t1 size: "<< t1.size()<< ", t2 size: "<< t2.size() <<endl;);	      
+	    }
+	    
 	    return (status | PAGEMISS);
         }
         

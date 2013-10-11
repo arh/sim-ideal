@@ -1,4 +1,3 @@
-./sim-ideal ../trace/CAM-01-SRV-lvm0.csv infinitePRAM_1.cfg infinitePRAM_1_9-3-13
-./sim-ideal ../trace/CAMRESIRA01-lvm0.csv infinitePRAM_2.cfg infinitePRAM_2_9-3-13
-./sim-ideal ../trace/CAMRESWEBA03-lvm0.csv infinitePRAM_3.cfg infinitePRAM_3_9-3-13
-./sim-ideal ../trace/CAMWEBDEV-lvm0.csv infinitePRAM_4.cfg infinitePRAM_4_9-3-13
+./sim-ideal ../trace/CAMRESWEBA03-lvm0.csv darc.cfg darc_10-11-13 
+./sim-ideal ../trace/CAMRESWEBA03-lvm0.csv arc.cfg arc_10-11-13 
+./sim-ideal ../trace/CAMRESWEBA03-lvm0.csv lru.cfg lru_10-11-13 

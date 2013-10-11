@@ -91,16 +91,20 @@ public:
 // We do have it. Before returning value,
 // update access record by moving accessed
 // key to back of list.
+	    
+	    value.updateFlags(status | (it->second.first.getReq().flags & DIRTY));
+	    	    
             _key_to_value.erase(it);
             _key_tracker.remove(k);
             assert(_key_to_value.size() < _capacity);
-            const V v = _fn(k, value);
+	    const V v = _fn(k, value);
             // Record k as most-recently-used key
             typename key_tracker_type::iterator itNew
             = _key_tracker.insert(_key_tracker.end(), k);
             // Create the key-value entry,
             // linked to the usage record.
             _key_to_value.insert(make_pair(k, make_pair(v, itNew)));
+	    PRINTV(logfile << "Hitted key status: " << bitset<10>(v.getReq().flags) << endl;);
             return (status | PAGEHIT | BLKHIT);
         }
     } //end operator access
