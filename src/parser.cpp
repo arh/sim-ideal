@@ -30,8 +30,6 @@ bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
     
     assert(inputTrace.good());
     
-
-
     while(!fetched) {       
 	
         std::string lineString;
@@ -45,111 +43,193 @@ bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
 
         strcpy(line, lineString.c_str());
         ++ lineno;
-        // Sample MSR trace lien:
-        // 	Timestamp        ,Hostname,DiskNumber,Type  ,Offset     ,Size,ResponseTime
-        // 128166554283938750,wdev    ,3         ,Write ,3154152960,4096 ,   2170
+
+	
         tempchar = strtok(line, ",");
 	
-	///ziqi: if it is the first line, denote its time stamp as base time. The following entry's time stamp need to be substracted by base time.
-	if(lineno == 1) {
-	  time = strtoll(tempchar, NULL, 10);
-	  if(WindowsTickToUnixMilliSeconds(time) <= DBL_MAX) {
-            baseTime = WindowsTickToUnixMilliSeconds(time);
+	std::size_t foundRead = lineString.find("Read");
+	std::size_t foundWrite = lineString.find("Write");
+	
+	///ziqi: MSR trace parse
+	// Sample MSR trace lien:
+        // 	Timestamp        ,Hostname,DiskNumber,Type  ,Offset     ,Size,ResponseTime
+        // 128166554283938750,wdev    ,3         ,Write ,3154152960,4096 ,   2170
+	if ( (foundRead!=std::string::npos) || (foundWrite!=std::string::npos) ) {
+	
+	  ///ziqi: if it is the first line, denote its time stamp as base time. The following entry's time stamp need to be substracted by base time.
+	  if(lineno == 1) {
+	    time = strtoll(tempchar, NULL, 10);
+	    if(WindowsTickToUnixMilliSeconds(time) <= DBL_MAX) {
+	      baseTime = WindowsTickToUnixMilliSeconds(time);
+	    }
 	  }
+	  else {
+	    time = strtoll(tempchar, NULL, 10);
+	  }
+
+	  if(time) {	  
+	      if(WindowsTickToUnixMilliSeconds(time) <= DBL_MAX) {
+		  newn->issueTime = WindowsTickToUnixMilliSeconds(time) - baseTime;
+	      }
+	      else {
+		  fprintf(stderr, "ARH: request time reach to the double boundry\n");
+		  fprintf(stderr, "line: %s", line);
+		  ExitNow(1);
+	      }
+  ///ziqi: FIXME I don't know what does the old_time doing here
+  // 			if( old_time > newn->time){
+  // 			  fprintf(stderr, "ARH: new time is small equal than old time\n");
+  // 				fprintf(stderr, "line: %s", line);
+  // 				ddbg_assert(0);
+  // 			}
+
+  //            if(old_time >= newn->issueTime) {
+  //                newn->issueTime = old_time + 1;
+		  /*				fprintf(stderr, "ARH: new time is small equal than old time\n");
+						  fprintf(stderr, "line: %s", line);
+						  ddbg_assert(0);*/
+  //          }
+
+  //            if(old_time > newn->issueTime) {
+  //                fprintf(stderr, "ARH: new time is small equal than old time\n");
+  //                fprintf(stderr, "line: %s", line);
+  //                ExitNow(1);
+  //            }
+
+  //            old_time = newn->issueTime;
+	      strtok(NULL, ","); //step over host name
+	      strtok(NULL, ","); //step over devno
+	      //ARH: msr traces only have one dev
+	      r_w = strtok(NULL, ","); //step over type
+
+	      if(strcmp(r_w, "Write") == 0) {
+		  newn->flags = WRITE;
+	      }
+	      else
+		  if(strcmp(r_w, "Read") == 0) {
+		      newn->flags = READ;
+		      ///ziqi: both read and write request
+		      //continue;
+		  }
+		  else
+		      continue;
+
+	      byteoff = strtoull((strtok(NULL, " ,")) , NULL , 10) ;   //read byteoffset (byte)
+	      //ARH: comment this line to accept blkno 0
+  // 			if(!byteoff) {
+  // 				continue;
+  // 			}
+  // 			if(!byteoff % 512) {
+  // 				PRINT(fprintf(stderr, "ARH: request byte offset is not aligned to sector size\n"););
+  // 				PRINT(fprintf(stderr, "line: %s", line););
+  // 			} else {
+	      newn->fsblkno = (byteoff / _gConfiguration.fsblkSize) ; //convert byte2sector and align to page size
+	      //TODO: fix this line
+	      newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio[0];
+  // 			}
+	      bcount_temp = atoi((strtok(NULL, " ,")));   // read size
+
+	      if(!bcount_temp) {
+		  continue;
+	      }
+
+	      if(!bcount_temp % 512) {
+		  PRINT(fprintf(stderr, "ARH: request byte count is not aligned to sector size\n"););
+		  PRINT(fprintf(stderr, "line: %s", line););
+	      }
+	      else {
+		  ///ziqi: if the remaining request size is less than one block size, still count it as one. 
+		  ///ziqi: The following "if" statement works as getting the ceiling of bcount_temp / _gConfiguration.fsblkSize
+		  if((bcount_temp % _gConfiguration.fsblkSize) == 0)
+		      newn->reqSize = bcount_temp / _gConfiguration.fsblkSize;
+		  else
+		      newn->reqSize = bcount_temp / _gConfiguration.fsblkSize + 1;
+
+		  //TODO: fix this line
+		  if(newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0] + newn->reqSize >= _gConfiguration.ssd2fsblkRatio[0]) {   // req size is big, going to share multiple block
+		      newn->reqSize = _gConfiguration.ssd2fsblkRatio[0] - newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0];
+		  }
+	      }
+
+	      fetched = 1;
+	      newn->lineNo = lineno;
+	  } //end if(time)
 	}
+	
+	///ziqi: WebSearch trace parse
+	// Sample WebSearch trace lien:
+	// ASU, LBA,    Size, Opcode, Timestamp
+	// 0,   657728, 8192, R,      0.011413
 	else {
-	  time = strtoll(tempchar, NULL, 10);
+	  newn->lineNo = lineno;
+	  
+	  fetched = 1;
+	  
+	  byteoff = strtoull((strtok(NULL, " ,")) , NULL , 10) ;   // LBA
+	  
+	  newn->fsblkno = byteoff ; //convert byte2sector and align to page size
+	  //TODO: fix this line
+	  newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio[0];
+	  
+	  bcount_temp = atoi((strtok(NULL, " ,")));   // read size
+
+	  if(!bcount_temp) {
+	    continue;
+	  }
+
+	  if(!bcount_temp % 512) {
+	    PRINT(fprintf(stderr, "ARH: request byte count is not aligned to sector size\n"););
+	    PRINT(fprintf(stderr, "line: %s", line););
+	  }
+	  else {
+	    ///ziqi: if the remaining request size is less than one block size, still count it as one. 
+	    ///ziqi: The following "if" statement works as getting the ceiling of bcount_temp / _gConfiguration.fsblkSize
+	  if((bcount_temp % _gConfiguration.fsblkSize) == 0)
+	    newn->reqSize = bcount_temp / _gConfiguration.fsblkSize;
+	  else
+	    newn->reqSize = bcount_temp / _gConfiguration.fsblkSize + 1;
+
+	    //TODO: fix this line
+	    if(newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0] + newn->reqSize >= _gConfiguration.ssd2fsblkRatio[0]) {   // req size is big, going to share multiple block
+	      newn->reqSize = _gConfiguration.ssd2fsblkRatio[0] - newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0];
+	    }
+	  }
+	  
+	  r_w = strtok(NULL, ","); //step over type
+	  if(strcmp(r_w, "W") == 0) {
+	    newn->flags = WRITE;
+	  }
+	  else if(strcmp(r_w, "R") == 0) {
+	    newn->flags = READ;
+	    ///ziqi: both read and write request
+	    //continue;
+	  }
+	  //else
+	    //continue;
+	  
+	  ///ziqi: if it is the first line, denote its time stamp as base time. The following entry's time stamp need to be substracted by base time.  
+	  if(lineno == 1) {
+	    time = strtoll(tempchar, NULL, 10);
+	    //if(WindowsTickToUnixMilliSeconds(time) <= DBL_MAX) {
+	    baseTime = time;
+	    //}
+	  }
+	  else {
+	    time = strtoll(tempchar, NULL, 10);
+	  }	    
+  	  
+	  //if(WindowsTickToUnixMilliSeconds(time) <= DBL_MAX) {
+	  newn->issueTime = time - baseTime;
+	  //}
+	  //else {
+	  //  fprintf(stderr, "ARH: request time reach to the double boundry\n");
+	  //  fprintf(stderr, "line: %s", line);
+	  // ExitNow(1);
+	  //}
+	  
+	  	
 	}
-
-        if(time) {	  
-            if(WindowsTickToUnixMilliSeconds(time) <= DBL_MAX) {
-                newn->issueTime = WindowsTickToUnixMilliSeconds(time) - baseTime;
-            }
-            else {
-                fprintf(stderr, "ARH: request time reach to the double boundry\n");
-                fprintf(stderr, "line: %s", line);
-                ExitNow(1);
-            }
-///ziqi: FIXME I don't know what does the old_time doing here
-// 			if( old_time > newn->time){
-// 			  fprintf(stderr, "ARH: new time is small equal than old time\n");
-// 				fprintf(stderr, "line: %s", line);
-// 				ddbg_assert(0);
-// 			}
-
-//            if(old_time >= newn->issueTime) {
-//                newn->issueTime = old_time + 1;
-                /*				fprintf(stderr, "ARH: new time is small equal than old time\n");
-                				fprintf(stderr, "line: %s", line);
-                				ddbg_assert(0);*/
-//          }
-
-//            if(old_time > newn->issueTime) {
-//                fprintf(stderr, "ARH: new time is small equal than old time\n");
-//                fprintf(stderr, "line: %s", line);
-//                ExitNow(1);
-//            }
-
-//            old_time = newn->issueTime;
-            strtok(NULL, ","); //step over host name
-            strtok(NULL, ","); //step over devno
-            //ARH: msr traces only have one dev
-            r_w = strtok(NULL, ","); //step over type
-
-            if(strcmp(r_w, "Write") == 0) {
-                newn->flags = WRITE;
-            }
-            else
-                if(strcmp(r_w, "Read") == 0) {
-                    newn->flags = READ;
-                    ///ziqi: both read and write request
-                    //continue;
-                }
-                else
-                    continue;
-
-            byteoff = strtoull((strtok(NULL, " ,")) , NULL , 10) ;   //read byteoffset (byte)
-            //ARH: comment this line to accept blkno 0
-// 			if(!byteoff) {
-// 				continue;
-// 			}
-// 			if(!byteoff % 512) {
-// 				PRINT(fprintf(stderr, "ARH: request byte offset is not aligned to sector size\n"););
-// 				PRINT(fprintf(stderr, "line: %s", line););
-// 			} else {
-            newn->fsblkno = (byteoff / _gConfiguration.fsblkSize) ; //convert byte2sector and align to page size
-            //TODO: fix this line
-            newn->ssdblkno = newn->fsblkno / _gConfiguration.ssd2fsblkRatio[0];
-// 			}
-            bcount_temp = atoi((strtok(NULL, " ,")));   // read size
-
-            if(!bcount_temp) {
-                continue;
-            }
-
-            if(!bcount_temp % 512) {
-                PRINT(fprintf(stderr, "ARH: request byte count is not aligned to sector size\n"););
-                PRINT(fprintf(stderr, "line: %s", line););
-            }
-            else {
-		///ziqi: if the remaining request size is less than one block size, still count it as one. 
-		///ziqi: The following "if" statement works as getting the ceiling of bcount_temp / _gConfiguration.fsblkSize
-		if((bcount_temp % _gConfiguration.fsblkSize) == 0)
-		    newn->reqSize = bcount_temp / _gConfiguration.fsblkSize;
-		else
-		    newn->reqSize = bcount_temp / _gConfiguration.fsblkSize + 1;
-
-                //TODO: fix this line
-                if(newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0] + newn->reqSize >= _gConfiguration.ssd2fsblkRatio[0]) {   // req size is big, going to share multiple block
-                    newn->reqSize = _gConfiguration.ssd2fsblkRatio[0] - newn->fsblkno % _gConfiguration.ssd2fsblkRatio[0];
-                }
-            }
-
-            fetched = 1;
-            newn->lineNo = lineno;
-        } //end if(time)
     }//end while fetched
-
     return true;
 }
 

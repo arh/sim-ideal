@@ -16,7 +16,9 @@
 #include "lru_hotCold.h"
 #include "lru_pure.h"
 #include "arc.h"
+#include "larc.h"
 #include "darc.h"
+#include "ldarc.h"
 #include "stats.h"
 #include "min.h"
 
@@ -55,8 +57,14 @@ void	readTrace(deque<reqAtom> & memTrace)
     uint32_t lineNo = 0;
 
     while(getAndParseMSR(_gConfiguration.traceStream , &newAtom)) {
+      
+        ///cout<<"lineNo: "<<newAtom.lineNo<<" flags: "<<newAtom.flags<<" fsblkn: "<<newAtom.fsblkno<<" issueTime: "<<newAtom.issueTime<<" reqSize: "<<newAtom.reqSize<<endl;
+      
         ///ziqi: if writeOnly is 1, only insert write cache miss page to cache
         if(_gConfiguration.writeOnly) {
+	  
+	  
+	  
             if(newAtom.flags & WRITE) {
 #ifdef REQSIZE
                 uint32_t reqSize = newAtom.reqSize;
@@ -149,22 +157,30 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 			      _gTestCache[i] = new DARC<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 			    }
 			    else
-			      if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
-				  _gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+			      if(_gConfiguration.GetAlgName(i).compare("larc") == 0) {
+				_gTestCache[i] = new LARC<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);	
 			      }
 			      else
-				if(_gConfiguration.GetAlgName(i).compare("blockmin") == 0) {
-				    _gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+				if(_gConfiguration.GetAlgName(i).compare("ldarc") == 0) {
+				  _gTestCache[i] = new LDARC<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);	
 				}
 				else
-				  if(_gConfiguration.GetAlgName(i).find("owbp") != string::npos) {
-				      _gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
+				  if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
+				      _gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
 				  }
-		      //esle if //add new policy name and dynamic allocation here
-				  else {
-				    cerr << "Error: UnKnown Algorithm name " << endl;
-				    exit(1);
-				  }
+				  else
+				    if(_gConfiguration.GetAlgName(i).compare("blockmin") == 0) {
+					_gTestCache[i] = new BlockMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
+				    }
+				    else
+				      if(_gConfiguration.GetAlgName(i).find("owbp") != string::npos) {
+					  _gTestCache[i] = new OwbpCache(cacheAll, _gConfiguration.cacheSize[i], i);
+				      }
+			  //esle if //add new policy name and dynamic allocation here
+				      else {
+					cerr << "Error: UnKnown Algorithm name " << endl;
+					exit(1);
+				      }
     }
 
     PRINTV(logfile << "Configuration and setup done" << endl;);
@@ -314,7 +330,9 @@ int main(int argc, char **argv)
       ||_gConfiguration.GetAlgName(0).compare("hotcoldlru") == 0
       ||_gConfiguration.GetAlgName(0).compare("purelru") == 0
       ||_gConfiguration.GetAlgName(0).compare("arc") == 0
-      ||_gConfiguration.GetAlgName(0).compare("darc") == 0)
+      ||_gConfiguration.GetAlgName(0).compare("darc") == 0
+      ||_gConfiguration.GetAlgName(0).compare("larc") == 0
+      ||_gConfiguration.GetAlgName(0).compare("ldarc") == 0)
     {
       threshold = 1;
     }
