@@ -14,173 +14,171 @@ extern int totalNonSeqEvictedDirtyPages;
 
 void collectStat(int level, uint32_t newFlags)
 {
-    ++ _gStats[level].Ref;
+	++ _gStats[level].Ref;
 
-    ///ziqi: find dirty page number
-    if(newFlags & DIRTY) {
-        ++_gStats[level].DirtyPage ;
-    }
+	///ziqi: find dirty page number
+	if(newFlags & DIRTY) {
+		++_gStats[level].DirtyPage ;
+	}
 
-    if(newFlags & SEQEVICT) {
-        ++_gStats[level].SeqEviction ;
-    }
+	if(newFlags & SEQEVICT) {
+		++_gStats[level].SeqEviction ;
+	}
 
-    if(newFlags & LESSSEQEVICT) {
-        ++_gStats[level].LessSeqEviction ;
-    }
+	if(newFlags & LESSSEQEVICT) {
+		++_gStats[level].LessSeqEviction ;
+	}
 
-    // find read or write count
+	// find read or write count
 
-    if(newFlags	&	READ) {
-        ++_gStats[level].PageRead ;
+	if(newFlags	&	READ) {
+		++_gStats[level].PageRead ;
 
-        // Collect Read stats
-        if(newFlags	&	PAGEHIT) {
-            ++ _gStats[level].PageReadHit;
-            assert(newFlags & BLKHIT);
-            assert(!(newFlags & PAGEMISS));
-        }
+		// Collect Read stats
+		if(newFlags	&	PAGEHIT) {
+			++ _gStats[level].PageReadHit;
+			assert(newFlags & BLKHIT);
+			assert(!(newFlags & PAGEMISS));
+		}
 
-        if(newFlags	&	PAGEMISS)
-            ++ _gStats[level].PageReadMiss;
+		if(newFlags	&	PAGEMISS)
+			++ _gStats[level].PageReadMiss;
 
-        if(newFlags	&	BLKHIT) {
-            ++ _gStats[level].BlockWriteHit;
-            assert(!(newFlags & BLKMISS));
-        }
+		if(newFlags	&	BLKHIT) {
+			++ _gStats[level].BlockWriteHit;
+			assert(!(newFlags & BLKMISS));
+		}
 
-        if(newFlags	&	BLKMISS) {
-            ++ _gStats[level].BlockReadMiss;
-            ++ _gStats[level].PageReadMiss;
-        }
-        ///ziqi: added! read could also generate EVICT. Previously, only when newFlags is WRITE, having the following code.
-        if(newFlags	&	EVICT)
-            ++ _gStats[level].BlockEvict;
-    }
-    else
-        if(newFlags	&	WRITE) {
-            ++_gStats[level].PageWrite;
+		if(newFlags	&	BLKMISS) {
+			++ _gStats[level].BlockReadMiss;
+			++ _gStats[level].PageReadMiss;
+		}
 
-            // Collect Read stats
-            if(newFlags	&	PAGEHIT) {
-                ++ _gStats[level].PageWriteHit;
-                assert(newFlags & BLKHIT);
-                assert(!(newFlags & PAGEMISS));
-            }
+		///ziqi: added! read could also generate EVICT. Previously, only when newFlags is WRITE, having the following code.
+		if(newFlags	&	EVICT)
+			++ _gStats[level].BlockEvict;
+	}
+	else if(newFlags	&	WRITE) {
+		++_gStats[level].PageWrite;
 
-            if(newFlags	&	BLKHIT) {
-                ++ _gStats[level].BlockWriteHit;
-                assert(!(newFlags & BLKMISS));
+		// Collect Read stats
+		if(newFlags	&	PAGEHIT) {
+			++ _gStats[level].PageWriteHit;
+			assert(newFlags & BLKHIT);
+			assert(!(newFlags & PAGEMISS));
+		}
 
-                if(newFlags	&	PAGEMISS)
-                    ++ _gStats[level].PageWriteMiss;
-            }
+		if(newFlags	&	BLKHIT) {
+			++ _gStats[level].BlockWriteHit;
+			assert(!(newFlags & BLKMISS));
 
-            if(newFlags	&	BLKMISS) {
-                assert(!(newFlags & BLKHIT));
-                ++ _gStats[level].BlockWriteMiss;
-                ++ _gStats[level].PageWriteMiss;
-            }
+			if(newFlags	&	PAGEMISS)
+				++ _gStats[level].PageWriteMiss;
+		}
 
-            if(newFlags	&	EVICT)
-                ++ _gStats[level].BlockEvict;
+		if(newFlags	&	BLKMISS) {
+			assert(!(newFlags & BLKHIT));
+			++ _gStats[level].BlockWriteMiss;
+			++ _gStats[level].PageWriteMiss;
+		}
 
-            if(newFlags	&	PAGEMISS && !(newFlags	& BLKHIT) && !(newFlags	& BLKMISS))    // for page based algorithm
-                ++ _gStats[level].PageWriteMiss;
+		if(newFlags	&	EVICT)
+			++ _gStats[level].BlockEvict;
 
-            if(newFlags & COLD2COLD) {
-                ++ _gStats[level].Cold2Cold;
-                assert(!(newFlags & COLD2HOT));
-            }
+		if(newFlags	&	PAGEMISS && !(newFlags	& BLKHIT) && !(newFlags	& BLKMISS))    // for page based algorithm
+			++ _gStats[level].PageWriteMiss;
 
-            if(newFlags & COLD2HOT)
-                ++ _gStats[level].Cold2Hot;
-        }
-        else {
-            cerr << "Error: Unknown request type in stat collection" << endl;
-            assert(0);
-        }
+		if(newFlags & COLD2COLD) {
+			++ _gStats[level].Cold2Cold;
+			assert(!(newFlags & COLD2HOT));
+		}
+
+		if(newFlags & COLD2HOT)
+			++ _gStats[level].Cold2Hot;
+	}
+	else {
+		cerr << "Error: Unknown request type in stat collection" << endl;
+		assert(0);
+	}
 }
 
 // print histograms
 void printHist()
 {
-    //TODO: print stat for each cache in hierarchy
-    int i = 0;
-    ofstream pirdStream, birdStream;
-    string pirdName("Stats/");
-    pirdName.append(_gConfiguration.testName);
-    pirdName.append("-");
-    pirdName.append(_gConfiguration.GetAlgName(i));
-    string birdName(pirdName);
-    pirdName.append(".PIRD");
-    birdName.append(".BIRD");
-    pirdStream.open(pirdName, ios::out | ios::trunc);
+	//TODO: print stat for each cache in hierarchy
+	int i = 0;
+	ofstream pirdStream, birdStream;
+	string pirdName("Stats/");
+	pirdName.append(_gConfiguration.testName);
+	pirdName.append("-");
+	pirdName.append(_gConfiguration.GetAlgName(i));
+	string birdName(pirdName);
+	pirdName.append(".PIRD");
+	birdName.append(".BIRD");
+	pirdStream.open(pirdName, ios::out | ios::trunc);
 
-    if(! pirdStream.good()) {
-        cerr << "Error: can not open PIRD file: " << pirdName << endl;
-        return;
-    }
+	if(! pirdStream.good()) {
+		cerr << "Error: can not open PIRD file: " << pirdName << endl;
+		return;
+	}
 
-    birdStream.open(birdName, ios::out | ios::trunc);
+	birdStream.open(birdName, ios::out | ios::trunc);
 
-    if(! birdStream.good()) {
-        cerr << "Error: can not open BIRD file: " << birdName << endl;
-        return;
-    }
+	if(! birdStream.good()) {
+		cerr << "Error: can not open BIRD file: " << birdName << endl;
+		return;
+	}
 
-    for(unsigned i = 0; i < _gConfiguration.futureWindowSize  ; ++i) {
-        pirdStream << i << "\t" << _gConfiguration.pirdHist[i] << endl;
-        birdStream << i << "\t" << _gConfiguration.birdHist[i] << endl;
-    }
+	for(unsigned i = 0; i < _gConfiguration.futureWindowSize  ; ++i) {
+		pirdStream << i << "\t" << _gConfiguration.pirdHist[i] << endl;
+		birdStream << i << "\t" << _gConfiguration.birdHist[i] << endl;
+	}
 
-    pirdStream.close();
-    birdStream.close();
+	pirdStream.close();
+	birdStream.close();
 }
 
 //print stats
 void printStats()
 {
-    ofstream statStream;
-    mkdir("Stats", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    string fileName("Stats/");
-    fileName.append(_gConfiguration.testName);
-    fileName.append(".stat");
-    statStream.open(fileName, ios::out | ios::app);
+	ofstream statStream;
+	mkdir("Stats", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	string fileName("Stats/");
+	fileName.append(_gConfiguration.testName);
+	fileName.append(".stat");
+	statStream.open(fileName, ios::out | ios::app);
 
-    if(! statStream.good()) {
-        cerr << "Error: can not open stat file: " << fileName << endl;
-        return;
-    }
+	if(! statStream.good()) {
+		cerr << "Error: can not open stat file: " << fileName << endl;
+		return;
+	}
 
-    statStream << _gConfiguration.testName << endl;
-    Stat *tempStat;
+	statStream << _gConfiguration.testName << endl;
+	Stat *tempStat;
 
-    //print stat results for each level
-    for(int i = 0 ; i < _gConfiguration.totalLevels ; i++) {
-        statStream << "Level " << i + 1 << ",\t" << _gConfiguration.GetAlgName(i) << endl;
+	//print stat results for each level
+	for(int i = 0 ; i < _gConfiguration.totalLevels ; i++) {
+		statStream << "Level " << i + 1 << ",\t" << _gConfiguration.GetAlgName(i) << endl;
 
-        while((tempStat = _gStats[i].next())) {
-            statStream << tempStat->print() << endl;
-        }
+		while((tempStat = _gStats[i].next())) {
+			statStream << tempStat->print() << endl;
+		}
 
-        ///uint64_t blockEvict = _gStats[i].BlockEvict.getCounter();
-        ///uint64_t seqEviction = _gStats[i].SeqEviction.getCounter();
-        ///uint64_t lessSeqEviction = _gStats[i].LessSeqEviction.getCounter();
-        statStream << "Total Seq Evicted Dirty Pages, " << totalSeqEvictedDirtyPages << endl;
-        statStream << "Total NonSeq Evicted Dirty Pages, " << totalNonSeqEvictedDirtyPages << endl;
-        //statStream << "Total Evicted Clean Pages, " << ((int)blockEvict - (int)seqEviction - (int)lessSeqEviction) << endl;
-	statStream << "Total Evicted Clean Pages, " << totalEvictedCleanPages << endl;
-        //statStream << "Real Total Evicted Pages, " << ((int)blockEvict - (int)seqEviction + totalSeqEvictedDirtyPages - (int)lessSeqEviction + totalNonSeqEvictedDirtyPages) << endl;
-	statStream << "Real Total Evicted Pages, " << totalSeqEvictedDirtyPages + totalNonSeqEvictedDirtyPages + totalEvictedCleanPages << endl;
-	
-	statStream << "Page read cache hit ratio, " << double(_gStats[i].PageReadHit.getCounter()) / double(_gStats[i].Ref.getCounter()) * 100 <<"%"<<endl;
-	statStream << "Page write cache hit ratio, " << double(_gStats[i].PageWriteHit.getCounter()) / double(_gStats[i].Ref.getCounter()) * 100 <<"%"<<endl;
-	statStream << "Total cache hit ratio, " << (double(_gStats[i].PageReadHit.getCounter()) + double(_gStats[i].PageWriteHit.getCounter())) / double(_gStats[i].Ref.getCounter()) * 100 <<"%"<<endl;
-	
-        statStream << endl;
-    }
+		///uint64_t blockEvict = _gStats[i].BlockEvict.getCounter();
+		///uint64_t seqEviction = _gStats[i].SeqEviction.getCounter();
+		///uint64_t lessSeqEviction = _gStats[i].LessSeqEviction.getCounter();
+		statStream << "Total Seq Evicted Dirty Pages, " << totalSeqEvictedDirtyPages << endl;
+		statStream << "Total NonSeq Evicted Dirty Pages, " << totalNonSeqEvictedDirtyPages << endl;
+		//statStream << "Total Evicted Clean Pages, " << ((int)blockEvict - (int)seqEviction - (int)lessSeqEviction) << endl;
+		statStream << "Total Evicted Clean Pages, " << totalEvictedCleanPages << endl;
+		//statStream << "Real Total Evicted Pages, " << ((int)blockEvict - (int)seqEviction + totalSeqEvictedDirtyPages - (int)lessSeqEviction + totalNonSeqEvictedDirtyPages) << endl;
+		statStream << "Real Total Evicted Pages, " << totalSeqEvictedDirtyPages + totalNonSeqEvictedDirtyPages + totalEvictedCleanPages << endl;
+		statStream << "Page read cache hit ratio, " << double(_gStats[i].PageReadHit.getCounter()) / double(_gStats[i].Ref.getCounter()) * 100 << "%" << endl;
+		statStream << "Page write cache hit ratio, " << double(_gStats[i].PageWriteHit.getCounter()) / double(_gStats[i].Ref.getCounter()) * 100 << "%" << endl;
+		statStream << "Total cache hit ratio, " << (double(_gStats[i].PageReadHit.getCounter()) + double(_gStats[i].PageWriteHit.getCounter())) / double(_gStats[i].Ref.getCounter()) * 100 << "%" << endl;
+		statStream << endl;
+	}
 
-    statStream.close();
-    IFHIST(printHist(););
+	statStream.close();
+	IFHIST(printHist(););
 }
