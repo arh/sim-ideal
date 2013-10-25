@@ -16,9 +16,7 @@
 #include "lru_hotCold.h"
 #include "lru_pure.h"
 #include "arc.h"
-#include "larc.h"
-#include "darc.h"
-#include "ldarc.h"
+
 #include "stats.h"
 #include "min.h"
 
@@ -152,18 +150,6 @@ void	Initialize(int argc, char **argv, deque<reqAtom> & memTrace)
 			  if(_gConfiguration.GetAlgName(i).compare("arc") == 0) {
 			    _gTestCache[i] = new ARC<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
 			  }
-			  else
-			    if(_gConfiguration.GetAlgName(i).compare("darc") == 0) {
-			      _gTestCache[i] = new DARC<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);
-			    }
-			    else
-			      if(_gConfiguration.GetAlgName(i).compare("larc") == 0) {
-				_gTestCache[i] = new LARC<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);	
-			      }
-			      else
-				if(_gConfiguration.GetAlgName(i).compare("ldarc") == 0) {
-				  _gTestCache[i] = new LDARC<uint64_t, cacheAtom>(cacheAll, _gConfiguration.cacheSize[i], i);	
-				}
 				else
 				  if(_gConfiguration.GetAlgName(i).compare("pagemin") == 0) {
 				      _gTestCache[i] = new PageMinCache(cacheAll, _gConfiguration.cacheSize[i], i);
@@ -281,7 +267,8 @@ void runSeqLengthAnalysis()
 void RunBenchmark(deque<reqAtom> & memTrace)
 {
     PRINTV(logfile << "Start benchmarking" << endl;);
-
+	
+	//main simulation loop
     while(! memTrace.empty()) {
         uint32_t newFlags = 0;
         reqAtom newReq = memTrace.front();
