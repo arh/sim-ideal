@@ -1,4 +1,5 @@
 #include "owbp.h"
+#include <boost/iterator/iterator_concepts.hpp>
 
 extern deque<reqAtom> memTrace;
 
@@ -185,6 +186,10 @@ uint32_t OwbpCache::access(const uint64_t &k  , cacheAtom &value, uint32_t statu
 	// Attempt to find existing block
 	map< uint64_t, OwbpCacheBlock >::iterator 	blkit;
 	blkit = blkID_2_DS.find(currSsdBlkNo);
+	
+	//update currTime
+	reqAtom newReq = value.getReq();
+	currentTime =  newReq.issueTime; 
 
 	if(blkit ==  blkID_2_DS.end()) {
 		// Block miss
@@ -341,7 +346,12 @@ void OwbpCache::evict(uint64_t currBlkID)
 	assert(itOw != blkID_2_DS.end());
 	size_t victimSize = itOw->second.getPageSetSize();
 	assert(victimSize);
+	//update cache sizeV
 	currSize -= victimSize;
+	
+	PageSetType victimPageSet = itOw->second.getPageSet();
+	
+	recordOutTrace(victimPageSet);
 
 	//remove from main table
 	if(victimBlkID == currBlkID) {
@@ -350,6 +360,40 @@ void OwbpCache::evict(uint64_t currBlkID)
 	else {
 		blkID_2_DS.erase(itOw);
 	}
+	//victim evicted out of write buffer
+	
 }
+
+//typedef set < cacheAtom, CompCacheAtom, allocator<cacheAtom> > PageSetType;
+//typedef set < cacheAtom, CompCacheAtom, allocator<cacheAtom> >::iterator PageSetIt;
+
+void OwbpCache::recordOutTrace(PageSetType victimPageSet){
+	
+	unsigned level =0; //temporary for the highet level only
+	reqAtom newReq;
+	
+	if(_gConfiguration.outTraceStream[level].is_open() ==  false ){
+		assert(0);
+	}
+	
+	
+	PageSetIt it = victimPageSet.begin();
+	newReq =  (*it).getReq();
+	size_t clusterSize = victimPageSet.size(); 
+		
+	if(_gConfiguration.outTraceFormat[level].compare("uflip") == 0 )
+	{
+		if(newReq.flags & READ)
+			_gConfiguration.outTraceStream[level] << "s; "<<"R; ";	
+		else
+			_gConfiguration.outTraceStream[level] << "s; "<<"W; ";	
+		
+		_gConfiguration.outTraceStream[level] << newReq.fsblkno   << "; 0; ";
+		_gConfiguration.outTraceStream[level] << clusterSize  << "; "<< currentTime  ;
+		_gConfiguration.outTraceStream[level] << endl; 
+	}
+}
+// each sector 512 byte
+// each fsblk 8 sector or 4KB
 
 

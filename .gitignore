@@ -25,5 +25,5 @@ sim-ideal
 *.stat
 # Kdevelop files #
 ##################
-#*.kdev4
+*.kdev4
 *-swp

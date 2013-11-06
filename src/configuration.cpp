@@ -5,6 +5,7 @@
 void Configuration::allocateArrays(int totalLevels)
 {
 	outTraceStream = new std::ofstream[totalLevels];
+	outTraceFormat = new std::string[totalLevels];
 	policyName = new std::string[totalLevels];
 	cacheSize =  new uint64_t[totalLevels];
 	cachePageSize = new uint64_t[totalLevels];
@@ -108,14 +109,14 @@ bool Configuration::read(int argc, char **argv)
 			tempStr = pTree.get<std::string>("Global.writeOnly");
 		}
 		catch(...) {
-			//no log file specified
+			//no writeOnlu file specified
 			tempStr.clear();
 		}
 
 		if(! tempStr.empty()) {
 			writeOnly = (bool) myString2intConverter(tempStr);
 		}
-
+		
 		///ziqi: read out the value for seqThreshold
 		try {
 			tempStr = pTree.get<std::string>("Global.seqThreshold");
@@ -148,8 +149,9 @@ bool Configuration::read(int argc, char **argv)
 			}
 
 			if(! tempStr.empty()) {
+				
 				outTraceStream[i].open(tempStr.c_str(), std::ios::trunc);
-
+				outTraceFormat[i] = pTree.get<std::string>(std::string(cacheStr[i] + "." + "outTraceFormat"));
 				if(i == totalLevels - 1) {
 					cache2diskPipeFileName = tempStr;
 				}
@@ -261,6 +263,7 @@ Configuration::Configuration()
 	policyName = NULL;
 	cacheSize = NULL;
 	outTraceStream = NULL;
+	outTraceFormat = NULL;
 	totalLevels = 0;
 	writeOnly = false;
 	///ziqi
@@ -287,6 +290,7 @@ Configuration::~Configuration()
 	for(int i = 0 ; i < totalLevels ; ++i)
 		outTraceStream[i].close();
 
+	delete [] outTraceFormat;
 	delete [] cacheSize;
 	delete [] policyName;
 	delete [] cacheBlkSize;

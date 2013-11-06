@@ -56,6 +56,8 @@ public:
 	}
 };
 
+typedef set < cacheAtom, CompCacheAtom, allocator<cacheAtom> > PageSetType;
+typedef set < cacheAtom, CompCacheAtom, allocator<cacheAtom> >::iterator PageSetIt;
 typedef multiset<OwbpCacheBlockMetaData, CompOwbpCacheBlockMetaData, allocator<OwbpCacheBlockMetaData>> ColdHeap_type;
 typedef multiset<OwbpCacheBlockMetaData, CompOwbpCacheBlockMetaData, allocator<OwbpCacheBlockMetaData>>::iterator ColdHeapIt;
 typedef multiset<OwbpCacheBlockMetaData, CompOwbpCacheBlockMetaData, allocator<OwbpCacheBlockMetaData>>::reverse_iterator ColdHeapRIt;
@@ -65,7 +67,6 @@ typedef set<uint64_t>::reverse_iterator victimRIt;
 class OwbpCacheBlock
 {
 private:
-	typedef set < cacheAtom, CompCacheAtom, allocator<cacheAtom> > PageSetType;
 	PageSetType pageSet;
 	set < uint64_t > coldPageSet;
 public:
@@ -81,6 +82,9 @@ public:
 	}
 	inline size_t getPageSetSize() const {
 		return pageSet.size();
+	}
+	inline PageSetType getPageSet() const {
+		return pageSet; 
 	}
 	inline void clearPageSet() {
 		pageSet.clear();
@@ -144,6 +148,7 @@ private:
 	map< uint64_t, OwbpCacheBlock > 	blkID_2_DS;//map blkID to blk DS (all blocks in the cache)
 	ColdHeap_type coldHeap;
 	set<uint64_t> victimPull; // maintain block IDs with INF distance
+	double currentTime; //arrival time of the latest request, used to generate outTrace
 
 
 
@@ -157,6 +162,10 @@ private:
 	void evict(uint64_t currBlkID);
 	uint32_t blkHitAccess(const uint64_t &k  , cacheAtom &value, uint32_t status, OwbpCacheBlock &tempBlock);
 	void insertNewBlk(cacheAtom &value);
+	
+	//FIXME:this function is here temporary, it record victim entries from evit()
+	/* utlimately it should move to the main simulator loop */
+	void recordOutTrace( PageSetType victimPageSet );
 };
 
 

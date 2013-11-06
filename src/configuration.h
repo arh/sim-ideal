@@ -33,6 +33,7 @@ public:
 	std::ofstream diskSimInputStream;
 
 	std::ofstream *outTraceStream;
+	std::string *outTraceFormat;
 	std::string *policyName;
 	char   *testName;
 	uint64_t *cacheSize;   // in pages

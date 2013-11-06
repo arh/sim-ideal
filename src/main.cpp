@@ -258,9 +258,15 @@ void RunBenchmark(deque<reqAtom> & memTrace)
 
 		//access hierachy from top layer
 		for(int i = 0 ; i < _gConfiguration.totalLevels ; i++) {
+			//access cache at level i for newReq
+			//BUG: victim dirty pages from upper levels does not access lower levels
 			newFlags = _gTestCache[i]->access(newReq.fsblkno, newCacheAtom, newReq.flags);
 			collectStat(i, newFlags);
-
+			
+			//BUG: write requests in the upper-level write-back cache does not access lower levels even
+			/* in the case of cache miss
+			 */
+			
 			if(newFlags & PAGEHIT)
 				break; // no need to check further down in the hierachy
 
