@@ -1,0 +1,2 @@
+File;NumIOReads;ReadIOTime;NumIOWrites;WriteIOTime;NumIOTotal;IOTime;numFTLRead;numFTLWrite;numFTLErase;numFTLTrim;numGCRead;numGCWrite;numGCErase;numWLRead;numWLWrite;numWLErase;numLogMergeSwitch;numLogMergePartial;numLogMergeFull;numPageBlockToPageConversion;numCacheHits;numCacheFaults;numMemoryTranslation;numMemoryCache;numMemoryRead;numMemoryWrite
+L1Trace.out;0;0.000000;4;1248.080000;4;1248.080000;0;4;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;
