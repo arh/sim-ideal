@@ -11,6 +11,8 @@ uint32_t PageMinCache::access(const uint64_t &k  , cacheAtom &value, uint32_t st
 {
 	assert(_capacity != 0);
 	PRINTV(logfile << value.getLineNo() << ": Access key: " << k << endl;);
+	//record current Time
+	currTime =  value.getReq().issueTime; 
 	// Attempt to find existing record
 	key_to_value_type::iterator it	= _key_to_value.find(k);
 
@@ -129,16 +131,66 @@ void PageMinCache::evict()
 	key_to_value_type::iterator it 	= _key_to_value.find(setit->key);
 	assert(it != _key_to_value.end());
 	// Erase both elements to completely purge record
+	recordOutTrace(setit->key);
 	_key_to_value.erase(it);
 	maxHeap.erase(setit);
+	
 }
 
+void PageMinCache::recordOutTrace(const uint64_t& k){
+	
+	unsigned level =0; //temporary for the highet level only
+	reqAtom newReq;
+	
+	if(_gConfiguration.outTraceStream[level].is_open() ==  false ){
+		assert(0);
+	}
+	
+	
+	if(_gConfiguration.outTraceFormat[level].compare("uflip") == 0 )
+	{
+		if(newReq.flags & READ)
+			_gConfiguration.outTraceStream[level] << "s; "<<"R; ";	
+		else
+			_gConfiguration.outTraceStream[level] << "s; "<<"W; ";	
+		
+		_gConfiguration.outTraceStream[level] << k   << "; 0; ";
+		_gConfiguration.outTraceStream[level] << "1; "<<  currTime;
+		_gConfiguration.outTraceStream[level] << endl; 
+	}
+}
 
+void BlockMinCache::recordOutTrace(const uint64_t& k, size_t clustSize){
+	
+	unsigned level =0; //temporary for the highet level only
+	reqAtom newReq;
+	
+	if(_gConfiguration.outTraceStream[level].is_open() ==  false ){
+		assert(0);
+	}
+	
+	
+	if(_gConfiguration.outTraceFormat[level].compare("uflip") == 0 )
+	{
+		if(newReq.flags & READ)
+			_gConfiguration.outTraceStream[level] << "s; "<<"R; ";	
+		else
+			_gConfiguration.outTraceStream[level] << "s; "<<"W; ";	
+		
+		_gConfiguration.outTraceStream[level] << k   << "; 0; ";
+		_gConfiguration.outTraceStream[level] << clustSize<<"; "<<  currTime;
+		_gConfiguration.outTraceStream[level] << endl; 
+	}
+}
 
 uint32_t BlockMinCache::access(const uint64_t &k  , cacheAtom &value, uint32_t status)
 {
 	assert(cacheNum <= _capacity);
 	PRINTV(logfile << value.getLineNo() << ": Access key: " << k << endl;);
+	
+	//record current time
+	currTime = value.getReq().issueTime;
+	
 	// Attempt to find existing record
 	key_to_block_type::iterator it	= _key_to_block.find(value.getSsdblkno());
 
@@ -274,6 +326,8 @@ void BlockMinCache::evict(uint64_t ssdblkno)
 	assert((it->second).size());
 	PRINTV(logfile << "\tMake " << (it->second).size() << " empty space" << endl;);
 	cacheNum -= (it->second).size();
+	uint64_t clustBeginKey = *((it->second).begin());
+	recordOutTrace(clustBeginKey, (it->second).size() );
 	(it->second).clear();
 
 	if(setit->key != ssdblkno)

@@ -148,6 +148,8 @@ public:
 		PRINTV(logfile << "Before eviting, key bit status: " << bitset<10>(it->second.first.getReq().flags) << endl;);
 
 		if(it->second.first.getReq().flags & DIRTY) {
+///ARH: record flashSim output log
+			recordOutTrace(k,v);
 ///ziqi: DiskSim format Request_arrival_time Device_number Block_number Request_size Request_flags
 ///ziqi: Device_number is set to 1. About Request_flags, 0 is for write and 1 is for read
 			PRINTV(DISKSIMINPUTSTREAM << setfill(' ') << left << fixed << setw(25) << v.getReq().issueTime << left << setw(8) << "0" << left << fixed << setw(12) << it->second.first.getReq().fsblkno << left << fixed << setw(8) << it->second.first.getReq().reqSize << "0" << endl;);
@@ -175,6 +177,28 @@ public:
 	}
 
 private:
+	void recordOutTrace(const K& k, const V& v){
+		
+		unsigned level =0; //temporary for the highet level only
+		reqAtom newReq;
+		
+		if(_gConfiguration.outTraceStream[level].is_open() ==  false ){
+			assert(0);
+		}
+		
+		
+		if(_gConfiguration.outTraceFormat[level].compare("uflip") == 0 )
+		{
+			if(newReq.flags & READ)
+				_gConfiguration.outTraceStream[level] << "s; "<<"R; ";	
+			else
+				_gConfiguration.outTraceStream[level] << "s; "<<"W; ";	
+			
+			_gConfiguration.outTraceStream[level] << k   << "; 0; ";
+			_gConfiguration.outTraceStream[level] << "1; "<<  v.getReq().issueTime ;
+			_gConfiguration.outTraceStream[level] << endl; 
+		}
+	}
 
 // Record a fresh key-value pair in the cache
 	int insert(const K &k, const V &v) {

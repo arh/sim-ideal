@@ -64,11 +64,13 @@ private:
 	// Key-to-value lookup
 	key_to_value_type _key_to_value;
 	unsigned levelMinusMinus;
+	double currTime;
 
 	// Record a fresh key-value pair in the cache
 	int insert(uint64_t k, cacheAtom v);
-	// Purge the least-recently-used element in the cache
+	// Purge an element out of the cache
 	void evict();
+	void recordOutTrace(const uint64_t& k);
 };
 
 class BlockMinCache : public TestCache<uint64_t, cacheAtom>
@@ -110,11 +112,13 @@ private:
 	// Key-to-value lookup
 	key_to_block_type _key_to_block;
 	unsigned levelMinusMinus;
+	double currTime; 
 
 	// Record a fresh key-value pair in the cache
 	int insert(uint64_t k, cacheAtom v);
 	// Purge the least-recently-used element in the cache
 	void evict(uint64_t ssdblkno);
+	void recordOutTrace(const uint64_t &k, size_t clustSize);
 };
 
 

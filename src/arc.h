@@ -267,7 +267,7 @@ public:
 	} //end operator access
 
 	///ziqi: ARC subroutine
-	void REPLACE(const K &k, const V &v, int p) {
+	void REPLACE(const K &k, const V &v, unsigned p) {
 		typename key_to_value_type::iterator it = b2.find(k);
 
 		if((t1.size() > 0) && ((t1.size() > p) || ((it != b2.end()) && (t1.size() == p)))) {

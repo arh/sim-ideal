@@ -1,5 +1,4 @@
 #include "owbp.h"
-#include <boost/iterator/iterator_concepts.hpp>
 
 extern deque<reqAtom> memTrace;
 
