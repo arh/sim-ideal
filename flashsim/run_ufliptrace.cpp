@@ -231,14 +231,6 @@ int main(int argc, char **argv){
 		std::string fileName = files[i].c_str();
 		std::string multiplerStr = fileName.substr(fileName.find('P',0)+1, fileName.find_last_of('_', std::string::npos)-fileName.find('P',0)-1);
 
-		char pattern = fileName.substr(4,1).c_str()[0];
-		switch (pattern)
-		{
-		case '5':
-			multiplier = atof(multiplerStr.c_str());
-			break;
-
-		}
 
 		/* first go through and write to all read addresses to prepare the SSD */
 		while(fgets(line, 80, trace) != NULL){
@@ -253,8 +245,8 @@ int main(int argc, char **argv){
 				for (int i=0;i<ioSize;i++)
 				{
 					local_loop_time += ssd.event_arrive(READ, ((vaddr+(i*(int)multiplier))/addressDivisor)%deviceSize, 1, ((start_time+arrive_time)*timeMultiplier)+local_loop_time);
-					num_reads++;
 				}
+				num_reads++;
 
 				read_time += local_loop_time;
 			}
@@ -264,22 +256,19 @@ int main(int argc, char **argv){
 				{
 					local_loop_time += ssd.event_arrive(WRITE, ((vaddr+(i*(int)multiplier))/addressDivisor)%deviceSize, 1, ((start_time+arrive_time)*timeMultiplier)+local_loop_time);
 
-					num_writes++;
 				}
+				num_writes++;
 				write_time += local_loop_time;
 
 			}
 
 			arrive_time += local_loop_time;
 		}
-
 		// Write all statistics
 		fprintf(logFile, "%lu;%f;%lu;%f;%lu;%f;", num_reads, read_time, num_writes, write_time, num_reads+num_writes, read_time+write_time);
 		ssd.write_statistics(logFile);
-
 		fclose(trace);
-
-
+		fflush(logFile);
 	}
 
 	fclose(logFile);
