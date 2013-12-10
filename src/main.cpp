@@ -54,7 +54,7 @@ void	readTrace(deque<reqAtom> & memTrace)
 	reqAtom newAtom;
 	uint32_t lineNo = 0;
 
-	while(getAndParseMSR(_gConfiguration.traceStream , &newAtom)) {
+	while(getAndParseTrace(_gConfiguration.traceStream , &newAtom)) {
 		///cout<<"lineNo: "<<newAtom.lineNo<<" flags: "<<newAtom.flags<<" fsblkn: "<<newAtom.fsblkno<<" issueTime: "<<newAtom.issueTime<<" reqSize: "<<newAtom.reqSize<<endl;
 
 		///ziqi: if writeOnly is 1, only insert write cache miss page to cache
@@ -256,7 +256,7 @@ void RunBenchmark(deque<reqAtom> & memTrace)
 		reqAtom newReq = memTrace.front();
 		cacheAtom newCacheAtom(newReq);
 
-		//access hierachy from top layer
+		//access hierachy from top layer, reqSize is always equal to 1
 		for(int i = 0 ; i < _gConfiguration.totalLevels ; i++) {
 			//access cache at level i for newReq
 			//BUG: victim dirty pages from upper levels does not access lower levels

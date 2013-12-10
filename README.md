@@ -51,8 +51,39 @@ TODO:
 - a request with reqSize > 1 will always have future distance block 1 , Do we need to fix it ? 
 
 Assumptions:
+=========
 - a request in the trace access only one block. For example if the request want to access 8 pages, all pages blong to the same block
 
+MULTI-LEVEL COMMUNICATION 
+=========
+there is a for loop in RunBenchmark() which iterate over the cache levels. The for loop is responsible to handle the request through
+the cache hierachy until the request satisfied by a hit. 
+The for loop body call access member method of each cache data structure. The access method returns an object of type AccessPacket
+which includes the status of current reference and also list of dirty cache lines that has been evicted out of current level and proceed
+to the next cache level. 
+
+TODO:
+- input and return object type of the access method should be from the same type. Therefore, output of the higher level can be feed in
+to the lower level caches.
+- inter cache level communication for write requests is dependent to write-handling method. since write-handeling is a property of cache
+object, sending write event down the hierarchy is the decision which is made inside the current cache object.
+
+
+WRITE HANDLING
+=========
+sim-ideal support following two write handling methods:
+- write-back: higher level cache stores new write request and return hit flag. No additional event is passed to the lower level cache
+in tha case of cache hit event received from higher level cache.
+- write-only: this is like write-back method however it does not store dala blocks due to read cache miss. Moreover, it does not 
+lookup the cache for read hit. All read requests are dismissed in this case. 
+
+TODO:
+- The write handling should be independent config parameter for each cache layer. 
+- Write-Through: 
+- Write-Around: 
+
+
+OTHER NOTES:
 ========
 Block i Coldness value at time t = number of valid pages in the cache associated with block i 
 	that will not receive any hit in future window. 
@@ -91,3 +122,5 @@ example:
 	20		8		12		100
 	25		6		19		210
 	15		5		10		107
+
+	

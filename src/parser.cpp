@@ -11,6 +11,39 @@ double  WindowsTickToUnixMilliSeconds(long long windowsTicks)
 	return (double)(((double)windowsTicks / (double)WINDOWS_TICK - (double)SEC_TO_UNIX_EPOCH) * (double)1000);
 }
 
+
+
+bool getAndParseMEM(std::ifstream &inputTrace, reqAtom *newn){
+	
+	static uint32_t lineno = 0;
+	int fetched =0; 
+	char line[201];
+	char *tempchar=NULL;
+	while(!fetched){
+		std::string lineString;
+		std::getline(inputTrace,  lineString);
+		if(inputTrace.eof()) {
+			//end of file
+			_gConfiguration.maxLineNo = lineno; // record last line number
+			return false;
+		}
+		strcpy(line, lineString.c_str());
+		tempchar = strtok(line, " ");
+		++ lineno;
+		
+		if(tempchar == NULL){
+			continue;
+		}
+		fetched = 1; 
+		newn->fsblkno = strtoull( tempchar , NULL , 16) ;   //read byteoffset (byte)
+		newn->reqSize = 1; 
+		newn->lineNo = lineno;
+		newn->flags = WRITE;
+		newn->ssdblkno = newn->fsblkno; 		
+	}
+	return true; 
+	
+}
 bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
 {
 	int bcount_temp = 0;
@@ -223,7 +256,16 @@ bool  getAndParseMSR(std::ifstream &inputTrace, reqAtom *newn)
 	return true;
 }
 
-
+bool getAndParseTrace(std::ifstream &inputTrace, reqAtom *newn){
+	if(_gConfiguration.inputTraceFormat.compare("msr") == 0 ){
+		return getAndParseMSR(inputTrace , newn);
+	}
+	if(_gConfiguration.inputTraceFormat.compare("mem") == 0 ){
+		return getAndParseMEM(inputTrace, newn);
+	}
+	
+	return false; 
+}
 /*
 
 static int iotrace_month_convert (char *monthstr, int year)

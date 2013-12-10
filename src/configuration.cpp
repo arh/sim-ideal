@@ -117,6 +117,15 @@ bool Configuration::read(int argc, char **argv)
 			writeOnly = (bool) myString2intConverter(tempStr);
 		}
 		
+		try {
+			tempStr = pTree.get<std::string>("Global.inputTraceFromat");
+			inputTraceFormat = tempStr;
+		}
+		catch(...){
+			tempStr.clear();
+			inputTraceFormat = std::string("msr"); // set default format
+		}
+		
 		///ziqi: read out the value for seqThreshold
 		try {
 			tempStr = pTree.get<std::string>("Global.seqThreshold");

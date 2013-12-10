@@ -47,7 +47,7 @@ Name=small.csv
 Type=Native Application
 
 [Launch][Launch Configuration 3][Data]
-Arguments=./Traces/small.csv sample.cfg test-output
+Arguments=./mem-trace/bodytrack_1m.uniq sample.cfg test-output
 Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
 Dependency Action=Nothing
 EnvironmentGroup=default

@@ -23,19 +23,11 @@
 
 using namespace std;
 
-///ziqi: in access(), if the value's time stamp is the first one that equal or bigger than a multiple of 30s, then flushing back all the dirty pages in buffer cache.
-///Then change the dirty pages status to clean. Log these dirty pages into DiskSim input trace.
-///ziqi: in access(), for status is write, add dirty page notation to the status.
-///(done) ziqi: in remove(), modify it as lru_ziqi.h. Log the evicted dirty page.
-
 extern int totalEvictedCleanPages;
-
 extern int totalNonSeqEvictedDirtyPages;
 
 
-// Class providing fixed-size (by number of records)
-// LRU-replacement cache of a function with signature
-// V f(K)
+
 template <typename K, typename V>
 class PureLRUCache : public TestCache<K, V>
 {

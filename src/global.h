@@ -1,5 +1,6 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
+#include <vector>
 #include "configuration.h"
 
 
@@ -50,8 +51,16 @@ const uint32_t DIRTY = 512;
 const uint32_t SEQEVICT = 1024;
 const uint32_t LESSSEQEVICT = 2048;
 
+//Bypassing state
+const uint32_t BYPASS = 4196<<0; //by pass 0th level
+// const uint32_t BYPASS = 4196<<1; //reserved for bypass 1th level
+// const uint32_t BYPASS = 4196<<2; //reserved for bypass 2nd level
+// const uint32_t BYPASS = 4196<<3; //reserved for bypass 3rd level
+
+//new flag should start from 4196*16 
 const uint32_t INF = 0xFFFFFFFF;
 
+/* Objects of this type hold the basic infomation about a single request */
 class reqAtom
 {
 public:
@@ -85,6 +94,7 @@ public:
 
 };
 
+/* This is a wrapper class for requests that are stored in the cache metadata type */
 class cacheAtom
 {
 private:
@@ -121,6 +131,42 @@ public:
 	///ziqi
 	void updateFlags(uint32_t outerFlags) {
 		req.flags = outerFlags;
+	}
+	void addFlags( uint32_t newFlags){
+		req.flags = req.flags | newFlags ;
+	}
+};
+
+class reqPacket {
+private:
+	std::vector<reqAtom> reqList;
+	uint32_t packetFlags;
+public:
+	reqPacket( reqAtom newAtom) {
+		reqList.push_back(newAtom);
+		packetFlags = 0;
+	}
+	reqPacket(){
+		packetFlags = 0;
+	}
+	uint32_t getSize(){
+		return reqList.size();
+	}
+	std::vector<reqAtom> getReqList(){
+		return reqList;
+	}
+	void append( reqPacket newPacket ){
+		std::vector<reqAtom> newReqList = newPacket.getReqList();
+		if( newReqList.size() )
+			reqList.insert(reqList.end(), newReqList.begin() ,newReqList.end() );
+	}
+	void append( const cacheAtom newCacheAtom){
+		reqAtom newReq = newCacheAtom.getReq();
+		assert(newReq.fsblkno);
+		reqList.push_back(newReq);
+	}
+	reqAtom operator[] (int i){
+		return reqList[i];
 	}
 };
 

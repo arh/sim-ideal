@@ -47,6 +47,7 @@ public:
 	uint64_t *pirdHist;
 	int 	totalLevels;
 	bool writeOnly;
+	std::string inputTraceFormat; 
 	std::string diskSimuExe;
 	std::string diskSimPath;
 	std::string diskSimParv;
